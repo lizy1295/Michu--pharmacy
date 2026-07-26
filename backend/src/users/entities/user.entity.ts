@@ -39,7 +39,7 @@ export class User {
   })
   role!: UserRole;
 
-  @Column({ type: 'varchar', length: 36, nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   branchId!: string | null;
 
   @ManyToOne(() => Branch, { nullable: true, onDelete: 'SET NULL' })

@@ -4,14 +4,12 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
-import { useWishlist } from '@/context/WishlistContext';
 import { getAccessToken } from '@/lib/auth/tokens';
 
 export function Header() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { cartCount } = useCart();
-  const { wishlistCount } = useWishlist();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -136,21 +134,16 @@ export function Header() {
               </Link>
             )}
 
-            {/* Wishlist Icon */}
-            <Link
-              href="/wishlist"
-              className="relative p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition hidden md:flex"
-              aria-label="Wishlist"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white px-1">
-                  {wishlistCount}
-                </span>
-              )}
-            </Link>
+             {/* Shop Icon */}
+             <Link
+               href="/products"
+               className="relative p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition hidden md:flex"
+               aria-label="Shop"
+             >
+               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-3m-6.5-1.5L9 17.5M9 17.5l3.5-3.5M9 17.5l3.5 3.5" />
+               </svg>
+             </Link>
 
             {/* Cart Icon */}
             <Link
@@ -326,9 +319,9 @@ export function Header() {
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                 Track Order
               </Link>
-              <Link href="/wishlist" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-brand-50 hover:text-brand-700 transition" onClick={() => setMobileMenuOpen(false)}>
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                Wishlist
+              <Link href="/products" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-brand-50 hover:text-brand-700 transition" onClick={() => setMobileMenuOpen(false)}>
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-3m-6.5-1.5L9 17.5M9 17.5l3.5-3.5M9 17.5l3.5 3.5" /></svg>
+                Shop
               </Link>
 
               <div className="border-t my-3"></div>

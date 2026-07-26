@@ -4,131 +4,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import { useCart } from '@/context/CartContext';
-
-// Define product type
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  prescriptionRequired: boolean;
-  imageType: 'syrup' | 'tablet' | 'drops' | 'cream' | 'spray' | 'cosmetic' | 'device';
-  brand: string;
-  category: string;
-  branches: string[];
-}
-
-const PRODUCTS_DATA: Product[] = [
-  {
-    id: 'p1',
-    name: '(Exedexe) Dextromethorphan syrup 120ml',
-    price: 240,
-    prescriptionRequired: false,
-    imageType: 'syrup',
-    brand: 'Exedexe',
-    category: 'Medicines',
-    branches: ['Adama Branch', 'Ayat Branch', 'Hawassa Branch'],
-  },
-  {
-    id: 'p2',
-    name: '(Nicardia retard 20) Nifedipine 20mg of 100',
-    price: 25,
-    prescriptionRequired: true,
-    imageType: 'tablet',
-    brand: 'Nicardia',
-    category: 'Medicines',
-    branches: ['Bethel Branch', 'Jemo Branch', 'Adama Branch'],
-  },
-  {
-    id: 'p3',
-    name: '(Zoxan-D) Ciprofloxacin 0.3% + Dexamethason 5ml',
-    price: 290,
-    prescriptionRequired: true,
-    imageType: 'drops',
-    brand: 'Zoxan-D',
-    category: 'Medicines',
-    branches: ['Figa Branch', 'Hawassa Branch', 'Ayat Branch'],
-  },
-  {
-    id: 'p4',
-    name: '3D white charcoal whitening Tp of 204g',
-    price: 500,
-    prescriptionRequired: false,
-    imageType: 'cosmetic',
-    brand: 'Crest',
-    category: 'Cosmetics',
-    branches: ['Ayat Branch', 'Hawassa Branch', 'Jemo Branch'],
-  },
-  {
-    id: 'p5',
-    name: 'Absolute Lip Gloss Clear Glow',
-    price: 73.91,
-    prescriptionRequired: false,
-    imageType: 'cosmetic',
-    brand: 'Other',
-    category: 'Cosmetics',
-    branches: ['Jemo Branch', 'Dire Dawa Branch', 'Figa Branch'],
-  },
-  {
-    id: 'p6',
-    name: 'Acetazolamide 250mg of 10*10 tablet',
-    price: 225,
-    prescriptionRequired: true,
-    imageType: 'tablet',
-    brand: 'Other',
-    category: 'Medicines',
-    branches: ['Adama Branch', 'Bethel Branch', 'Dire Dawa Branch'],
-  },
-  {
-    id: 'p7',
-    name: 'Actrapid 100iu/ml 10ml/vial soluble insulin',
-    price: 1155,
-    prescriptionRequired: true,
-    imageType: 'tablet',
-    brand: 'Other',
-    category: 'Medicines',
-    branches: ['Dire Dawa Branch', 'Ayat Branch', 'Jemo Branch'],
-  },
-  {
-    id: 'p8',
-    name: 'Acyclovir Denk 200mg of 5*10 tabletten',
-    price: 460,
-    prescriptionRequired: true,
-    imageType: 'tablet',
-    brand: 'Acyclovir Denk',
-    category: 'Medicines',
-    branches: ['Hawassa Branch', 'Jemo Branch', 'Bethel Branch'],
-  },
-  {
-    id: 'p9',
-    name: 'Michu Daily Multi-Vitamin Capsules',
-    price: 350,
-    prescriptionRequired: false,
-    imageType: 'tablet',
-    brand: 'Other',
-    category: 'Supplements',
-    branches: ['All Branches', 'Ayat Branch', 'Adama Branch'],
-  },
-  {
-    id: 'p10',
-    name: 'Sterile Nebulizer Compressor Device',
-    price: 2450,
-    prescriptionRequired: false,
-    imageType: 'device',
-    brand: 'Other',
-    category: 'Medical Devices',
-    branches: ['Adama Branch', 'Bethel Branch', 'Jemo Branch'],
-  },
-  {
-    id: 'p11',
-    name: 'Anti-Bacterial Hand Spray 100ml',
-    price: 95,
-    prescriptionRequired: false,
-    imageType: 'spray',
-    brand: 'Other',
-    category: 'Personal Care',
-    branches: ['All Branches', 'Figa Branch', 'Dire Dawa Branch'],
-  }
-];
+import { getProducts, Product } from '@/lib/api/products';
 
 const BRANCHES_LIST = [
   'All Branches',
@@ -141,10 +17,48 @@ const BRANCHES_LIST = [
   'Jemo Branch',
 ];
 
+const getProductImageType = (name: string, category: string | null): string => {
+  const nameLower = name.toLowerCase();
+  if (nameLower.includes('syrup')) return 'syrup';
+  if (nameLower.includes('tablet') || nameLower.includes('pill') || nameLower.includes('capsule') || nameLower.includes('tabletten')) return 'tablet';
+  if (nameLower.includes('drop')) return 'drops';
+  if (nameLower.includes('cream') || nameLower.includes('gel') || nameLower.includes('lotion') || nameLower.includes('balm') || nameLower.includes('gloss')) return 'cosmetic';
+  if (nameLower.includes('spray')) return 'spray';
+  if (nameLower.includes('device') || nameLower.includes('compressor') || nameLower.includes('nebulizer') || nameLower.includes('inhaler')) return 'device';
+
+  // Fallback by category
+  const catLower = (category ?? '').toLowerCase();
+  if (catLower.includes('medicine')) return 'tablet';
+  if (catLower.includes('cosmetic')) return 'cosmetic';
+  if (catLower.includes('device')) return 'device';
+  if (catLower.includes('personal')) return 'spray';
+  if (catLower.includes('supplement')) return 'tablet';
+
+  return 'generic';
+};
+
+const getProductBranches = (id: number): string[] => {
+  const branches = [];
+  if (id % 2 === 0) branches.push('Ayat Branch');
+  if (id % 3 === 0) branches.push('Adama Branch');
+  if (id % 5 === 0) branches.push('Hawassa Branch');
+  if (id % 7 === 0) branches.push('Bethel Branch');
+  if (id % 11 === 0) branches.push('Dire Dawa Branch');
+  if (branches.length === 0) {
+    branches.push('All Branches');
+  }
+  return branches;
+};
+
 export default function ProductsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { addToCart } = useCart();
+
+  // API States
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Search, Category and Brand states synced with URL parameters
   const urlSearch = searchParams.get('search') || '';
@@ -165,6 +79,25 @@ export default function ProductsPage() {
     setToastMessage(message);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  // Fetch products from backend
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getProducts();
+        setProducts(data);
+      } catch (err: any) {
+        console.error('Failed to load products:', err);
+        setError(err.message || 'Failed to connect to the products API.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllProducts();
+  }, []);
 
   // Sync category filter click or search input change
   useEffect(() => {
@@ -218,25 +151,25 @@ export default function ProductsPage() {
 
   // Advanced Filtering logic
   const filteredProducts = useMemo(() => {
-    return PRODUCTS_DATA.filter((product) => {
+    return products.filter((product) => {
       // 1. Search Query filter
       if (urlSearch) {
         const query = urlSearch.toLowerCase();
         const matchesName = product.name.toLowerCase().includes(query);
-        const matchesBrand = product.brand.toLowerCase().includes(query);
+        const matchesBrand = (product.brand ?? '').toLowerCase().includes(query);
         if (!matchesName && !matchesBrand) return false;
       }
 
       // 2. Category Dropdown filter
       if (urlCategory) {
-        if (product.category.toLowerCase() !== urlCategory.toLowerCase()) {
+        if ((product.category ?? '').toLowerCase() !== urlCategory.toLowerCase()) {
           return false;
         }
       }
 
       // 3. Brand Dropdown filter
       if (urlBrand) {
-        if (product.brand.toLowerCase() !== urlBrand.toLowerCase()) {
+        if ((product.brand ?? '').toLowerCase() !== urlBrand.toLowerCase()) {
           return false;
         }
       }
@@ -246,12 +179,14 @@ export default function ProductsPage() {
       if (rxNo && !rxYes && product.prescriptionRequired) return false;
 
       // 5. Price Filter
-      if (minPrice && product.price < parseFloat(minPrice)) return false;
-      if (maxPrice && product.price > parseFloat(maxPrice)) return false;
+      const priceVal = parseFloat(product.price);
+      if (minPrice && priceVal < parseFloat(minPrice)) return false;
+      if (maxPrice && priceVal > parseFloat(maxPrice)) return false;
 
       // 6. Branches Filter
+      const productBranches = getProductBranches(product.id);
       if (selectedBranches.length > 0 && !selectedBranches.includes('All Branches')) {
-        const hasMatchingBranch = product.branches.some((branch) =>
+        const hasMatchingBranch = productBranches.some((branch) =>
           selectedBranches.includes(branch)
         );
         if (!hasMatchingBranch) return false;
@@ -259,20 +194,22 @@ export default function ProductsPage() {
 
       return true;
     }).sort((a, b) => {
+      const priceA = parseFloat(a.price);
+      const priceB = parseFloat(b.price);
       // Sorting
       if (sortBy === 'price-asc') {
-        return a.price - b.price;
+        return priceA - priceB;
       }
       if (sortBy === 'price-desc') {
-        return b.price - a.price;
+        return priceB - priceA;
       }
       if (sortBy === 'alphabetical') {
         return a.name.localeCompare(b.name);
       }
-      // default: popularity (mock order by product code id)
-      return a.id.localeCompare(b.id);
+      // default: popularity (sort by id)
+      return a.id - b.id;
     });
-  }, [urlSearch, urlCategory, urlBrand, rxYes, rxNo, minPrice, maxPrice, selectedBranches, sortBy]);
+  }, [products, urlSearch, urlCategory, urlBrand, rxYes, rxNo, minPrice, maxPrice, selectedBranches, sortBy]);
 
   const renderProductIllustration = (type: string) => {
     const baseColor = 'flex items-center justify-center rounded-2xl w-full h-full relative';
@@ -317,16 +254,69 @@ export default function ProductsPage() {
             </svg>
           </div>
         );
+      case 'spray':
+        return (
+          <div className={`${baseColor} bg-pink-50 text-pink-600`}>
+            <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2h-1M5 11V9a2 2 0 012-2h1m5-4h2a1 1 0 011 1v2H11V4a1 1 0 011-1z" />
+            </svg>
+          </div>
+        );
+      case 'generic':
       default:
         return (
-          <div className={`${baseColor} bg-gray-50 text-gray-400`}>
+          <div className={`${baseColor} bg-emerald-50 text-emerald-600`}>
             <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
         );
     }
   };
+
+  const renderProductImage = (product: Product) => {
+    if (product.imageUrl) {
+      return (
+        <div className="w-full h-full relative">
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="w-full h-full object-cover rounded-2xl"
+          />
+        </div>
+      );
+    }
+    const imageType = getProductImageType(product.name, product.category);
+    return renderProductIllustration(imageType);
+  };
+
+  const renderProductAttributes = (attributes: any) => {
+    if (!attributes || typeof attributes !== 'object') return null;
+    const items = [];
+    if (attributes.strength) items.push(`Strength: ${attributes.strength}`);
+    if (attributes.dosage_form) items.push(`Form: ${attributes.dosage_form}`);
+    if (attributes.spf) items.push(`SPF ${attributes.spf}`);
+    if (attributes.shade) items.push(`Shade: ${attributes.shade}`);
+    if (attributes.volume_ml) items.push(`${attributes.volume_ml}ml`);
+    if (attributes.skin_type) items.push(`Skin: ${attributes.skin_type}`);
+    if (attributes.flavor) items.push(`Flavor: ${attributes.flavor}`);
+
+    if (items.length === 0) return null;
+
+    return (
+      <div className="flex flex-wrap gap-1 mt-2">
+        {items.map((item, idx) => (
+          <span
+            key={idx}
+            className="text-[9px] font-bold text-gray-500 bg-neutral-50 border border-neutral-200/60 px-2 py-0.5 rounded-full"
+          >
+            {item}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 relative">
@@ -473,7 +463,9 @@ export default function ProductsPage() {
           {filteredProducts.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filteredProducts.map((product) => {
-                const isFav = wishlist.includes(product.id);
+                const isFav = wishlist.includes(String(product.id));
+                const priceNum = parseFloat(product.price);
+                const productBranches = getProductBranches(product.id);
                 return (
                   <div
                     key={product.id}
@@ -481,33 +473,58 @@ export default function ProductsPage() {
                   >
                     <div>
                       {/* Product Illustration / Image Area */}
-                      <div className="aspect-video w-full rounded-xl overflow-hidden mb-4 relative shadow-inner bg-neutral-50">
-                        {renderProductIllustration(product.imageType)}
+                      <Link href={`/products/${product.id}`} className="aspect-video w-full rounded-xl overflow-hidden mb-4 relative shadow-inner bg-neutral-50 block">
+                        {renderProductImage(product)}
                         {/* Rx Required Overlay */}
                         {product.prescriptionRequired && (
-                          <span className="absolute top-2 left-2 bg-red-50 text-red-600 text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border border-red-200 shadow-sm">
+                          <span className="absolute top-2 left-2 bg-red-50 text-red-600 text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border border-red-200 shadow-sm z-10">
                             Rx Required
                           </span>
                         )}
-                      </div>
+                      </Link>
                       
                       {/* Product Title */}
                       <h3 className="text-sm font-bold text-neutral-800 group-hover:text-brand-600 transition line-clamp-1">
-                        {product.name}
+                        <Link href={`/products/${product.id}`}>
+                          {product.name}
+                        </Link>
                       </h3>
                       
                       {/* Brand Info */}
                       <p className="text-[11px] text-brand-600 font-semibold mt-0.5 uppercase tracking-wide">
-                        {product.brand}
+                        {product.brand || 'Other'}
                       </p>
+
+                      {/* Description snippet */}
+                      {product.description && (
+                        <p className="text-[11px] text-neutral-500 mt-1 line-clamp-2 leading-relaxed">
+                          {product.description}
+                        </p>
+                      )}
+
+                      {/* Attributes Badges */}
+                      {renderProductAttributes(product.attributes)}
                       
+                      {/* Stock Indicator */}
+                      <div className="flex items-center gap-1.5 mt-2 text-[10px] font-bold">
+                        {product.stock > 0 ? (
+                          <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100/60">
+                            In Stock: {product.stock}
+                          </span>
+                        ) : (
+                          <span className="text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-100/60">
+                            Out of Stock
+                          </span>
+                        )}
+                      </div>
+
                       {/* Sub-text details */}
                       <div className="mt-2.5 flex items-center gap-1.5 text-[10px] text-gray-500 font-medium">
                         <svg className="w-3.5 h-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <span className="truncate">{product.branches.slice(0, 2).join(', ')}</span>
+                        <span className="truncate">{productBranches.slice(0, 2).join(', ')}</span>
                       </div>
                     </div>
 
@@ -518,12 +535,12 @@ export default function ProductsPage() {
                         <div className="flex flex-col">
                           <span className="text-[10px] text-neutral-400 font-semibold uppercase">Price</span>
                           <span className="text-lg font-extrabold text-neutral-900 leading-none mt-0.5">
-                            {product.price.toFixed(2)} <span className="text-xs font-normal text-neutral-500">ETB</span>
+                            {priceNum.toFixed(2)} <span className="text-xs font-normal text-neutral-500">ETB</span>
                           </span>
                         </div>
                         
-                        <div className="text-[10px] font-bold text-gray-500 bg-neutral-100 px-2 py-0.5 rounded">
-                          {product.category}
+                        <div className="text-[10px] font-bold text-gray-500 bg-neutral-100 px-2 py-0.5 rounded uppercase">
+                          {product.category || 'Medicine'}
                         </div>
                       </div>
 
@@ -532,11 +549,11 @@ export default function ProductsPage() {
                         <button
                           onClick={() => {
                             addToCart({
-                              id: product.id,
+                              id: String(product.id),
                               name: product.name,
-                              price: product.price,
+                              price: priceNum,
                               prescriptionRequired: product.prescriptionRequired,
-                              imageType: product.imageType,
+                              imageType: getProductImageType(product.name, product.category) as any,
                             });
                             triggerToast(`Added ${product.name.split(' ')[0]} to cart!`);
                           }}
@@ -548,8 +565,8 @@ export default function ProductsPage() {
                           Add
                         </button>
 
-                        <button
-                          onClick={() => triggerToast(`Item quick preview modal coming soon.`)}
+                        <Link
+                          href={`/products/${product.id}`}
                           className="p-2 rounded-xl border hover:bg-neutral-50 transition active:scale-95 text-neutral-400 hover:text-neutral-600"
                           aria-label="Preview details"
                         >
@@ -557,10 +574,10 @@ export default function ProductsPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                        </button>
+                        </Link>
 
                         <button
-                          onClick={() => toggleWishlist(product.id)}
+                          onClick={() => toggleWishlist(String(product.id))}
                           className={`p-2 rounded-xl border transition active:scale-95 ${
                             isFav ? 'bg-red-50 text-red-500 border-red-100 hover:bg-red-100' : 'text-neutral-400 hover:text-red-500 hover:bg-neutral-50'
                           }`}
@@ -592,7 +609,8 @@ export default function ProductsPage() {
                 Reset All Filters
               </button>
             </div>
-          )}
+          )
+}
         </section>
 
       </div>

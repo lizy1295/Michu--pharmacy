@@ -34,18 +34,26 @@ async function request<T>(
   return response.json();
 }
 
-// Example function - update with actual Product type when available
 export interface Product {
-  id: string;
+  id: number;
   name: string;
-  price: number;
-  [key: string]: any;
+  price: string; // serialized as string from decimal in Postgres
+  brand: string | null;
+  category: string | null;
+  prescriptionRequired: boolean;
+  stock: number;
+  description: string | null;
+  imageUrl: string | null;
+  attributes: Record<string, any> | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export async function getProducts(): Promise<Product[]> {
   return request<Product[]>('/products');
 }
 
-export async function getProductById(id: string): Promise<Product> {
+export async function getProductById(id: number): Promise<Product> {
   return request<Product>(`/products/${id}`);
 }
+

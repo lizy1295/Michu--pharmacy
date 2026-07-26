@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const BRANCHES = [
   { name: 'Adama Branch', address: 'Bole Road, Near Adama Stadium', phone: '+251 221 112 233', hours: '8:00 AM - 10:00 PM' },
@@ -70,6 +70,11 @@ export default function HealthServicesPage() {
   const [rxPhone, setRxPhone] = useState('');
   const [rxBranch, setRxBranch] = useState(BRANCHES[0].name);
   const [rxNotes, setRxNotes] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleScanClick = () => {
+    fileInputRef.current?.click();
+  };
 
   // Consultation Form State
   const [consultDoctor, setConsultDoctor] = useState('Dr. Sarah Hailu (Clinical Lead)');
@@ -196,8 +201,10 @@ export default function HealthServicesPage() {
                 {/* File Dropzone */}
                 <div className="border-2 border-dashed border-gray-300 hover:border-brand-500 rounded-xl p-8 flex flex-col items-center justify-center bg-gray-50 cursor-pointer transition relative">
                   <input
+                    ref={fileInputRef}
                     type="file"
-                    accept="image/*,application/pdf"
+                    accept="image/*,application/pdf,video/*"
+                    capture="environment"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
                         setRxFile(e.target.files[0]);
@@ -211,8 +218,15 @@ export default function HealthServicesPage() {
                   <span className="text-sm font-bold text-gray-700">
                     {rxFile ? rxFile.name : 'Click or Drag & Drop Prescription File'}
                   </span>
-                  <span className="text-[10px] text-gray-400 mt-1">Accepts PNG, JPG, PDF up to 5MB</span>
+                  <span className="text-[10px] text-gray-400 mt-1">Accepts PNG, JPG, PDF, MP4, MOV, AVI, WEBM up to 15MB</span>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleScanClick}
+                  className="w-full rounded-xl border border-brand-200 bg-white text-brand-700 font-semibold py-3 text-sm mt-3 hover:bg-brand-50 transition"
+                >
+                  Scan Prescription with Camera
+                </button>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

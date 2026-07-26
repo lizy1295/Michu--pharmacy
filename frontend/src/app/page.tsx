@@ -233,7 +233,36 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3. Promotional Health Services Cards */}
+      {/* 3. Stats / Trust Badges */}
+      <section className="py-12 bg-white border-b">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="flex flex-col items-center text-center p-6 rounded-2xl border border-neutral-100 bg-neutral-50 hover:shadow-md transition">
+              <div className="w-12 h-12 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center mb-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <p className="text-2xl font-extrabold text-neutral-900">3+</p>
+              <p className="text-sm font-semibold text-neutral-600 mt-1">Years Experience</p>
+            </div>
+            <div className="flex flex-col items-center text-center p-6 rounded-2xl border border-neutral-100 bg-neutral-50 hover:shadow-md transition">
+              <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
+              </div>
+              <p className="text-2xl font-extrabold text-neutral-900">10,000+</p>
+              <p className="text-sm font-semibold text-neutral-600 mt-1">Happy Customers</p>
+            </div>
+            <div className="flex flex-col items-center text-center p-6 rounded-2xl border border-neutral-100 bg-neutral-50 hover:shadow-md transition">
+              <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center mb-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              </div>
+              <p className="text-2xl font-extrabold text-neutral-900">24/7</p>
+              <p className="text-sm font-semibold text-neutral-600 mt-1">Support Available</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Promotional Health Services Cards */}
       <section className="py-16 px-4">
         <div className="mx-auto max-w-7xl">
           <div className="text-center max-w-xl mx-auto mb-12">
