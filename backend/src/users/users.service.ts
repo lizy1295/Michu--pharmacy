@@ -28,7 +28,7 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id } });
+    return this.usersRepository.findOne({ where: { id: Number(id) } });
   }
 
   async createCustomer(dto: RegisterDto): Promise<User> {

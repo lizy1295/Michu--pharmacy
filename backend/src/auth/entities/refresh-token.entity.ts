@@ -18,11 +18,11 @@ export class RefreshToken {
   @Column({ type: 'varchar', length: 512 })
   tokenHash!: string;
 
-  @Column({ type: 'uuid' })
-  userId!: string;
+  @Column({ name: 'user_id', type: 'integer' })
+  userId!: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user!: User;
 
   @Column({ type: 'timestamp' })
@@ -31,6 +31,6 @@ export class RefreshToken {
   @Column({ type: 'boolean', default: false })
   isRevoked!: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 }

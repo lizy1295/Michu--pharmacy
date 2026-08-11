@@ -6,10 +6,20 @@ import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
 import { OrdersModule } from './orders/orders.module';
 import { PrescriptionsModule } from './prescriptions/prescriptions.module';
-import { TelehealthModule } from './telehealth/telehealth.module';
 import { LoyaltyModule } from './loyalty/loyalty.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AdminsModule } from './admins/admins.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { CategoriesModule } from './categories/categories.module';
+import { CustomersModule } from './customers/customers.module';
+import { AdvertisementsModule } from './advertisements/advertisements.module';
+import { ArticlesModule } from './articles/articles.module';
+import { VideosModule } from './videos/videos.module';
+import { BranchesModule } from './branches/branches.module';
+import { ReportsModule } from './reports/reports.module';
+import { SettingsModule } from './settings/settings.module';
+import { PaymentsModule } from './payments/payments.module';
 import { TypeOrmConfigService } from './common/database/typeorm.config';
 
 @Module({
@@ -25,11 +35,21 @@ import { TypeOrmConfigService } from './common/database/typeorm.config';
     UsersModule,
     ProductsModule,
     OrdersModule,
+    PaymentsModule,
     PrescriptionsModule,
-    TelehealthModule,
     LoyaltyModule,
     InventoryModule,
     NotificationsModule,
+    AdminsModule,
+    DashboardModule,
+    CategoriesModule,
+    CustomersModule,
+    AdvertisementsModule,
+    ArticlesModule,
+    VideosModule,
+    BranchesModule,
+    ReportsModule,
+    SettingsModule,
   ],
 })
 export class AppModule {}

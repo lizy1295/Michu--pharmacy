@@ -72,7 +72,7 @@ export class AuthService {
     const storedToken = await this.refreshTokenRepository.findOne({
       where: {
         tokenHash,
-        userId: payload.sub,
+        userId: Number(payload.sub),
         isRevoked: false,
         expiresAt: MoreThan(new Date()),
       },
@@ -112,21 +112,21 @@ export class AuthService {
 
   private toJwtPayload(user: User): Omit<JwtPayload, 'type'> {
     return {
-      sub: user.id,
+      sub: String(user.id),
       email: user.email,
-      role: user.role,
-      branchId: user.branchId,
+      role: user.role as any,
+      branchId: user.branchId ?? null,
     };
   }
 
   private toAuthUser(user: User): AuthUser {
     return {
-      id: user.id,
+      id: String(user.id),
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: user.role,
-      branchId: user.branchId,
+      role: user.role as any,
+      branchId: user.branchId ?? null,
     };
   }
 
@@ -150,7 +150,7 @@ export class AuthService {
     );
   }
 
-  private async storeRefreshToken(userId: string, token: string): Promise<void> {
+  private async storeRefreshToken(userId: number, token: string): Promise<void> {
     const tokenHash = this.hashToken(token);
     const expiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d');
     const expiresAt = this.parseExpiry(expiresIn);

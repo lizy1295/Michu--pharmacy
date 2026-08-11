@@ -17,16 +17,23 @@ describe('AuthService', () => {
   let refreshTokenRepo: jest.Mocked<Repository<RefreshToken>>;
 
   const mockUser: User = {
-    id: 'user-uuid',
-    email: 'test@example.com',
-    passwordHash: 'hashed',
+    id: 1,
     firstName: 'Test',
     lastName: 'User',
+    username: 'testuser',
+    email: 'test@example.com',
+    passwordHash: 'hashed',
     phone: null,
+    gender: null,
+    dateOfBirth: null,
+    profileImage: null,
+    roleId: 1,
     role: UserRole.CUSTOMER,
     branchId: null,
-    branch: null,
+    emailVerified: true,
+    phoneVerified: true,
     isActive: true,
+    lastLogin: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

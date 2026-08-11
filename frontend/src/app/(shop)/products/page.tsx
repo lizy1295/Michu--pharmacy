@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import { useCart } from '@/context/CartContext';
-import { getProducts, Product } from '@/lib/api/products';
+import { getProducts, getProductsByCategory, getProductsByBrand, Product } from '@/lib/api/products';
 
 const BRANCHES_LIST = [
   'All Branches',
@@ -82,12 +82,21 @@ export default function ProductsPage() {
 
   // Fetch products from backend
   useEffect(() => {
-    const fetchAllProducts = async () => {
+    const fetchProducts = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getProducts();
-        setProducts(data);
+
+        if (urlCategory) {
+          const data = await getProductsByCategory(urlCategory);
+          setProducts(data);
+        } else if (urlBrand) {
+          const data = await getProductsByBrand(urlBrand);
+          setProducts(data);
+        } else {
+          const data = await getProducts();
+          setProducts(data);
+        }
       } catch (err: any) {
         console.error('Failed to load products:', err);
         setError(err.message || 'Failed to connect to the products API.');
@@ -96,8 +105,8 @@ export default function ProductsPage() {
       }
     };
 
-    fetchAllProducts();
-  }, []);
+    fetchProducts();
+  }, [urlCategory, urlBrand]);
 
   // Sync category filter click or search input change
   useEffect(() => {

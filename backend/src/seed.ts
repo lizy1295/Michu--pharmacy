@@ -134,7 +134,7 @@ async function seed() {
 
   for (const product of SAMPLE_PRODUCTS) {
     const existing = await productsService.findAll();
-    if (!existing.find((p: any) => p.name === product.name)) {
+    if (!existing.data.find((p: any) => p.name === product.name)) {
       await productsService.create(product);
       console.log(`✅ Created: ${product.name}`);
     }

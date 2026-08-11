@@ -20,7 +20,6 @@ const getProductImageType = (name: string, category: string | null): string => {
   if (nameLower.includes('spray')) return 'spray';
   if (nameLower.includes('device') || nameLower.includes('compressor') || nameLower.includes('nebulizer') || nameLower.includes('inhaler')) return 'device';
 
-  // Fallback by category
   const catLower = (category ?? '').toLowerCase();
   if (catLower.includes('medicine')) return 'tablet';
   if (catLower.includes('cosmetic')) return 'cosmetic';
@@ -184,81 +183,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       case 'drops':
         return <div className="w-full h-full bg-teal-50 rounded-2xl flex items-center justify-center text-teal-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158A6 6 0 018 16" /></svg></div>;
       case 'cosmetic':
-        return <div className="w-full h-full bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2zM12 5V2m-3 3v4a3 3 0 006 0V5" /></svg></div>;
+        return <div className="w-full h-full bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 002 2v12a2 2 0 002 2zM12 5V2m-3 3v4a3 3 0 006 0V5" /></svg></div>;
       case 'device':
-        return <div className="w-full h-full bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M9 3v2m6-2v2M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" /></svg></div>;
-      case 'spray':
-        return <div className="w-full h-full bg-pink-50 rounded-2xl flex items-center justify-center text-pink-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2h-1M5 11V9a2 2 0 012-2h1m5-4h2a1 1 0 011 1v2H11V4a1 1 0 011-1z" /></svg></div>;
-      case 'generic':
-      default:
-        return (
-          <div className="w-full h-full bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
-            <svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        );
-    }
-  };
-
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-16 text-center">
-        <svg className="w-20 h-20 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <h1 className="text-3xl font-extrabold text-gray-800">Product Not Found</h1>
-        <p className="text-sm text-gray-500 mt-2">The product you&apos;re looking for doesn&apos;t exist or has been removed.</p>
-        <Link href="/products" className="mt-6 inline-block rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-2.5 text-sm transition">
-          Back to Products
-        </Link>
-      </div>
-    );
-  }
-
-  const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i++) {
-      addToCart({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        prescriptionRequired: product.prescriptionRequired,
-        imageType: product.imageType,
-      });
-    }
-    triggerToast(`Added ${quantity} x ${product.name.split(' ').slice(0, 3).join(' ')} to cart!`);
-    setQuantity(1);
-  };
-
-  const handleWishlistToggle = () => {
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
-      triggerToast('Removed from wishlist');
-    } else {
-      addToWishlist({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        prescriptionRequired: product.prescriptionRequired,
-        imageType: product.imageType,
-        brand: product.brand,
-        category: product.category,
-      });
-      triggerToast('Added to wishlist!');
-    }
-  };
-
-  const renderProductImage = (type: string) => {
-    switch (type) {
-      case 'syrup':
-        return <div className="w-full h-full bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2h-1M5 11V9a2 2 0 012-2h1m5-4h2a1 1 0 011 1v2H11V4a1 1 0 011-1z" /></svg></div>;
-      case 'tablet':
-        return <div className="w-full h-full bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M12 22a10 10 0 100-20 10 10 0 000 20zm0-10h.01M8 12h.01M16 12h.01M12 8h.01M12 16h.01" /></svg></div>;
-      case 'drops':
-        return <div className="w-full h-full bg-teal-50 rounded-2xl flex items-center justify-center text-teal-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158A6 6 0 018 16" /></svg></div>;
-      case 'cosmetic':
-        return <div className="w-full h-full bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2zM12 5V2m-3 3v4a3 3 0 006 0V5" /></svg></div>;
-      case 'device':
-        return <div className="w-full h-full bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M9 3v2m6-2v2M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" /></svg></div>;
+        return <div className="w-full h-full bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M9 3v2m6-2v2M9 19v-6a2 2 0 00-2-2H5a2 2 0 002 2v6a2 2 0 002 2h2a2 2 0 012-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" /></svg></div>;
       case 'spray':
         return <div className="w-full h-full bg-pink-50 rounded-2xl flex items-center justify-center text-pink-600"><svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2h-1M5 11V9a2 2 0 012-2h1m5-4h2a1 1 0 011 1v2H11V4a1 1 0 011-1z" /></svg></div>;
       default:
@@ -336,17 +263,32 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       </div>
 
       <div className="mt-12 border-t pt-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white border rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></div><h3 className="font-bold text-neutral-800">Product Details</h3></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-white border rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              <h3 className="text-sm font-bold text-neutral-800">Product Details</h3>
+            </div>
             <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{getFullDescription()}</p>
           </div>
-          <div className="bg-white border rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><h3 className="font-bold text-neutral-800">Dosage & Usage</h3></div>
+          <div className="bg-white border rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <h3 className="text-sm font-bold text-neutral-800">Dosage & Usage</h3>
+            </div>
             <p className="text-xs text-gray-600 leading-relaxed">{getDosage()}</p>
           </div>
-          <div className="bg-white border rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></div><h3 className="font-bold text-neutral-800">Safety & Storage</h3></div>
+          <div className="bg-white border rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              </div>
+              <h3 className="text-sm font-bold text-neutral-800">Safety & Storage</h3>
+            </div>
             <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{`${getSideEffects()}\n\n${getStorage()}`}</p>
           </div>
         </div>
@@ -381,5 +323,4 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       </div>
     </div>
   );
-
 }

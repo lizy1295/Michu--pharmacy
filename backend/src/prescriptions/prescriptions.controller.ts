@@ -1,14 +1,20 @@
 import {
   Controller,
+  Get,
   Post,
+  Body,
+  Param,
+  Patch,
   UploadedFile,
   UseInterceptors,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
+import { PrescriptionsService, CreatePrescriptionDto, UpdatePrescriptionStatusDto } from './prescriptions.service';
 
 const PRESCRIPTION_UPLOAD_PATH = './uploads/prescriptions';
 const ALLOWED_MIME_TYPES = [
@@ -62,9 +68,38 @@ function prescriptionFileFilter(
   }
 }
 
+@ApiTags('Prescriptions')
 @Controller('prescriptions')
 export class PrescriptionsController {
+  constructor(private readonly prescriptionsService: PrescriptionsService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get all prescriptions' })
+  findAll() {
+    return this.prescriptionsService.findAll();
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get prescription by ID' })
+  findOne(@Param('id') id: string) {
+    return this.prescriptionsService.findOne(Number(id));
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create prescription' })
+  create(@Body() dto: CreatePrescriptionDto) {
+    return this.prescriptionsService.create(dto);
+  }
+
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Update prescription status' })
+  updateStatus(@Param('id') id: string, @Body() dto: UpdatePrescriptionStatusDto) {
+    return this.prescriptionsService.updateStatus(Number(id), dto);
+  }
+
   @Post('upload')
+  @ApiOperation({ summary: 'Upload prescription document' })
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -88,6 +123,7 @@ export class PrescriptionsController {
       originalName: file.originalname,
       size: file.size,
       type: file.mimetype,
+      url: `/uploads/prescriptions/${file.filename}`,
     };
   }
 }

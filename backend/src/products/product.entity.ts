@@ -76,6 +76,20 @@ export class Product {
   })
   attributes?: object | null;
 
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: 'active',
+  })
+  status?: string | null;
+
+  @Column({
+    name: 'expiry_date',
+    type: 'date',
+    nullable: true,
+  })
+  expiryDate?: Date | null;
+
   @CreateDateColumn({
     name: 'created_at',
   })

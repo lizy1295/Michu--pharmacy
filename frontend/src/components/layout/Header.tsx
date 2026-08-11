@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
 import { getAccessToken } from '@/lib/auth/tokens';
+import { getProducts, Product } from '@/lib/api/products';
 
 export function Header() {
   const router = useRouter();
@@ -15,6 +16,23 @@ export function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<'categories' | 'brands' | 'services' | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const data = await getProducts();
+        const uniqueCategories = Array.from(new Set(data.map((p: Product) => p.category).filter(Boolean))) as string[];
+        const uniqueBrands = Array.from(new Set(data.map((p: Product) => p.brand).filter(Boolean))) as string[];
+        setCategories(uniqueCategories.sort());
+        setBrands(uniqueBrands.sort());
+      } catch (err) {
+        console.error('Failed to load filter options:', err);
+      }
+    };
+    fetchFilters();
+  }, []);
 
   // Check login status on mount
   useEffect(() => {
@@ -45,7 +63,7 @@ export function Header() {
   };
 
   const handleCategorySelect = (category: string) => {
-    router.push(`/products?category=${encodeURIComponent(category === 'All Medicines' ? '' : category)}`);
+    router.push(`/products?category=${encodeURIComponent(category)}`);
     setOpenDropdown(null);
     setMobileMenuOpen(false);
   };
@@ -192,10 +210,30 @@ export function Header() {
                 </svg>
               </button>
               {openDropdown === 'categories' && (
-                <div className="absolute left-0 mt-3.5 w-56 rounded-xl bg-white p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-1">
-                  {['All Medicines', 'Supplements', 'Cosmetics', 'Medical Devices', 'Personal Care'].map((cat) => (
-                    <button key={cat} onClick={() => handleCategorySelect(cat)} className="w-full text-left rounded-lg px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-700 font-medium transition">
-                      {cat}
+                <div className="absolute left-0 mt-3.5 w-64 rounded-2xl bg-white p-3 shadow-2xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-1 max-h-96 overflow-y-auto">
+                  <button onClick={() => handleCategorySelect('')} className="w-full text-left rounded-xl px-3.5 py-2 text-sm text-brand-700 font-bold bg-brand-50/60 hover:bg-brand-100 transition mb-1">
+                    All Categories & Products
+                  </button>
+                  <div className="my-1 border-t border-gray-100"></div>
+                  {[
+                    { name: 'Medicines', target: 'Medicine' },
+                    { name: 'Vitamins & Supplements', target: 'Supplement' },
+                    { name: 'Skin Care', target: 'Cosmetic' },
+                    { name: 'Hair Care', target: 'Cosmetic' },
+                    { name: 'Personal Care', target: 'Cosmetic' },
+                    { name: 'Baby & Mother', target: 'Cosmetic' },
+                    { name: 'Medical Devices', target: 'Medicine' },
+                    { name: 'First Aid', target: 'Medicine' },
+                    { name: 'Oral Care', target: 'Cosmetic' },
+                    { name: 'Eye Care', target: 'Medicine' },
+                    { name: 'Diabetes Care', target: 'Medicine' },
+                    { name: 'Women\'s Health', target: 'Supplement' },
+                    { name: 'Health & Wellness', target: 'Supplement' },
+                    { name: 'Special Offers', target: '' },
+                  ].map((cat) => (
+                    <button key={cat.name} onClick={() => handleCategorySelect(cat.target || cat.name)} className="w-full text-left rounded-xl px-3.5 py-2 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-700 font-medium transition flex items-center justify-between group">
+                      <span>{cat.name}</span>
+                      <span className="text-[10px] text-gray-400 group-hover:text-brand-600 transition">&rarr;</span>
                     </button>
                   ))}
                 </div>
@@ -213,9 +251,13 @@ export function Header() {
                 </svg>
               </button>
               {openDropdown === 'brands' && (
-                <div className="absolute left-0 mt-3.5 w-56 rounded-xl bg-white p-2 shadow-xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-1">
-                  {['Acyclovir Denk', 'Crest', 'Exedexe', 'Nicardia', 'Zoxan-D'].map((b) => (
-                    <button key={b} onClick={() => handleBrandSelect(b)} className="w-full text-left rounded-lg px-4 py-2.5 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-700 font-medium transition">
+                <div className="absolute left-0 mt-3.5 w-64 rounded-2xl bg-white p-3 shadow-2xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-1 max-h-96 overflow-y-auto">
+                  <Link href="/brands" onClick={() => setOpenDropdown(null)} className="block w-full text-left rounded-xl px-3.5 py-2 text-sm text-brand-700 font-bold bg-brand-50/60 hover:bg-brand-100 transition mb-1">
+                    Explore All Brands &rarr;
+                  </Link>
+                  <div className="my-1 border-t border-gray-100"></div>
+                  {brands.map((b) => (
+                    <button key={b} onClick={() => handleBrandSelect(b)} className="w-full text-left rounded-xl px-3.5 py-2 text-sm text-gray-700 hover:bg-brand-50 hover:text-brand-700 font-medium transition">
                       {b}
                     </button>
                   ))}

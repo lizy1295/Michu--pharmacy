@@ -50,10 +50,27 @@ export interface Product {
 }
 
 export async function getProducts(): Promise<Product[]> {
-  return request<Product[]>('/products');
+  const res = await request<any>('/products');
+  if (Array.isArray(res)) return res;
+  if (res && Array.isArray(res.data)) return res.data;
+  return [];
 }
 
 export async function getProductById(id: number): Promise<Product> {
   return request<Product>(`/products/${id}`);
+}
+
+export async function getProductsByCategory(category: string): Promise<Product[]> {
+  const res = await request<any>(`/products/category/${encodeURIComponent(category)}`);
+  if (Array.isArray(res)) return res;
+  if (res && Array.isArray(res.data)) return res.data;
+  return [];
+}
+
+export async function getProductsByBrand(brand: string): Promise<Product[]> {
+  const res = await request<any>(`/products/brand/${encodeURIComponent(brand)}`);
+  if (Array.isArray(res)) return res;
+  if (res && Array.isArray(res.data)) return res.data;
+  return [];
 }
 

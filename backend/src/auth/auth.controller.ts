@@ -63,12 +63,12 @@ export class AuthController {
     }
 
     return {
-      id: user.id,
+      id: String(user.id),
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: user.role,
-      branchId: user.branchId,
+      role: user.role as any,
+      branchId: user.branchId ?? null,
     };
   }
 }

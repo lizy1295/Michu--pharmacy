@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getProducts, Product } from '@/lib/api/products';
 
 export default function HomePage() {
   const router = useRouter();
@@ -14,14 +15,54 @@ export default function HomePage() {
     setToastMessage(message);
     setTimeout(() => setToastMessage(null), 3000);
   };
+  const [categories, setCategories] = useState<{ name: string; count: string; color: string; icon: string }[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
-  const categories = [
-    { name: 'Medicines', icon: 'pill', count: '120+ Products', color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
-    { name: 'Supplements', icon: 'bottle', count: '85+ Products', color: 'bg-blue-50 text-blue-700 border-blue-100' },
-    { name: 'Cosmetics', icon: 'cream', count: '60+ Products', color: 'bg-purple-50 text-purple-700 border-purple-100' },
-    { name: 'Medical Devices', icon: 'device', count: '45+ Products', color: 'bg-amber-50 text-amber-700 border-amber-100' },
-    { name: 'Personal Care', icon: 'spray', count: '90+ Products', color: 'bg-pink-50 text-pink-700 border-pink-100' },
-  ];
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await getProducts();
+        const categoryMap = new Map<string, number>();
+        data.forEach((p: Product) => {
+          const cat = p.category || 'Other';
+          categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
+        });
+
+        const colorMap: Record<string, string> = {
+          'Medicine': 'bg-emerald-50 text-emerald-700 border-emerald-100',
+          'Supplement': 'bg-blue-50 text-blue-700 border-blue-100',
+          'Cosmetic': 'bg-purple-50 text-purple-700 border-purple-100',
+          'Medical Devices': 'bg-amber-50 text-amber-700 border-amber-100',
+          'Personal Care': 'bg-pink-50 text-pink-700 border-pink-100',
+        };
+
+        const iconMap: Record<string, string> = {
+          'Medicine': 'pill',
+          'Supplement': 'bottle',
+          'Cosmetic': 'cream',
+          'Medical Devices': 'device',
+          'Personal Care': 'spray',
+        };
+
+        const dynamicCategories = Array.from(categoryMap.entries())
+          .map(([name, count]) => ({
+            name,
+            count: `${count}+ Products`,
+            color: colorMap[name] || 'bg-gray-50 text-gray-700 border-gray-100',
+            icon: iconMap[name] || 'default',
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        setCategories(dynamicCategories);
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const features = [
     {
@@ -214,21 +255,27 @@ export default function HomePage() {
             Find the health, wellness, and beauty essentials you need instantly
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-6 md:gap-8">
-            {categories.map((cat, idx) => (
-              <button
-                key={idx}
-                onClick={() => router.push(`/products?category=${encodeURIComponent(cat.name === 'Medicines' ? '' : cat.name)}`)}
-                className="flex flex-col items-center group focus:outline-none"
-              >
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border transition duration-200 shadow-sm group-hover:scale-105 group-hover:shadow-md ${cat.color}`}>
-                  {renderIcon(cat.icon)}
-                </div>
-                <span className="text-sm font-bold text-neutral-700 mt-3 group-hover:text-brand-600 transition">
-                  {cat.name}
-                </span>
-                <span className="text-[10px] text-neutral-400 mt-0.5">{cat.count}</span>
-              </button>
-            ))}
+            {categoriesLoading ? (
+              <p className="text-sm text-neutral-500">Loading categories...</p>
+            ) : categories.length === 0 ? (
+              <p className="text-sm text-neutral-500">No categories available.</p>
+            ) : (
+              categories.map((cat, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => router.push(`/products?category=${encodeURIComponent(cat.name)}`)}
+                  className="flex flex-col items-center group focus:outline-none"
+                >
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border transition duration-200 shadow-sm group-hover:scale-105 group-hover:shadow-md ${cat.color}`}>
+                    {renderIcon(cat.icon)}
+                  </div>
+                  <span className="text-sm font-bold text-neutral-700 mt-3 group-hover:text-brand-600 transition">
+                    {cat.name}
+                  </span>
+                  <span className="text-[10px] text-neutral-400 mt-0.5">{cat.count}</span>
+                </button>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -389,6 +436,13 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-semibold animate-bounce">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

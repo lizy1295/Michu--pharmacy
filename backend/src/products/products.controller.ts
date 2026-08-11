@@ -25,6 +25,7 @@ import {
   ProductsService,
   CreateProductDto,
   UpdateProductDto,
+  ProductFilterDto,
 } from './products.service';
 
 @ApiTags('Products')
@@ -35,13 +36,22 @@ export class ProductsController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all products' })
-  findAll() {
-    return this.productsService.findAll();
+  @ApiOperation({ summary: 'Get all products with filters' })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'category', required: false, type: String })
+  @ApiQuery({ name: 'brand', required: false, type: String })
+  @ApiQuery({ name: 'minPrice', required: false, type: Number })
+  @ApiQuery({ name: 'maxPrice', required: false, type: Number })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'prescriptionRequired', required: false, type: Boolean })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  findAll(@Query() filter: ProductFilterDto) {
+    return this.productsService.findAll(filter);
   }
 
   @Get('search')
-  @ApiOperation({ summary: 'Search products by name' })
+  @ApiOperation({ summary: 'Search products by name, brand, or category' })
   @ApiQuery({
     name: 'q',
     required: true,
@@ -61,6 +71,18 @@ export class ProductsController {
     @Param('category') category: string,
   ) {
     return this.productsService.findByCategory(category);
+  }
+
+  @Get('brand/:brand')
+  @ApiOperation({ summary: 'Get products by brand' })
+  @ApiParam({
+    name: 'brand',
+    description: 'Product brand',
+  })
+  findByBrand(
+    @Param('brand') brand: string,
+  ) {
+    return this.productsService.findByBrand(brand);
   }
 
   @Get('filter/price')
@@ -83,6 +105,20 @@ export class ProductsController {
       min ? Number(min) : 0,
       max ? Number(max) : 999999,
     );
+  }
+
+  @Get('stats/top-selling')
+  @ApiOperation({ summary: 'Get top selling products' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  getTopSelling(@Query('limit') limit?: string) {
+    return this.productsService.getTopSelling(limit ? Number(limit) : 10);
+  }
+
+  @Get('stats/low-stock')
+  @ApiOperation({ summary: 'Get low stock products' })
+  @ApiQuery({ name: 'threshold', required: false, type: Number })
+  getLowStock(@Query('threshold') threshold?: string) {
+    return this.productsService.getLowStock(threshold ? Number(threshold) : 10);
   }
 
   @Get(':id')

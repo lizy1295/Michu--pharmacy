@@ -1,0 +1,33 @@
+import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { InventoryService } from './inventory.service';
+
+@ApiTags('Inventory')
+@Controller('inventory')
+export class InventoryController {
+  constructor(private readonly inventoryService: InventoryService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get inventory overview' })
+  getOverview() {
+    return this.inventoryService.getOverview();
+  }
+
+  @Get('low-stock')
+  @ApiOperation({ summary: 'Get low stock items' })
+  getLowStock() {
+    return this.inventoryService.getLowStock();
+  }
+
+  @Get('expired')
+  @ApiOperation({ summary: 'Get expired medicines' })
+  getExpired() {
+    return this.inventoryService.getExpired();
+  }
+
+  @Get('incoming')
+  @ApiOperation({ summary: 'Get incoming inventory' })
+  getIncoming() {
+    return this.inventoryService.getIncoming();
+  }
+}

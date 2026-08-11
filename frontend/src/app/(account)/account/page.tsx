@@ -5,10 +5,13 @@ import Link from 'next/link';
 import type { AuthUser } from '@michu/shared';
 import { getMe } from '@/lib/api/auth';
 import { clearTokens, getAccessToken } from '@/lib/auth/tokens';
+import { getOrdersByCustomer, Order } from '@/lib/api/orders';
 
 export default function AccountPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   const [activeTab, setActiveTab] = useState<'orders' | 'rx'>('orders');
 
   useEffect(() => {
@@ -19,7 +22,16 @@ export default function AccountPage() {
     }
 
     getMe()
-      .then(setUser)
+      .then((userData) => {
+        setUser(userData);
+        if (userData?.email) {
+          setLoadingOrders(true);
+          getOrdersByCustomer({ email: userData.email })
+            .then(setOrders)
+            .catch((err) => console.error('Failed to load customer orders', err))
+            .finally(() => setLoadingOrders(false));
+        }
+      })
       .catch(() => clearTokens())
       .finally(() => setLoading(false));
   }, []);
@@ -140,7 +152,6 @@ export default function AccountPage() {
 
           {/* Yene Loyalty Card Widget */}
           <div className="bg-gradient-to-tr from-brand-900 to-emerald-950 text-white rounded-2xl p-6 shadow-md relative overflow-hidden border border-brand-800">
-            {/* Background design elements */}
             <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-white/5 blur-xl pointer-events-none"></div>
             <div className="absolute -bottom-16 -left-16 w-32 h-32 rounded-full bg-brand-500/10 blur-xl pointer-events-none"></div>
 
@@ -181,7 +192,7 @@ export default function AccountPage() {
                 activeTab === 'orders' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Order History
+              Order History ({orders.length})
             </button>
             <button
               onClick={() => setActiveTab('rx')}
@@ -189,78 +200,68 @@ export default function AccountPage() {
                 activeTab === 'rx' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              My Prescriptions ({activeTab === 'rx' ? '2' : '2'})
+              My Prescriptions (2)
             </button>
           </div>
 
           {/* Tab 1: Orders */}
           {activeTab === 'orders' && (
             <div className="space-y-4">
-              {/* Order Item 1 */}
-              <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-3.5">
-                <div className="flex flex-col sm:flex-row justify-between border-b pb-3 gap-2">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase">Order ID</p>
-                    <p className="text-sm font-bold text-neutral-800">#MPH-998-1002</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase">Order Date</p>
-                    <p className="text-xs text-neutral-600 mt-0.5">July 10, 2026</p>
-                  </div>
-                  <div>
-                    <span className="bg-brand-50 border border-brand-100 text-brand-700 text-[10px] font-bold uppercase px-3 py-1 rounded-full">
-                      Home Delivering
-                    </span>
-                  </div>
+              {loadingOrders ? (
+                <div className="p-8 text-center text-slate-500 flex flex-col items-center">
+                  <svg className="animate-spin h-6 w-6 text-brand-600 mb-2" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <p className="text-xs font-semibold">Loading your orders...</p>
                 </div>
+              ) : orders.length > 0 ? (
+                orders.map((order) => (
+                  <div key={order.id} className="bg-white border rounded-2xl p-5 shadow-sm space-y-3.5">
+                    <div className="flex flex-col sm:flex-row justify-between border-b pb-3 gap-2">
+                      <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase">Order Ref</p>
+                        <p className="text-sm font-extrabold font-mono text-neutral-800">{order.orderNumber}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase">Order Date</p>
+                        <p className="text-xs text-neutral-600 mt-0.5">{new Date(order.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <span className={`text-[10px] font-extrabold uppercase px-3 py-1 rounded-full border ${
+                          order.paymentStatus === 'paid'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}>
+                          {order.paymentStatus.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600 font-medium">3D white charcoal whitening Tp &times; 1</span>
-                    <span className="font-bold text-neutral-800">500.00 ETB</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600 font-medium">(Exedexe) Dextromethorphan syrup &times; 2</span>
-                    <span className="font-bold text-neutral-800">480.00 ETB</span>
-                  </div>
-                </div>
+                    <div className="space-y-2">
+                      {Array.isArray(order.items) && order.items.map((item, i) => (
+                        <div key={i} className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600 font-medium">{item.name} &times; {item.quantity || 1}</span>
+                          <span className="font-bold text-neutral-800">{(Number(item.price) * (item.quantity || 1)).toFixed(2)} ETB</span>
+                        </div>
+                      ))}
+                    </div>
 
-                <div className="pt-3 border-t flex justify-between items-center">
-                  <p className="text-xs text-gray-400">Paid online via CBE Birr</p>
-                  <p className="text-sm font-extrabold text-neutral-900">Total: 1,127.00 ETB</p>
-                </div>
-              </div>
-
-              {/* Order Item 2 */}
-              <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-3.5 opacity-85">
-                <div className="flex flex-col sm:flex-row justify-between border-b pb-3 gap-2">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase">Order ID</p>
-                    <p className="text-sm font-bold text-neutral-800">#MPH-872-9112</p>
+                    <div className="pt-3 border-t flex justify-between items-center text-xs">
+                      <p className="text-gray-500">Paid via <strong className="uppercase text-brand-700">{order.paymentMethod || 'cash'}</strong></p>
+                      <p className="text-sm font-extrabold text-neutral-900 font-mono">Total: {Number(order.total).toFixed(2)} ETB</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase">Order Date</p>
-                    <p className="text-xs text-neutral-600 mt-0.5">June 18, 2026</p>
-                  </div>
-                  <div>
-                    <span className="bg-neutral-100 border text-neutral-600 text-[10px] font-bold uppercase px-3 py-1 rounded-full">
-                      Completed
-                    </span>
-                  </div>
+                ))
+              ) : (
+                <div className="p-10 border rounded-2xl bg-slate-50 text-center space-y-3">
+                  <p className="text-sm font-bold text-slate-700">No orders found in your order history</p>
+                  <p className="text-xs text-slate-400">Place an order using Telebirr or CBE Birr and it will appear here in real time.</p>
+                  <Link href="/products" className="inline-block rounded-full bg-brand-600 text-white font-bold text-xs px-6 py-2">
+                    Shop Products
+                  </Link>
                 </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600 font-medium">Michu Daily Multi-Vitamin &times; 1</span>
-                    <span className="font-bold text-neutral-800">350.00 ETB</span>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t flex justify-between items-center">
-                  <p className="text-xs text-gray-400">Paid in-cash at Ayat Branch</p>
-                  <p className="text-sm font-extrabold text-neutral-900">Total: 402.50 ETB</p>
-                </div>
-              </div>
+              )}
             </div>
           )}
 
