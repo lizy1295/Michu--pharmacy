@@ -1,42 +1,109 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
-import { getProductsFiltered, deleteProduct, Product } from '@/lib/api/admin';
+import { useSearchParams } from 'next/navigation';
+import { getProductsFiltered, deleteProduct, Product, getImageUrl, getCategories } from '@/lib/api/admin';
 
-export default function ProductsPage() {
+function AdminProductsContent() {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get('search') || '';
   const [products, setProducts] = useState<Product[]>([]);
+  const [categoriesList, setCategoriesList] = useState<string[]>([
+    'Medicines',
+    'Cosmetics',
+    'Supplements',
+    'Medical Devices',
+    'Personal Care',
+    'Baby Care',
+  ]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialSearch);
+  const [brandFilter, setBrandFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [stockFilter, setStockFilter] = useState('');
+  const [prescriptionFilter, setPrescriptionFilter] = useState('');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [view, setView] = useState<'table' | 'grid'>('table');
+  const [error, setError] = useState('');
 
-  const fetchProducts = async () => {
+  useEffect(() => {
+    getCategories()
+      .then(cats => {
+        if (cats && cats.length > 0) {
+          const names = cats.map(c => c.name);
+          setCategoriesList(prev => Array.from(new Set([...prev, ...names])));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const data = await getProductsFiltered({
-        search,
-        category: categoryFilter,
-        status: statusFilter,
+        search: search || undefined,
+        brand: brandFilter || undefined,
+        category: categoryFilter || undefined,
+        status: statusFilter || undefined,
+        prescriptionRequired: prescriptionFilter === 'true' ? true : prescriptionFilter === 'false' ? false : undefined,
         page,
         limit: 20,
       });
-      setProducts(data.data);
+      let items = data.data;
+      // Client-side sorting since the API doesn't support sort params
+      if (sortBy) {
+        items = [...items].sort((a, b) => {
+          let valA: any, valB: any;
+          switch (sortBy) {
+            case 'name':
+              valA = a.name?.toLowerCase() ?? '';
+              valB = b.name?.toLowerCase() ?? '';
+              break;
+            case 'price':
+              valA = parseFloat(String(a.price)) || 0;
+              valB = parseFloat(String(b.price)) || 0;
+              break;
+            case 'stock':
+              valA = a.stock || 0;
+              valB = b.stock || 0;
+              break;
+            case 'createdAt':
+            default:
+              valA = new Date(a.createdAt).getTime() || 0;
+              valB = new Date(b.createdAt).getTime() || 0;
+              break;
+          }
+          if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+          if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      // Client-side stock filter
+      if (stockFilter === 'in-stock') {
+        items = items.filter(p => p.stock > 0);
+      } else if (stockFilter === 'out-of-stock') {
+        items = items.filter(p => p.stock === 0);
+      } else if (stockFilter === 'low-stock') {
+        items = items.filter(p => p.stock > 0 && p.stock < 10);
+      }
+      setProducts(items);
       setTotal(data.total);
-    } catch (err) {
-      console.error('Failed to fetch products:', err);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch products');
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, brandFilter, categoryFilter, statusFilter, prescriptionFilter, stockFilter, sortBy, sortOrder, page]);
 
   useEffect(() => {
     fetchProducts();
-  }, [page, categoryFilter, statusFilter]);
+  }, [fetchProducts]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,15 +117,33 @@ export default function ProductsPage() {
       await deleteProduct(id);
       setProducts(prev => prev.filter(p => p.id !== id));
       setTotal(prev => prev - 1);
-    } catch (err) {
-      console.error('Failed to delete product:', err);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete product');
+    }
+  };
+
+  const toggleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
     }
   };
 
   const totalPages = Math.ceil(total / 20);
 
+  const SortIcon = ({ field }: { field: string }) => (
+    <span className="inline-flex ml-1">
+      {sortBy === field ? (
+        sortOrder === 'asc' ? '↑' : '↓'
+      ) : (
+        <span className="text-slate-300">↕</span>
+      )}
+    </span>
+  );
+
   return (
-    <AdminLayout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -71,31 +156,68 @@ export default function ProductsPage() {
           </Link>
         </div>
 
+        {error && (
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium">
+            {error}
+          </div>
+        )}
+
         {/* Filter Bar */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs">
-          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
+          <form onSubmit={handleSearch} className="flex flex-col lg:flex-row gap-3">
             <div className="relative flex-1">
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search products by name or brand..."
+                placeholder="Search products by name..."
                 className="w-full rounded-xl border border-slate-200 bg-slate-50/80 pl-10 pr-4 py-2 text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 placeholder:text-slate-400 transition"
               />
               <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
+            <input
+              type="text"
+              value={brandFilter}
+              onChange={(e) => { setBrandFilter(e.target.value); setPage(1); }}
+              placeholder="Search by brand..."
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2 text-sm focus:bg-white focus:border-emerald-500 outline-none text-slate-700 font-medium transition"
+            />
             <select value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2 text-sm focus:bg-white focus:border-emerald-500 outline-none text-slate-700 font-medium">
               <option value="">All Categories</option>
-              <option value="Medicine">Medicine</option>
-              <option value="Supplement">Supplement</option>
-              <option value="Cosmetic">Cosmetic</option>
-              <option value="Medical Devices">Medical Devices</option>
+              {categoriesList.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
             <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2 text-sm focus:bg-white focus:border-emerald-500 outline-none text-slate-700 font-medium">
               <option value="">All Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
+            <select value={stockFilter} onChange={(e) => { setStockFilter(e.target.value); setPage(1); }} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2 text-sm focus:bg-white focus:border-emerald-500 outline-none text-slate-700 font-medium">
+              <option value="">All Stock</option>
+              <option value="in-stock">In Stock</option>
+              <option value="low-stock">Low Stock {'<10'}</option>
+              <option value="out-of-stock">Out of Stock</option>
+            </select>
+            <select value={prescriptionFilter} onChange={(e) => { setPrescriptionFilter(e.target.value); setPage(1); }} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2 text-sm focus:bg-white focus:border-emerald-500 outline-none text-slate-700 font-medium">
+              <option value="">All Prescriptions</option>
+              <option value="true">Rx Required</option>
+              <option value="false">No Rx</option>
+            </select>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2 text-sm focus:bg-white focus:border-emerald-500 outline-none text-slate-700 font-medium">
+              <option value="createdAt">Sort: Date</option>
+              <option value="name">Sort: Name</option>
+              <option value="price">Sort: Price</option>
+              <option value="stock">Sort: Stock</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+              className="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 text-sm font-semibold hover:bg-slate-100 transition"
+              title="Toggle sort order"
+            >
+              {sortOrder === 'asc' ? '↑ Asc' : '↓ Desc'}
+            </button>
             <div className="flex rounded-xl border border-slate-200 overflow-hidden bg-slate-50 p-0.5">
               <button type="button" onClick={() => setView('table')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${view === 'table' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}>Table</button>
               <button type="button" onClick={() => setView('grid')} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${view === 'grid' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}>Grid</button>
@@ -110,12 +232,15 @@ export default function ProductsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 text-xs font-bold uppercase tracking-wider">
-                    <th className="text-left py-3.5 px-4">Product Name</th>
+                    <th className="text-left py-3.5 px-4">Product</th>
+                    <th className="text-left py-3.5 px-4 cursor-pointer hover:text-emerald-600" onClick={() => toggleSort('name')}>Name <SortIcon field="name" /></th>
                     <th className="text-left py-3.5 px-4">Brand</th>
                     <th className="text-left py-3.5 px-4">Category</th>
-                    <th className="text-left py-3.5 px-4">Price</th>
-                    <th className="text-left py-3.5 px-4">Stock</th>
+                    <th className="text-left py-3.5 px-4 cursor-pointer hover:text-emerald-600" onClick={() => toggleSort('price')}>Price <SortIcon field="price" /></th>
+                    <th className="text-left py-3.5 px-4 cursor-pointer hover:text-emerald-600" onClick={() => toggleSort('stock')}>Stock <SortIcon field="stock" /></th>
+                    <th className="text-left py-3.5 px-4">Rx</th>
                     <th className="text-left py-3.5 px-4">Status</th>
+                    <th className="text-left py-3.5 px-4 cursor-pointer hover:text-emerald-600" onClick={() => toggleSort('createdAt')}>Created <SortIcon field="createdAt" /></th>
                     <th className="text-right py-3.5 px-4">Actions</th>
                   </tr>
                 </thead>
@@ -123,15 +248,17 @@ export default function ProductsPage() {
                   {products.map((product) => (
                     <tr key={product.id} className="hover:bg-slate-50/60 transition">
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0 border border-emerald-100">
-                            💊
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900">{product.name}</p>
-                            <p className="text-xs text-slate-400 font-medium">SKU ID: #{product.id}</p>
-                          </div>
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                          {product.imageUrl ? (
+                            <img src={getImageUrl(product.imageUrl) as string} alt={product.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xl">💊</span>
+                          )}
                         </div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <p className="font-bold text-slate-900">{product.name}</p>
+                        <p className="text-xs text-slate-400 font-medium">ID: #{product.id}</p>
                       </td>
                       <td className="py-3.5 px-4 text-slate-600 font-medium">{product.brand || 'N/A'}</td>
                       <td className="py-3.5 px-4">
@@ -139,16 +266,26 @@ export default function ProductsPage() {
                           {product.category || 'General'}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 font-extrabold text-slate-900">ETB {parseFloat(product.price).toFixed(2)}</td>
+                      <td className="py-3.5 px-4 font-extrabold text-slate-900">ETB {parseFloat(String(product.price)).toFixed(2)}</td>
                       <td className="py-3.5 px-4">
-                        <span className={`font-bold ${product.stock < 10 ? 'text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100' : 'text-slate-700'}`}>
+                        <span className={`font-bold ${product.stock === 0 ? 'text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100' : product.stock < 10 ? 'text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100' : 'text-slate-700'}`}>
                           {product.stock} units
                         </span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {product.prescriptionRequired ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">Rx</span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">No</span>
+                        )}
                       </td>
                       <td className="py-3.5 px-4">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${product.status === 'active' || !product.status ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
                           {product.status || 'active'}
                         </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-500 text-xs font-medium">
+                        {new Date(product.createdAt).toLocaleDateString()}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
@@ -199,15 +336,24 @@ export default function ProductsPage() {
               <div key={product.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between shadow-xs">
                 <div>
                   <div className="aspect-video rounded-xl bg-slate-50 mb-3 flex items-center justify-center text-3xl border border-slate-100 overflow-hidden relative">
-                    {product.imageUrl ? <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" /> : '💊'}
+                    {product.imageUrl ? <img src={getImageUrl(product.imageUrl) as string} alt={product.name} className="w-full h-full object-cover" /> : '💊'}
+                    {product.prescriptionRequired && (
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200">Rx</span>
+                    )}
                   </div>
                   <h3 className="font-bold text-slate-900 line-clamp-1">{product.name}</h3>
                   <p className="text-xs text-slate-500 font-medium">{product.brand || 'Michu Pharmacy'}</p>
                   <div className="flex items-center justify-between mt-3">
-                    <span className="font-extrabold text-emerald-700 text-base">ETB {parseFloat(product.price).toFixed(2)}</span>
+                    <span className="font-extrabold text-emerald-700 text-base">ETB {parseFloat(String(product.price)).toFixed(2)}</span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${product.status === 'active' || !product.status ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
                       {product.status || 'active'}
                     </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-2 text-xs">
+                    <span className={`font-bold ${product.stock === 0 ? 'text-rose-600' : product.stock < 10 ? 'text-amber-600' : 'text-slate-500'}`}>
+                      {product.stock} units
+                    </span>
+                    <span className="text-slate-400">{new Date(product.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100">
@@ -219,6 +365,13 @@ export default function ProductsPage() {
           </div>
         )}
       </div>
-    </AdminLayout>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-slate-500 font-semibold">Loading products catalog...</div>}>
+      <AdminProductsContent />
+    </Suspense>
   );
 }

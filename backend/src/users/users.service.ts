@@ -41,13 +41,57 @@ export class UsersService {
       lastName: dto.lastName,
       phone: dto.phone ?? null,
       role: UserRole.CUSTOMER,
+      roleId: 1,
       branchId: null,
+      isActive: true,
+    });
+
+    return this.usersRepository.save(user);
+  }
+
+  async createStaffUser(data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    roleId?: number;
+    phone?: string;
+    branchId?: string;
+  }): Promise<User> {
+    const passwordHash = await bcrypt.hash(data.password, this.saltRounds);
+
+    const user = this.usersRepository.create({
+      email: data.email.toLowerCase(),
+      passwordHash,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phone: data.phone ?? null,
+      role: data.role,
+      roleId: data.roleId ?? 2,
+      branchId: data.branchId ?? null,
+      isActive: true,
+      emailVerified: true,
     });
 
     return this.usersRepository.save(user);
   }
 
   async validatePassword(user: User, password: string): Promise<boolean> {
-    return bcrypt.compare(password, user.passwordHash);
+    if (!user.passwordHash) return false;
+
+    if (user.passwordHash.startsWith('$2a$') || user.passwordHash.startsWith('$2b$')) {
+      return bcrypt.compare(password, user.passwordHash);
+    }
+
+    // Plaintext fallback upgrade if needed
+    if (user.passwordHash === password) {
+      user.passwordHash = await bcrypt.hash(password, this.saltRounds);
+      await this.usersRepository.save(user);
+      return true;
+    }
+
+    return false;
   }
 }
+

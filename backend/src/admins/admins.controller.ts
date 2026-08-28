@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Patch, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Patch, Delete, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { AdminsService } from './admins.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
@@ -11,6 +11,7 @@ export class AdminsController {
   constructor(private readonly adminsService: AdminsService) {}
 
   @Post('auth/login')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Admin login' })
   @ApiBody({ type: AdminLoginDto })
   login(@Body() dto: AdminLoginDto) {

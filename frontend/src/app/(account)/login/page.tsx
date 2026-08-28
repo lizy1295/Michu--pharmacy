@@ -3,11 +3,13 @@
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { login, register } from '@/lib/api/auth';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -31,7 +33,7 @@ export default function LoginPage() {
       }
       window.location.href = '/account';
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+      setError(err instanceof Error ? err.message : t('auth.error_generic'));
     } finally {
       setLoading(false);
     }
@@ -83,10 +85,10 @@ export default function LoginPage() {
             </div>
 
             <h3 className="text-2xl font-bold text-neutral-900">
-              {isRegister ? 'Create Account' : 'Welcome back'}
+              {isRegister ? t('auth.register_title') : t('auth.welcome_title')}
             </h3>
             <p className="text-xs text-gray-500 mt-1.5 text-center">
-              {isRegister ? 'Fill in your details to sign up' : 'Sign in to your account to continue'}
+              {isRegister ? t('auth.register_subtitle') : t('auth.welcome_subtitle')}
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 w-full space-y-4">
@@ -94,7 +96,7 @@ export default function LoginPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="firstName" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                      First Name
+                      {t('auth.first_name_label')}
                     </label>
                     <input
                       id="firstName"
@@ -107,7 +109,7 @@ export default function LoginPage() {
                   </div>
                   <div>
                     <label htmlFor="lastName" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                      Last Name
+                      {t('auth.last_name_label')}
                     </label>
                     <input
                       id="lastName"
@@ -126,7 +128,7 @@ export default function LoginPage() {
                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  Phone Number or Email
+                  {t('auth.email_label')}
                 </label>
                 <input
                   id="email"
@@ -143,7 +145,7 @@ export default function LoginPage() {
                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  Password
+                  {t('auth.password_label')}
                 </label>
                 <input
                   id="password"
@@ -176,30 +178,30 @@ export default function LoginPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Processing...
+                    {t('auth.loading')}
                   </span>
                 ) : isRegister ? (
-                  'Register'
+                  t('auth.submit_register')
                 ) : (
-                  'Sign In'
+                  t('auth.submit_sign_in')
                 )}
               </button>
             </form>
 
             <div className="w-full border-t border-neutral-200 mt-6 pt-4 text-center">
               <p className="text-sm text-gray-600">
-                {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+                {isRegister ? t('auth.have_account') : t('auth.no_account')}{' '}
                 <button
                   type="button"
                   onClick={() => setIsRegister(!isRegister)}
                   className="text-brand-600 hover:text-brand-800 font-bold hover:underline"
                 >
-                  {isRegister ? 'Sign in' : 'Register now'}
+                  {isRegister ? t('auth.login_link') : t('auth.register_link')}
                 </button>
               </p>
               
               <Link href="/" className="inline-block text-xs font-semibold text-gray-400 hover:text-gray-600 transition mt-4">
-                &larr; Back to home page
+                &larr; {t('ui.back')}
               </Link>
             </div>
 

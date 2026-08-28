@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { MOCK_CATEGORIES } from '@/lib/admin/mock-data';
+import { getProductById, updateProduct, uploadProductImage, getImageUrl } from '@/lib/api/admin';
 
-export default function AdminProductEditPage({ params }: { params: { id: string } }) {
+export default function AdminProductsEditPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
@@ -18,70 +18,67 @@ export default function AdminProductEditPage({ params }: { params: { id: string 
     prescriptionRequired: false,
     status: 'active',
     imageUrl: '',
-    gallery: [] as string[],
+    expiryDate: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`/api/products/${params.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setFormData({
-            name: data.name || '',
-            brand: data.brand || '',
-            category: data.category || '',
-            description: data.description || '',
-            price: data.price || '',
-            stock: data.stock?.toString() || '',
-            prescriptionRequired: data.prescriptionRequired || false,
-            status: data.status || 'active',
-            imageUrl: data.imageUrl || '',
-            gallery: data.gallery || [],
-          });
-        }
-      } catch (err) {
-        console.error('Failed to fetch product:', err);
+        const product = await getProductById(Number(id));
+        setFormData({
+          name: product.name || '',
+          brand: product.brand || '',
+          category: product.category || '',
+          description: product.description || '',
+          price: String(product.price ?? ''),
+          stock: String(product.stock ?? ''),
+          prescriptionRequired: product.prescriptionRequired ?? false,
+          status: product.status || 'active',
+          imageUrl: product.imageUrl || '',
+          expiryDate: product.expiryDate ? product.expiryDate.split('T')[0] : '',
+        });
+      } catch (err: any) {
+        setError(err.message || 'Failed to load product for editing');
       } finally {
         setLoading(false);
       }
     };
     fetchProduct();
-  }, [params.id]);
+  }, [id]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Invalid image type. Only JPG, JPEG, PNG, and WEBP are allowed.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be 5 MB or smaller.');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+    try {
+      const result = await uploadProductImage(file);
+      setFormData(prev => ({ ...prev, imageUrl: result.url }));
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          gallery: [...prev.gallery, reader.result as string]
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const removeGalleryImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      gallery: prev.gallery.filter((_, i) => i !== index)
-    }));
+  const removeImage = () => {
+    setFormData(prev => ({ ...prev, imageUrl: '' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,21 +87,19 @@ export default function AdminProductEditPage({ params }: { params: { id: string 
     setError('');
 
     try {
-      const response = await fetch(`/api/products/${params.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price) || 0,
-          stock: parseInt(formData.stock) || 0,
-        }),
+      await updateProduct(Number(id), {
+        name: formData.name,
+        brand: formData.brand || undefined,
+        category: formData.category || undefined,
+        description: formData.description || undefined,
+        price: parseFloat(formData.price) || 0,
+        stock: parseInt(formData.stock) || 0,
+        prescriptionRequired: formData.prescriptionRequired,
+        status: formData.status as 'active' | 'inactive',
+        imageUrl: formData.imageUrl || undefined,
+        expiryDate: formData.expiryDate || undefined,
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update product');
-      }
-
-      router.push(`/admin/products/${params.id}`);
+      router.push(`/admin/products/${id}`);
     } catch (err: any) {
       setError(err.message || 'Failed to update product');
     } finally {
@@ -114,174 +109,214 @@ export default function AdminProductEditPage({ params }: { params: { id: string 
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="w-12 h-12 border-4 border-emerald-700/30 border-t-emerald-500 rounded-full animate-spin"></div>
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-12 h-12 border-4 border-emerald-700/30 border-t-emerald-500 rounded-full animate-spin"></div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href={`/admin/products/${params.id}`} className="p-2 rounded-xl border border-emerald-700/30 text-emerald-400 hover:bg-emerald-800/30 transition">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-          </Link>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center gap-4">
+        <Link href={`/admin/products/${id}`} className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-xs">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-900">Edit Product</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Update catalog details for #{id}</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium">
+            {error}
+          </div>
+        )}
+
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5">
+          <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Basic Information</h2>
+
           <div>
-            <h1 className="text-2xl font-bold text-white">Edit Product</h1>
-            <p className="text-sm text-emerald-300/80 mt-1">Update product information</p>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Product Name <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g. Paracetamol 500mg Tablets"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Brand / Manufacturer</label>
+              <input
+                type="text"
+                value={formData.brand}
+                onChange={e => setFormData(prev => ({ ...prev, brand: e.target.value }))}
+                placeholder="e.g. GSK, Bayer, Novartis"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Category</label>
+              <select
+                value={formData.category}
+                onChange={e => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 bg-white"
+              >
+                <option value="">Select category...</option>
+                <option value="Medicines">Medicines</option>
+                <option value="Cosmetics">Cosmetics</option>
+                <option value="Supplements">Supplements</option>
+                <option value="Medical Devices">Medical Devices</option>
+                <option value="Personal Care">Personal Care</option>
+                <option value="Baby Care">Baby Care</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Description</label>
+            <textarea
+              rows={3}
+              value={formData.description}
+              onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Dosage instructions, indications, package contents..."
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800"
+            />
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
-              {error}
-            </div>
-          )}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-5">
+          <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Pricing & Inventory</h2>
 
-          <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-emerald-700/30 p-6 space-y-6">
-            <h3 className="text-lg font-semibold text-white border-b border-emerald-700/30 pb-3">Basic Information</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-emerald-200 mb-2">Product Name *</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  required
-                  className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-emerald-200 mb-2">Brand</label>
-                <input
-                  type="text"
-                  value={formData.brand}
-                  onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
-                  className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-emerald-200 mb-2">Category *</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  required
-                  className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 outline-none text-emerald-200"
-                >
-                  <option value="">Select category</option>
-                  {MOCK_CATEGORIES.map(cat => (
-                    <option key={cat.id} value={cat.name}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-emerald-200 mb-2">Price (ETB) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                  required
-                  className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-emerald-200 mb-2">Stock Quantity</label>
-                <input
-                  type="number"
-                  value={formData.stock}
-                  onChange={(e) => setFormData(prev => ({ ...prev, stock: e.target.value }))}
-                  className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-emerald-200 mb-2">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                  className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 outline-none text-emerald-200"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-            </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="flex items-center gap-3 cursor-pointer">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                Price (ETB) <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                value={formData.price}
+                onChange={e => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                placeholder="0.00"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                Stock Quantity <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={formData.stock}
+                onChange={e => setFormData(prev => ({ ...prev, stock: e.target.value }))}
+                placeholder="0"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Status</label>
+              <select
+                value={formData.status}
+                onChange={e => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 bg-white"
+              >
+                <option value="active">Active (Visible)</option>
+                <option value="inactive">Inactive (Hidden)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Expiry Date</label>
+              <input
+                type="date"
+                value={formData.expiryDate}
+                onChange={e => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 bg-white"
+              />
+            </div>
+            <div className="flex items-center pt-6">
+              <label className="relative flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={formData.prescriptionRequired}
-                  onChange={(e) => setFormData(prev => ({ ...prev, prescriptionRequired: e.target.checked }))}
-                  className="rounded border-emerald-600 text-emerald-500 focus:ring-emerald-500 w-5 h-5"
+                  onChange={e => setFormData(prev => ({ ...prev, prescriptionRequired: e.target.checked }))}
+                  className="w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500"
                 />
-                <span className="text-sm font-medium text-emerald-200">Prescription Required</span>
+                <span className="text-sm font-semibold text-slate-700">Prescription Required (Rx)</span>
               </label>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-emerald-200 mb-2">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                rows={4}
-                className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white resize-none"
-              />
-            </div>
           </div>
+        </div>
 
-          <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-emerald-700/30 p-6 space-y-6">
-            <h3 className="text-lg font-semibold text-white border-b border-emerald-700/30 pb-3">Media</h3>
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4">
+          <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Product Image</h2>
 
-            <div>
-              <label className="block text-sm font-medium text-emerald-200 mb-2">Product Image</label>
-              <div className="flex items-start gap-4">
-                <div className="w-32 h-32 rounded-xl border-2 border-dashed border-emerald-700/50 flex items-center justify-center overflow-hidden bg-slate-900/50">
-                  {formData.imageUrl ? (
-                    <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="block w-full text-sm text-emerald-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500"
-                  />
-                </div>
+          {formData.imageUrl ? (
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <img src={getImageUrl(formData.imageUrl) as string} alt="Preview" className="w-16 h-16 object-cover rounded-lg border border-slate-200 bg-white" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-slate-500 truncate">{formData.imageUrl}</p>
               </div>
+              <button
+                type="button"
+                onClick={removeImage}
+                className="px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 text-xs font-bold hover:bg-rose-50 transition"
+              >
+                Remove
+              </button>
             </div>
-          </div>
+          ) : (
+            <div>
+              <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-xl hover:border-emerald-500 transition cursor-pointer bg-slate-50/50 hover:bg-emerald-50/20">
+                <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-xs font-semibold text-slate-700">
+                  {uploading ? 'Uploading image...' : 'Click to upload or drag & drop image'}
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">JPG, PNG, or WEBP up to 5 MB</p>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageUpload}
+                  disabled={uploading}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          )}
+        </div>
 
-          <div className="flex items-center justify-end gap-3">
-            <Link
-              href={`/admin/products/${params.id}`}
-              className="px-6 py-2.5 rounded-xl border border-emerald-700/30 text-emerald-300 text-sm font-medium hover:bg-emerald-800/30 transition"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500 transition disabled:opacity-50 shadow-lg shadow-emerald-900/50"
-            >
-              {saving ? 'Saving...' : 'Update Product'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </AdminLayout>
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <Link
+            href={`/admin/products/${id}`}
+            className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition"
+          >
+            Cancel
+          </Link>
+          <button
+            type="submit"
+            disabled={saving || uploading}
+            className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition shadow-md shadow-emerald-600/20 disabled:opacity-50"
+          >
+            {saving ? 'Saving changes...' : 'Update Product'}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

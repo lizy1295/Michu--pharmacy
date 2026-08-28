@@ -10,11 +10,11 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
     const dbType = this.configService.get<string>('DB_TYPE', 'sqlite');
     const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
 
-   const shared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging'> = {
-  autoLoadEntities: true,
-  synchronize: false,
-  logging: !isProduction,
-  };
+    const shared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging'> = {
+      autoLoadEntities: true,
+      synchronize: !isProduction,
+      logging: !isProduction,
+    };
 
     if (dbType === 'postgres') {
       return {

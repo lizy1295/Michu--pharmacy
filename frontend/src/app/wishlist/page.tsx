@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCart } from '@/context/CartContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 const renderProductImage = (type?: string) => {
   switch (type) {
@@ -19,6 +20,7 @@ const renderProductImage = (type?: string) => {
 };
 
 export default function WishlistPage() {
+  const { t } = useLanguage();
   const { wishlistItems, removeFromWishlist, clearWishlist, wishlistCount } = useWishlist();
   const { addToCart } = useCart();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export default function WishlistPage() {
       imageType: item.imageType,
     });
     removeFromWishlist(item.id);
-    triggerToast(`Moved ${item.name.split(' ')[0]} to cart!`);
+    triggerToast(`${t('wishlist.move_to_cart')}: ${item.name.split(' ')[0]}`);
   };
 
   return (
@@ -50,18 +52,18 @@ export default function WishlistPage() {
       )}
 
       <nav className="text-xs font-semibold text-gray-500 flex items-center gap-1.5 mb-6">
-        <Link href="/" className="hover:text-brand-600 transition">Home</Link>
+        <Link href="/" className="hover:text-brand-600 transition">{t('nav.home')}</Link>
         <span>&gt;</span>
-        <span className="text-brand-700">My Wishlist</span>
+        <span className="text-brand-700">{t('wishlist.title')}</span>
       </nav>
 
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">My Wishlist</h1>
+          <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">{t('wishlist.title')}</h1>
           <p className="text-sm text-neutral-500 mt-1">
             {wishlistCount > 0
-              ? `You have ${wishlistCount} item${wishlistCount > 1 ? 's' : ''} saved for later.`
-              : 'Save items you love by clicking the heart icon on any product.'}
+              ? `${wishlistCount} ${t('wishlist.items')}`
+              : t('wishlist.empty_desc')}
           </p>
         </div>
         {wishlistCount > 0 && (
@@ -69,7 +71,7 @@ export default function WishlistPage() {
             onClick={clearWishlist}
             className="text-xs font-bold text-red-600 hover:text-red-800 transition"
           >
-            Clear All
+            {t('ui.close')}
           </button>
         )}
       </div>
@@ -98,12 +100,12 @@ export default function WishlistPage() {
                   className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold py-2 text-xs transition shadow-sm"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                  Add to Cart
+                  {t('wishlist.move_to_cart')}
                 </button>
                 <button
                   onClick={() => {
                     removeFromWishlist(item.id);
-                    triggerToast('Removed from wishlist');
+                    triggerToast(t('products.removed_wishlist'));
                   }}
                   className="p-2 rounded-xl border border-gray-300 text-neutral-400 hover:text-red-600 hover:bg-red-50 transition"
                   aria-label="Remove"
@@ -117,10 +119,10 @@ export default function WishlistPage() {
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center border rounded-2xl bg-gray-50/50">
           <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-          <h2 className="text-xl font-bold text-gray-800 mt-4">Your Wishlist is Empty</h2>
-          <p className="text-sm text-gray-500 mt-1 max-w-sm">Save your favorite products by clicking the heart icon on any product page.</p>
+          <h2 className="text-xl font-bold text-gray-800 mt-4">{t('wishlist.empty_title')}</h2>
+          <p className="text-sm text-gray-500 mt-1 max-w-sm">{t('wishlist.empty_desc')}</p>
           <Link href="/products" className="mt-6 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-2.5 text-xs transition">
-            Browse Products
+            {t('wishlist.browse')}
           </Link>
         </div>
       )}

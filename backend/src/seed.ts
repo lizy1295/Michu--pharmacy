@@ -1,6 +1,25 @@
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+dotenv.config({ path: path.join(__dirname, '../.env') });
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ProductsService } from './products/products.service';
+import { CategoriesService } from './categories/categories.service';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from './users/entities/user.entity';
+import { Admin } from './admins/entities/admin.entity';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import { UserRole } from '@michu/shared';
+
+const SAMPLE_CATEGORIES = [
+  { name: 'Medicines', slug: 'medicines', description: 'Prescription & OTC pharmaceuticals', status: 'active', displayOrder: 1 },
+  { name: 'Cosmetics', slug: 'cosmetics', description: 'Skincare, haircare, and beauty products', status: 'active', displayOrder: 2 },
+  { name: 'Supplements', slug: 'supplements', description: 'Vitamins, minerals, and dietary supplements', status: 'active', displayOrder: 3 },
+  { name: 'Medical Devices', slug: 'medical-devices', description: 'Diagnostic tools, nebulizers, and home healthcare devices', status: 'active', displayOrder: 4 },
+  { name: 'Personal Care', slug: 'personal-care', description: 'Hygiene, oral care, and sanitizers', status: 'active', displayOrder: 5 },
+];
 
 const SAMPLE_PRODUCTS = [
   {
@@ -126,17 +145,112 @@ const SAMPLE_PRODUCTS = [
   },
 ];
 
+const ADMIN_ACCOUNTS = [
+  {
+    email: 'admin@michupharmacy.com',
+    password: 'password123',
+    firstName: 'Super',
+    lastName: 'Admin',
+    role: UserRole.SUPERADMIN,
+    phone: '+251-911-000-000',
+  },
+  {
+    email: 'superadmin@michupharmacy.com',
+    password: 'password123',
+    firstName: 'Super',
+    lastName: 'Admin',
+    role: UserRole.SUPERADMIN,
+    phone: '+251-911-111-111',
+  },
+  {
+    email: 'pharmacist@michupharmacy.com',
+    password: 'password123',
+    firstName: 'Lead',
+    lastName: 'Pharmacist',
+    role: UserRole.PHARMACIST,
+    phone: '+251-911-222-222',
+  },
+];
+
 async function seed() {
   const app = await NestFactory.create(AppModule);
+  const categoriesService = app.get(CategoriesService);
   const productsService = app.get(ProductsService);
+  const userRepo: Repository<User> = app.get(getRepositoryToken(User));
+  const adminRepo: Repository<Admin> = app.get(getRepositoryToken(Admin));
+
+  console.log('🌱 Starting to seed admin accounts and roles...');
+  const passwordHash = await bcrypt.hash('password123', 10);
+
+  for (const acc of ADMIN_ACCOUNTS) {
+    // 1. Seed or update in users table
+    const existingUser = await userRepo.findOne({ where: { email: acc.email } });
+    if (existingUser) {
+      existingUser.passwordHash = passwordHash;
+      existingUser.role = acc.role;
+      existingUser.isActive = true;
+      existingUser.firstName = acc.firstName;
+      existingUser.lastName = acc.lastName;
+      await userRepo.save(existingUser);
+      console.log(`✅ User Account Updated: ${acc.email} (${acc.role})`);
+    } else {
+      const newUser = userRepo.create({
+        email: acc.email,
+        passwordHash,
+        firstName: acc.firstName,
+        lastName: acc.lastName,
+        role: acc.role,
+        roleId: acc.role === UserRole.SUPERADMIN ? 3 : 4,
+        phone: acc.phone,
+        isActive: true,
+        emailVerified: true,
+      });
+      await userRepo.save(newUser);
+      console.log(`✅ User Account Created: ${acc.email} (${acc.role})`);
+    }
+
+    // 2. Seed or update in admins table
+    const existingAdmin = await adminRepo.findOne({ where: { email: acc.email } });
+    if (existingAdmin) {
+      existingAdmin.passwordHash = passwordHash;
+      existingAdmin.role = acc.role;
+      existingAdmin.isActive = true;
+      existingAdmin.name = `${acc.firstName} ${acc.lastName}`;
+      await adminRepo.save(existingAdmin);
+      console.log(`✅ Admin Record Updated: ${acc.email}`);
+    } else {
+      const newAdmin = adminRepo.create({
+        email: acc.email,
+        passwordHash,
+        name: `${acc.firstName} ${acc.lastName}`,
+        role: acc.role,
+        phone: acc.phone,
+        isActive: true,
+      });
+      await adminRepo.save(newAdmin);
+      console.log(`✅ Admin Record Created: ${acc.email}`);
+    }
+  }
+
+  console.log('🌱 Starting to seed categories...');
+  for (const category of SAMPLE_CATEGORIES) {
+    try {
+      const existing = await categoriesService.findAll();
+      if (!existing.find((c: any) => c.slug === category.slug)) {
+        await categoriesService.create(category as any);
+        console.log(`✅ Category Created: ${category.name}`);
+      }
+    } catch (err: any) {
+      console.log(`ℹ️ Category ${category.name}: ${err.message}`);
+    }
+  }
 
   console.log('🌱 Starting to seed products...');
-
   for (const product of SAMPLE_PRODUCTS) {
     const existing = await productsService.findAll();
     if (!existing.data.find((p: any) => p.name === product.name)) {
       await productsService.create(product);
-      console.log(`✅ Created: ${product.name}`);
+      console.log(`✅ Product Created: ${product.name}`);
     }
   }
 
@@ -148,3 +262,4 @@ seed().catch((error) => {
   console.error('❌ Seeding failed:', error);
   process.exit(1);
 });
+

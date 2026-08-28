@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useCart } from '@/context/CartContext';
-import { getProducts, getProductsByCategory, getProductsByBrand, Product } from '@/lib/api/products';
+import { getProducts, getProductsByCategory, getProductsByBrand, Product, getImageUrl } from '@/lib/api/products';
 
 const BRANCHES_LIST = [
   'All Branches',
@@ -15,6 +15,40 @@ const BRANCHES_LIST = [
   'Figa Branch',
   'Hawassa Branch',
   'Jemo Branch',
+];
+
+const COMMON_BRANDS = [
+  'All Brands',
+  'EPHARM (Ethiopian Pharm. Mfg.)',
+  'Cadila Pharmaceuticals Ethiopia',
+  'Julphar Pharmaceuticals',
+  'Addis Pharmaceuticals Factory (APF)',
+  'Novartis',
+  'Sanofi',
+  'GSK (GlaxoSmithKline)',
+  'Pfizer',
+  'AstraZeneca',
+  'Denk Pharma Germany',
+  'DKT Ethiopia',
+  'Cipla',
+  'Medreich',
+  'Bayer',
+  'CeraVe',
+  'Neutrogena',
+  'Gedeon Richter',
+  'Johnson & Johnson',
+  'Michu Health',
+];
+
+const COMMON_CATEGORIES = [
+  'All Categories',
+  'Medicine',
+  'Supplement',
+  'Cosmetic',
+  'Medical Devices',
+  'Personal Care',
+  'Baby & Mother',
+  'First Aid',
 ];
 
 const getProductImageType = (name: string, category: string | null): string => {
@@ -50,7 +84,7 @@ const getProductBranches = (id: number): string[] => {
   return branches;
 };
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { addToCart } = useCart();
@@ -188,7 +222,7 @@ export default function ProductsPage() {
       if (rxNo && !rxYes && product.prescriptionRequired) return false;
 
       // 5. Price Filter
-      const priceVal = parseFloat(product.price);
+      const priceVal = parseFloat(String(product.price)) || 0;
       if (minPrice && priceVal < parseFloat(minPrice)) return false;
       if (maxPrice && priceVal > parseFloat(maxPrice)) return false;
 
@@ -203,8 +237,8 @@ export default function ProductsPage() {
 
       return true;
     }).sort((a, b) => {
-      const priceA = parseFloat(a.price);
-      const priceB = parseFloat(b.price);
+      const priceA = parseFloat(String(a.price)) || 0;
+      const priceB = parseFloat(String(b.price)) || 0;
       // Sorting
       if (sortBy === 'price-asc') {
         return priceA - priceB;
@@ -284,11 +318,12 @@ export default function ProductsPage() {
   };
 
   const renderProductImage = (product: Product) => {
-    if (product.imageUrl) {
+    const fullImgUrl = getImageUrl(product.imageUrl);
+    if (fullImgUrl) {
       return (
         <div className="w-full h-full relative">
           <img
-            src={product.imageUrl}
+            src={fullImgUrl}
             alt={product.name}
             className="w-full h-full object-cover rounded-2xl"
           />
@@ -351,10 +386,13 @@ export default function ProductsPage() {
       {/* Grid Layout: Left sidebar filters & right product listing */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         
-        {/* Sidebar Filters */}
-        <aside className="space-y-6 lg:border-r lg:pr-8 border-gray-200">
+        {/* Sticky Sidebar Filters */}
+        <aside className="space-y-6 lg:border-r lg:pr-6 border-gray-200 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:scrollbar-thin">
           <div className="flex items-center justify-between pb-3 border-b">
-            <h2 className="text-lg font-bold text-gray-900 uppercase tracking-tight">Filters</h2>
+            <h2 className="text-lg font-extrabold text-gray-900 uppercase tracking-tight flex items-center gap-2">
+              <span>⚡</span>
+              <span>Filters</span>
+            </h2>
             <button
               onClick={handleClearFilters}
               className="text-xs font-bold text-brand-600 hover:text-brand-800 transition"
@@ -363,9 +401,77 @@ export default function ProductsPage() {
             </button>
           </div>
 
-          {/* Filter 1: Prescription Required */}
+          {/* Filter 1: Common Pharmacy Brands */}
           <div className="space-y-3">
-            <h3 className="font-bold text-sm text-gray-700 uppercase tracking-wider">Prescription Required</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-xs text-gray-700 uppercase tracking-wider">Shop by Brand</h3>
+              {urlBrand && (
+                <span className="text-[10px] bg-brand-50 text-brand-700 font-bold px-2 py-0.5 rounded-full border border-brand-200">
+                  {urlBrand}
+                </span>
+              )}
+            </div>
+            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-2.5 bg-gray-50/50 space-y-1.5 text-xs">
+              {COMMON_BRANDS.map((brandName) => {
+                const isSelected = brandName === 'All Brands' ? !urlBrand : urlBrand === brandName;
+                return (
+                  <button
+                    key={brandName}
+                    type="button"
+                    onClick={() => {
+                      if (brandName === 'All Brands') {
+                        router.push('/products');
+                      } else {
+                        router.push(`/products?brand=${encodeURIComponent(brandName)}`);
+                      }
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg font-medium transition flex items-center justify-between ${
+                      isSelected
+                        ? 'bg-brand-600 text-white font-bold shadow-xs'
+                        : 'text-gray-700 hover:bg-brand-50 hover:text-brand-700'
+                    }`}
+                  >
+                    <span className="truncate">{brandName}</span>
+                    {isSelected && <span className="text-[10px]">✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Filter 2: Categories */}
+          <div className="space-y-3 pt-1">
+            <h3 className="font-bold text-xs text-gray-700 uppercase tracking-wider">Categories</h3>
+            <div className="flex flex-wrap gap-1.5">
+              {COMMON_CATEGORIES.map((cat) => {
+                const isSelected = cat === 'All Categories' ? !urlCategory : urlCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => {
+                      if (cat === 'All Categories') {
+                        router.push('/products');
+                      } else {
+                        router.push(`/products?category=${encodeURIComponent(cat)}`);
+                      }
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition border ${
+                      isSelected
+                        ? 'bg-brand-700 text-white border-brand-700 shadow-xs'
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Filter 3: Prescription Required */}
+          <div className="space-y-3 pt-1">
+            <h3 className="font-bold text-xs text-gray-700 uppercase tracking-wider">Prescription Required</h3>
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
                 <input
@@ -374,7 +480,7 @@ export default function ProductsPage() {
                   onChange={() => setRxYes(!rxYes)}
                   className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 border-gray-300 transition"
                 />
-                <span>Yes</span>
+                <span>Rx Required</span>
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
                 <input
@@ -383,40 +489,39 @@ export default function ProductsPage() {
                   onChange={() => setRxNo(!rxNo)}
                   className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 border-gray-300 transition"
                 />
-                <span>No</span>
+                <span>Over-The-Counter (No Rx)</span>
               </label>
             </div>
           </div>
 
-          {/* Filter 2: Price Range */}
-          <div className="space-y-3 pt-2">
-            <h3 className="font-bold text-sm text-gray-700 uppercase tracking-wider">Price Range</h3>
+          {/* Filter 4: Price Range */}
+          <div className="space-y-3 pt-1">
+            <h3 className="font-bold text-xs text-gray-700 uppercase tracking-wider">Price Range (ETB)</h3>
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                placeholder="MIN (ETB)"
+                placeholder="MIN"
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
-                className="w-full text-xs rounded-lg border border-gray-300 px-3 py-2 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full text-xs rounded-xl border border-gray-300 px-3 py-2 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 bg-gray-50/50"
               />
-              <span className="text-gray-400 text-xs font-bold">to</span>
+              <span className="text-gray-400 text-xs font-bold">-</span>
               <input
                 type="number"
-                placeholder="MAX (ETB)"
+                placeholder="MAX"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
-                className="w-full text-xs rounded-lg border border-gray-300 px-3 py-2 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full text-xs rounded-xl border border-gray-300 px-3 py-2 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 bg-gray-50/50"
               />
             </div>
           </div>
 
-          {/* Filter 3: Branches */}
-          <div className="space-y-3 pt-2">
-            <h3 className="font-bold text-sm text-gray-700 uppercase tracking-wider">Branches</h3>
-            {/* Scrollable list of branches */}
-            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-3 bg-gray-50/50 space-y-2.5">
+          {/* Filter 5: Branches */}
+          <div className="space-y-3 pt-1">
+            <h3 className="font-bold text-xs text-gray-700 uppercase tracking-wider">Branches Availability</h3>
+            <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-xl p-2.5 bg-gray-50/50 space-y-2 text-xs">
               {BRANCHES_LIST.map((branch) => (
-                <label key={branch} className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                <label key={branch} className="flex items-center gap-2 text-gray-600 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={
@@ -473,7 +578,7 @@ export default function ProductsPage() {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filteredProducts.map((product) => {
                 const isFav = wishlist.includes(String(product.id));
-                const priceNum = parseFloat(product.price);
+                const priceNum = parseFloat(String(product.price)) || 0;
                 const productBranches = getProductBranches(product.id);
                 return (
                   <div
@@ -624,5 +729,13 @@ export default function ProductsPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-semibold">Loading product catalog...</div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }

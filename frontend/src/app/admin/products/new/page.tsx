@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { MOCK_CATEGORIES } from '@/lib/admin/mock-data';
+import { createProduct, uploadProductImage, getImageUrl } from '@/lib/api/admin';
 
 export default function AdminProductsNewPage() {
   const router = useRouter();
@@ -18,41 +17,43 @@ export default function AdminProductsNewPage() {
     prescriptionRequired: false,
     status: 'active',
     imageUrl: '',
-    gallery: [] as string[],
+    expiryDate: '',
   });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Invalid image type. Only JPG, JPEG, PNG, and WEBP are allowed.');
+      return;
+    }
+
+    // Validate file size (5 MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be 5 MB or smaller.');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+    try {
+      const result = await uploadProductImage(file);
+      setFormData(prev => ({ ...prev, imageUrl: result.url }));
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          gallery: [...prev.gallery, reader.result as string]
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const removeGalleryImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      gallery: prev.gallery.filter((_, i) => i !== index)
-    }));
+  const removeImage = () => {
+    setFormData(prev => ({ ...prev, imageUrl: '' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,20 +62,18 @@ export default function AdminProductsNewPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price) || 0,
-          stock: parseInt(formData.stock) || 0,
-        }),
+      await createProduct({
+        name: formData.name,
+        brand: formData.brand || undefined,
+        category: formData.category || undefined,
+        description: formData.description || undefined,
+        price: parseFloat(formData.price) || 0,
+        stock: parseInt(formData.stock) || 0,
+        prescriptionRequired: formData.prescriptionRequired,
+        status: formData.status as 'active' | 'inactive',
+        imageUrl: formData.imageUrl || undefined,
+        expiryDate: formData.expiryDate || undefined,
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to create product');
-      }
-
       router.push('/admin/products');
     } catch (err: any) {
       setError(err.message || 'Failed to create product');
@@ -84,7 +83,6 @@ export default function AdminProductsNewPage() {
   };
 
   return (
-    <AdminLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Link href="/admin/products" className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-xs">
@@ -136,12 +134,15 @@ export default function AdminProductsNewPage() {
                   value={formData.category}
                   onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                   required
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-sm focus:bg-white focus:border-emerald-500 outline-none text-slate-800 font-medium transition"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 transition"
                 >
-                  <option value="">Select category</option>
-                  {MOCK_CATEGORIES.map(cat => (
-                    <option key={cat.id} value={cat.name}>{cat.name}</option>
-                  ))}
+                  <option value="">Select category...</option>
+                  <option value="Medicines">Medicines</option>
+                  <option value="Cosmetics">Cosmetics</option>
+                  <option value="Supplements">Supplements</option>
+                  <option value="Medical Devices">Medical Devices</option>
+                  <option value="Personal Care">Personal Care</option>
+                  <option value="Baby Care">Baby Care</option>
                 </select>
               </div>
 
@@ -166,6 +167,16 @@ export default function AdminProductsNewPage() {
                   onChange={(e) => setFormData(prev => ({ ...prev, stock: e.target.value }))}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 placeholder:text-slate-400 transition"
                   placeholder="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Expiry Date</label>
+                <input
+                  type="date"
+                  value={formData.expiryDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 transition"
                 />
               </div>
 
@@ -210,55 +221,39 @@ export default function AdminProductsNewPage() {
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-6 shadow-xs">
-            <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Media & Images</h3>
+            <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Product Image</h3>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Primary Product Image</label>
               <div className="flex items-start gap-4">
                 <div className="w-32 h-32 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50">
                   {formData.imageUrl ? (
-                    <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <img src={getImageUrl(formData.imageUrl) as string} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
                     <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                   )}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 space-y-3">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png,.webp"
                     onChange={handleImageUpload}
-                    className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition"
+                    disabled={uploading}
+                    className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition disabled:opacity-50"
                   />
-                  <p className="text-xs text-slate-400 mt-2">Upload a main product photo (JPG, PNG, max 5MB)</p>
+                  <p className="text-xs text-slate-400">JPG, JPEG, PNG, or WEBP. Max 5 MB.</p>
+                  {uploading && <p className="text-xs text-emerald-600 font-semibold">Uploading...</p>}
+                  {formData.imageUrl && (
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-bold hover:bg-rose-100 transition"
+                    >
+                      Remove Image
+                    </button>
+                  )}
                 </div>
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Gallery Images</label>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleGalleryUpload}
-                className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition"
-              />
-              {formData.gallery.length > 0 && (
-                <div className="grid grid-cols-4 gap-3 mt-4">
-                  {formData.gallery.map((img, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200">
-                      <img src={img} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removeGalleryImage(idx)}
-                        className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
@@ -271,7 +266,7 @@ export default function AdminProductsNewPage() {
             </Link>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploading}
               className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition disabled:opacity-50 shadow-md shadow-emerald-600/20"
             >
               {loading ? 'Saving...' : 'Save Product'}
@@ -279,6 +274,5 @@ export default function AdminProductsNewPage() {
           </div>
         </form>
       </div>
-    </AdminLayout>
   );
 }

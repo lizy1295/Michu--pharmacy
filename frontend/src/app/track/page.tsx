@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 const MOCK_ORDERS: Record<string, {
   id: string;
@@ -58,6 +59,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function TrackPage() {
+  const { t } = useLanguage();
   const [orderId, setOrderId] = useState('');
   const [result, setResult] = useState<(typeof MOCK_ORDERS)[string] | null>(null);
   const [error, setError] = useState('');
@@ -70,31 +72,31 @@ export default function TrackPage() {
     if (MOCK_ORDERS[trimmed]) {
       setResult(MOCK_ORDERS[trimmed]);
     } else {
-      setError('Order not found. Please check your order ID and try again. Try MPH-998-1002 for a demo.');
+      setError(t('track.not_found'));
     }
   };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <div className="text-center max-w-xl mx-auto mb-10">
-        <span className="text-brand-600 text-xs font-bold uppercase tracking-wider">Track Your Order</span>
-        <h1 className="text-4xl font-extrabold text-neutral-900 tracking-tight mt-2">Order Status</h1>
-        <p className="text-sm text-neutral-500 mt-3">Enter your order ID to see real-time updates on your delivery or pickup status.</p>
+        <span className="text-brand-600 text-xs font-bold uppercase tracking-wider">{t('track.title')}</span>
+        <h1 className="text-4xl font-extrabold text-neutral-900 tracking-tight mt-2">{t('track.title')}</h1>
+        <p className="text-sm text-neutral-500 mt-3">{t('track.subtitle')}</p>
       </div>
 
       {/* Search Form */}
       <form onSubmit={handleTrack} className="bg-white border rounded-3xl p-6 shadow-sm mb-8">
-        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Order ID</label>
+        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{t('track.status')}</label>
         <div className="flex gap-3">
           <input
             type="text"
-            placeholder="e.g. MPH-998-1002"
+            placeholder={t('track.input_placeholder')}
             value={orderId}
             onChange={(e) => setOrderId(e.target.value)}
             className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
           />
           <button type="submit" className="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold px-8 py-3 text-sm transition shadow-sm">
-            Track
+            {t('track.search_btn')}
           </button>
         </div>
         {error && <p className="text-red-600 text-xs font-medium mt-2">{error}</p>}
@@ -139,17 +141,17 @@ export default function TrackPage() {
               </div>
             ))}
             <div className="flex justify-between text-sm font-extrabold text-neutral-900 pt-2 border-t">
-              <span>Total</span>
+              <span>{t('cart.total')}</span>
               <span>{result.total.toFixed(2)} ETB</span>
             </div>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/products" className="rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-2.5 text-sm transition">
-              Continue Shopping
+              {t('cart.continue_shopping')}
             </Link>
             <Link href="/account" className="rounded-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-6 py-2.5 text-sm transition">
-              View All Orders
+              {t('cart.view_order')}
             </Link>
           </div>
         </div>

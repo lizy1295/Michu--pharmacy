@@ -13,6 +13,7 @@ import { Product } from './product.entity';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 
 export class CreateProductDto {
   @ApiProperty({ example: 'Paracetamol 500mg' })
@@ -66,6 +67,10 @@ export class CreateProductDto {
   @ApiPropertyOptional()
   @IsOptional()
   attributes?: object;
+
+  @ApiPropertyOptional({ example: '2026-12-31' })
+  @IsOptional()
+  expiryDate?: Date | string;
 }
 
 export class UpdateProductDto {
@@ -121,6 +126,10 @@ export class UpdateProductDto {
   @ApiPropertyOptional()
   @IsOptional()
   attributes?: object;
+
+  @ApiPropertyOptional({ example: '2026-12-31' })
+  @IsOptional()
+  expiryDate?: Date | string;
 }
 
 export class ProductFilterDto {
@@ -141,11 +150,13 @@ export class ProductFilterDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   minPrice?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   maxPrice?: number;
 
@@ -156,16 +167,23 @@ export class ProductFilterDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
   @IsBoolean()
   prescriptionRequired?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   page?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   limit?: number;
 }
@@ -202,7 +220,14 @@ export class ProductsService {
     }
 
     if (filter?.category) {
-      query.andWhere('LOWER(product.category) = LOWER(:category)', { category: filter.category });
+      const cat = filter.category.trim().toLowerCase();
+      const variants = [cat];
+      if (cat.endsWith('s')) {
+        variants.push(cat.slice(0, -1));
+      } else {
+        variants.push(cat + 's');
+      }
+      query.andWhere('LOWER(product.category) IN (:...categoryVariants)', { categoryVariants: variants });
     }
 
     if (filter?.brand) {
@@ -318,6 +343,7 @@ export class ProductsService {
       imageUrl: productData.imageUrl,
       attributes: productData.attributes ?? {},
       status: productData.status || 'active',
+      expiryDate: productData.expiryDate ? new Date(productData.expiryDate) : undefined,
     });
 
     return this.productsRepo.save(product);

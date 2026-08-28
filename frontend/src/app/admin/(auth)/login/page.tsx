@@ -24,12 +24,14 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email, password, rememberMe }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Invalid email or password');
+        throw new Error(data.message || 'Invalid email or password');
       }
 
-      const data = await response.json();
-      localStorage.setItem('admin_token', data.accessToken);
+      localStorage.setItem('michu_access_token', data.accessToken);
+      localStorage.setItem('michu_refresh_token', data.refreshToken || '');
       localStorage.setItem('admin_data', JSON.stringify(data.admin));
       router.push('/admin');
     } catch (err: any) {
@@ -37,6 +39,7 @@ export default function AdminLoginPage() {
     } finally {
       setLoading(false);
     }
+
   };
 
   return (

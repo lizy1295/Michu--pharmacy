@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { getCategoryById, updateCategory } from '@/lib/api/admin';
 
-export default function AdminCategoriesEditPage({ params }: { params: { id: string } }) {
+export default function AdminCategoriesEditPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
@@ -21,25 +22,22 @@ export default function AdminCategoriesEditPage({ params }: { params: { id: stri
   useEffect(() => {
     const fetchCategory = async () => {
       try {
-        const res = await fetch(`/api/categories/${params.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setFormData({
-            name: data.name || '',
-            slug: data.slug || '',
-            description: data.description || '',
-            status: data.status || 'active',
-            displayOrder: data.displayOrder || 0,
-          });
-        }
-      } catch (err) {
-        console.error('Failed to fetch category:', err);
+        const data = await getCategoryById(Number(id));
+        setFormData({
+          name: data.name || '',
+          slug: data.slug || '',
+          description: data.description || '',
+          status: data.status || 'active',
+          displayOrder: data.displayOrder || 0,
+        });
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch category');
       } finally {
         setLoading(false);
       }
     };
     fetchCategory();
-  }, [params.id]);
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,16 +45,7 @@ export default function AdminCategoriesEditPage({ params }: { params: { id: stri
     setError('');
 
     try {
-      const response = await fetch(`/api/categories/${params.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update category');
-      }
-
+      await updateCategory(Number(id), formData);
       router.push('/admin/categories');
     } catch (err: any) {
       setError(err.message || 'Failed to update category');
@@ -67,107 +56,103 @@ export default function AdminCategoriesEditPage({ params }: { params: { id: stri
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="w-12 h-12 border-4 border-emerald-700/30 border-t-emerald-500 rounded-full animate-spin"></div>
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-12 h-12 border-4 border-emerald-700/30 border-t-emerald-500 rounded-full animate-spin"></div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/categories" className="p-2 rounded-xl border border-emerald-700/30 text-emerald-400 hover:bg-emerald-800/30 transition">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-          </Link>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div className="flex items-center gap-4">
+        <Link href="/admin/categories" className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-xs">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-900">Edit Category</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Update category information for #{id}</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-6">
+        {error && (
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium">
+            {error}
+          </div>
+        )}
+
+        <div>
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Category Name *</label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            required
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Slug *</label>
+          <input
+            type="text"
+            value={formData.slug}
+            onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+            required
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 font-mono text-xs"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Description</label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            rows={3}
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 resize-none"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">Edit Category</h1>
-            <p className="text-sm text-emerald-300/80 mt-1">Update category information</p>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Status</label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 bg-white"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Display Order</label>
+            <input
+              type="number"
+              value={formData.displayOrder}
+              onChange={(e) => setFormData(prev => ({ ...prev, displayOrder: parseInt(e.target.value) || 0 }))}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800"
+            />
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-emerald-700/30 p-6 space-y-6">
-          {error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-emerald-200 mb-2">Category Name *</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              required
-              className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-emerald-200 mb-2">Slug *</label>
-            <input
-              type="text"
-              value={formData.slug}
-              onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-              required
-              className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-emerald-200 mb-2">Description</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
-              className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white resize-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-emerald-200 mb-2">Status</label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 outline-none text-emerald-200"
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-emerald-200 mb-2">Display Order</label>
-              <input
-                type="number"
-                value={formData.displayOrder}
-                onChange={(e) => setFormData(prev => ({ ...prev, displayOrder: parseInt(e.target.value) || 0 }))}
-                className="w-full rounded-xl border border-emerald-700/50 bg-slate-900/50 backdrop-blur-sm px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-4">
-            <Link
-              href="/admin/categories"
-              className="px-6 py-2.5 rounded-xl border border-emerald-700/30 text-emerald-300 text-sm font-medium hover:bg-emerald-800/30 transition"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500 transition disabled:opacity-50 shadow-lg shadow-emerald-900/50"
-            >
-              {saving ? 'Saving...' : 'Update Category'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </AdminLayout>
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <Link
+            href="/admin/categories"
+            className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition"
+          >
+            Cancel
+          </Link>
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition disabled:opacity-50 shadow-md shadow-emerald-600/20"
+          >
+            {saving ? 'Saving...' : 'Update Category'}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

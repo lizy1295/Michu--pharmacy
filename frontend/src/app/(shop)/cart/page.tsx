@@ -7,8 +7,10 @@ import { createOrder, Order } from '@/lib/api/orders';
 import { initiatePayment, verifyPayment, InitiatePaymentResult, PaymentDetails } from '@/lib/api/payments';
 import { getMe } from '@/lib/api/auth';
 import { getAccessToken } from '@/lib/auth/tokens';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function CartPage() {
+  const { t } = useLanguage();
   const { cartItems, updateQuantity, removeFromCart, cartTotal, clearCart } = useCart();
   const [selectedBranch, setSelectedBranch] = useState('Ayat Branch');
   const [paymentMethod, setPaymentMethod] = useState<'telebirr' | 'cbe'>('telebirr');
@@ -56,6 +58,11 @@ export default function CartPage() {
     e.preventDefault();
     if (cartItems.length === 0) return;
 
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setErrorMessage('⚠️ Internet Connection Required: Processing checkout and digital payments (Telebirr / CBE Birr) requires an active internet connection. Please connect to the internet to complete your order.');
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage(null);
 
@@ -67,7 +74,7 @@ export default function CartPage() {
         customerPhone,
         shippingAddress: hasPrescriptionItems ? `In-Store Pickup: ${selectedBranch}` : shippingAddress,
         items: cartItems.map(i => ({
-          id: i.id,
+          id: Number(i.id) || 0,
           name: i.name,
           price: i.price,
           quantity: i.quantity,
@@ -169,33 +176,33 @@ export default function CartPage() {
 
           <div>
             <span className="inline-block px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
-              Payment Confirmed & Verified
+              {t('cart.payment_confirmed')}
             </span>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">Order Confirmed!</h1>
+            <h1 className="text-3xl font-black text-gray-900 tracking-tight">{t('cart.order_confirmed')}</h1>
             <p className="mt-2 text-sm text-gray-500 max-w-md mx-auto leading-relaxed">
-              Thank you for choosing Michu Pharmacy! Your payment of <strong>{createdOrder.total.toLocaleString()} ETB</strong> has been successfully verified via <strong>{createdOrder.paymentMethod?.toUpperCase()}</strong>.
+              {t('cart.thank_you')} <strong>{createdOrder.total.toLocaleString()} ETB</strong> — <strong>{createdOrder.paymentMethod?.toUpperCase()}</strong>.
             </p>
           </div>
 
           {/* Receipt Breakdown Card */}
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left space-y-3">
             <div className="flex justify-between items-center border-b pb-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
-              <span>Order Summary</span>
+              <span>{t('cart.order_summary_label')}</span>
               <span className="text-emerald-700 font-mono font-extrabold">{createdOrder.orderNumber}</span>
             </div>
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-slate-600">Customer Name:</span>
+                <span className="text-slate-600">{t('cart.customer_name')}</span>
                 <span className="font-bold text-slate-800">{createdOrder.customerName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600">Payment Gateway:</span>
+                <span className="text-slate-600">{t('cart.payment_gateway')}</span>
                 <span className="font-bold text-brand-700 uppercase">{createdOrder.paymentMethod}</span>
               </div>
               {verifiedPayment?.paymentNumber && (
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Payment Ref:</span>
+                  <span className="text-slate-600">{t('cart.payment_ref')}</span>
                   <span className="font-mono text-xs font-bold text-slate-700">{verifiedPayment.paymentNumber}</span>
                 </div>
               )}
@@ -206,7 +213,7 @@ export default function CartPage() {
                 </div>
               )}
               <div className="flex justify-between border-t pt-2 text-slate-900 font-extrabold">
-                <span>Total Amount Paid:</span>
+                <span>{t('cart.total_paid')}</span>
                 <span className="text-emerald-600 font-mono">{Number(createdOrder.total).toFixed(2)} ETB</span>
               </div>
             </div>
@@ -214,11 +221,11 @@ export default function CartPage() {
 
           {hasPrescriptionItems ? (
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs text-left leading-relaxed">
-              <strong>⚠️ Prescription Notice:</strong> Your items will be prepared at <strong>{selectedBranch}</strong>. Please bring your valid physical doctor&apos;s prescription when picking up your medications.
+              {t('cart.rx_pickup_notice').replace('{branch}', selectedBranch)}
             </div>
           ) : (
             <div className="p-4 bg-brand-50 border border-brand-200 rounded-2xl text-brand-900 text-xs text-left leading-relaxed">
-              <strong>🚀 Home Delivery:</strong> Your order is being compiled by our clinical pharmacy team and will be delivered to <strong>{shippingAddress}</strong> within 2-4 hours.
+              {t('cart.home_delivery_notice').replace('{address}', shippingAddress)}
             </div>
           )}
 
@@ -227,13 +234,13 @@ export default function CartPage() {
               href="/account"
               className="rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold px-8 py-3 text-sm transition shadow-md"
             >
-              View Order in Account
+              {t('cart.view_order')}
             </Link>
             <Link
               href="/products"
               className="rounded-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-8 py-3 text-sm transition"
             >
-              Continue Shopping
+              {t('cart.continue_shopping')}
             </Link>
           </div>
         </div>
@@ -255,10 +262,10 @@ export default function CartPage() {
               }`}>
                 {isTelebirr ? 'Telebirr Payment' : 'CBE Birr Payment'}
               </span>
-              <h1 className="text-2xl font-black text-slate-900 mt-2">Complete Payment Authorization</h1>
+              <h1 className="text-2xl font-black text-slate-900 mt-2">{t('cart.payment_pending_title')}</h1>
             </div>
             <div className="text-right font-mono">
-              <span className="text-xs text-slate-400 block">Total Due</span>
+              <span className="text-xs text-slate-400 block">{t('cart.total_due')}</span>
               <span className="text-lg font-black text-brand-600">{Number(createdOrder.total).toFixed(2)} ETB</span>
             </div>
           </div>
@@ -286,7 +293,7 @@ export default function CartPage() {
                 <h3 className="font-bold text-slate-900 text-base">
                   {isTelebirr ? 'Telebirr SuperApp / Web' : 'CBE Birr Mobile Gateway'}
                 </h3>
-                <p className="text-xs text-slate-500">Order Reference: <strong className="font-mono">{createdOrder.orderNumber}</strong></p>
+                <p className="text-xs text-slate-500">{t('cart.order_ref')}: <strong className="font-mono">{createdOrder.orderNumber}</strong></p>
               </div>
             </div>
 
@@ -328,14 +335,14 @@ export default function CartPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Verifying Payment with Provider...</span>
+                  <span>{t('cart.verifying')}</span>
                 </>
               ) : (
                 <>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>Verify Payment Status Now</span>
+                  <span>{t('cart.verify_payment')}</span>
                 </>
               )}
             </button>
@@ -344,7 +351,7 @@ export default function CartPage() {
               onClick={() => setCheckoutStep('CART')}
               className="w-full text-center text-xs font-bold text-slate-400 hover:text-slate-600 transition py-1"
             >
-              &larr; Back to Order Details
+              {t('cart.back_to_order')}
             </button>
           </div>
         </div>
@@ -355,7 +362,7 @@ export default function CartPage() {
   // STEP 1: SHOPPING CART & CHECKOUT FORM
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-8">Shopping Cart & Checkout</h1>
+      <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-8">{t('cart.title')}</h1>
 
       {errorMessage && (
         <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs flex items-center justify-between">
@@ -377,7 +384,7 @@ export default function CartPage() {
             
             {/* Cart Items List */}
             <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
-              <h2 className="text-base font-bold text-neutral-900 border-b pb-2">Selected Products ({cartItems.length})</h2>
+              <h2 className="text-base font-bold text-neutral-900 border-b pb-2">{t('cart.selected_products')} ({cartItems.length})</h2>
 
               <div className="space-y-3">
                 {cartItems.map((item) => (
@@ -393,7 +400,7 @@ export default function CartPage() {
                           <span className="text-xs font-bold text-neutral-500">{item.price.toFixed(2)} ETB</span>
                           {item.prescriptionRequired && (
                             <span className="bg-red-50 border border-red-100 text-red-600 text-[8px] font-extrabold px-2 py-0.5 rounded-full uppercase">
-                              Rx Required
+                              {t('cart.rx_required')}
                             </span>
                           )}
                         </div>
@@ -441,11 +448,11 @@ export default function CartPage() {
                     <svg className="w-4 h-4 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                    <span>Prescription Items Notice</span>
+                    <span>{t('cart.rx_notice_title')}</span>
                   </div>
-                  <p>Your cart contains regulated prescription medications. In compliance with health regulations, prescription items are available for store pick-up at your chosen branch with a valid physical prescription.</p>
+                  <p>{t('cart.rx_notice_desc')}</p>
                   <div>
-                    <label htmlFor="branchSelect" className="block text-[10px] font-extrabold text-red-700 uppercase mt-1">Collection Branch</label>
+                    <label htmlFor="branchSelect" className="block text-[10px] font-extrabold text-red-700 uppercase mt-1">{t('cart.collection_branch')}</label>
                     <select
                       id="branchSelect"
                       value={selectedBranch}
@@ -464,10 +471,10 @@ export default function CartPage() {
 
             {/* Customer Details Form */}
             <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
-              <h2 className="text-base font-bold text-neutral-900 border-b pb-2">Customer & Delivery Details</h2>
+              <h2 className="text-base font-bold text-neutral-900 border-b pb-2">{t('cart.customer_details')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Full Name *</label>
+                  <label className="block font-bold text-slate-700 mb-1">{t('cart.full_name')} *</label>
                   <input
                     type="text"
                     required
@@ -478,7 +485,7 @@ export default function CartPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Email Address *</label>
+                  <label className="block font-bold text-slate-700 mb-1">{t('cart.email')} *</label>
                   <input
                     type="email"
                     required
@@ -489,7 +496,7 @@ export default function CartPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Phone Number *</label>
+                  <label className="block font-bold text-slate-700 mb-1">{t('cart.phone')} *</label>
                   <input
                     type="tel"
                     required
@@ -500,7 +507,7 @@ export default function CartPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Delivery Address *</label>
+                  <label className="block font-bold text-slate-700 mb-1">{t('cart.delivery_address')} *</label>
                   <input
                     type="text"
                     required
@@ -515,7 +522,7 @@ export default function CartPage() {
 
             {/* Payment Method Selector */}
             <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
-              <h2 className="text-base font-bold text-neutral-900 border-b pb-2">Select Digital Payment Method</h2>
+              <h2 className="text-base font-bold text-neutral-900 border-b pb-2">{t('cart.payment_method')}</h2>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Telebirr Option */}
@@ -574,28 +581,28 @@ export default function CartPage() {
 
           {/* Order Summary Sidebar */}
           <aside className="bg-white border rounded-2xl p-6 shadow-sm self-start space-y-4">
-            <h2 className="text-lg font-bold text-neutral-900 border-b pb-2">Order Summary</h2>
+            <h2 className="text-lg font-bold text-neutral-900 border-b pb-2">{t('cart.order_summary')}</h2>
 
             <div className="space-y-2.5 text-sm text-neutral-600">
               <div className="flex justify-between">
-                <span>Items Subtotal</span>
+                <span>{t('cart.subtotal')}</span>
                 <span className="font-semibold text-neutral-800">{cartTotal.toFixed(2)} ETB</span>
               </div>
               <div className="flex justify-between">
-                <span>VAT (15%)</span>
+                <span>{t('cart.vat')}</span>
                 <span className="font-semibold text-neutral-800">{taxAmount.toFixed(2)} ETB</span>
               </div>
               <div className="flex justify-between">
-                <span>Delivery / Pickup Fees</span>
+                <span>{t('cart.delivery_fee')}</span>
                 {deliveryFee === 0 ? (
-                  <span className="font-bold text-emerald-600 uppercase text-xs">Free Store Pickup</span>
+                  <span className="font-bold text-emerald-600 uppercase text-xs">{t('cart.free_pickup')}</span>
                 ) : (
                   <span className="font-semibold text-neutral-800">{deliveryFee.toFixed(2)} ETB</span>
                 )}
               </div>
               
               <div className="border-t border-dashed pt-2.5 flex justify-between text-neutral-900 font-extrabold text-base">
-                <span>Total Amount</span>
+                <span>{t('cart.total')}</span>
                 <span>{finalTotal.toFixed(2)} ETB</span>
               </div>
             </div>
@@ -606,8 +613,8 @@ export default function CartPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
-                <p className="font-bold">Earn Yene Loyalty Points</p>
-                <p className="text-[10px] text-brand-600 mt-0.5">Collect +{loyaltyPointsEarned} points from this order</p>
+                <p className="font-bold">{t('cart.loyalty_earn')}</p>
+                <p className="text-[10px] text-brand-600 mt-0.5">{t('cart.loyalty_points').replace('{points}', String(loyaltyPointsEarned))}</p>
               </div>
             </div>
 
@@ -623,10 +630,10 @@ export default function CartPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Creating Order...</span>
+                    <span>{t('cart.creating_order')}</span>
                   </span>
                 ) : (
-                  <span>Proceed to Pay with {paymentMethod === 'telebirr' ? 'Telebirr' : 'CBE Birr'}</span>
+                  <span>{t('cart.proceed_pay')} {paymentMethod === 'telebirr' ? 'Telebirr' : 'CBE Birr'}</span>
                 )}
               </button>
             </form>
@@ -635,7 +642,7 @@ export default function CartPage() {
               href="/products"
               className="block text-center text-xs font-bold text-neutral-400 hover:text-neutral-600 transition pt-1"
             >
-              Continue Shopping
+              {t('cart.continue_shopping')}
             </Link>
           </aside>
         </div>
@@ -644,15 +651,15 @@ export default function CartPage() {
           <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
-          <h2 className="text-xl font-bold text-gray-800 mt-4">Your Cart is Empty</h2>
+          <h2 className="text-xl font-bold text-gray-800 mt-4">{t('cart.empty_title')}</h2>
           <p className="text-sm text-gray-500 mt-1 max-w-sm">
-            It looks like you haven&apos;t added any products to your shopping cart yet. Browse our selection and take care of your health today.
+            {t('cart.empty_desc')}
           </p>
           <Link
             href="/products"
             className="mt-6 rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-2.5 text-xs transition"
           >
-            Shop Products
+            {t('cart.shop_products')}
           </Link>
         </div>
       )}

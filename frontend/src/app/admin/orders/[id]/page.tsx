@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { getOrderById, updateOrderStatus, Order } from '@/lib/api/orders';
 import { getPaymentByOrderId, PaymentDetails } from '@/lib/api/payments';
 
-export default function AdminOrderDetailPage({ params }: { params: { id: string } }) {
+export default function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const [order, setOrder] = useState<Order | null>(null);
   const [payment, setPayment] = useState<PaymentDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,7 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
   const fetchDetails = async () => {
     try {
       setLoading(true);
-      const orderData = await getOrderById(Number(params.id));
+      const orderData = await getOrderById(Number(resolvedParams.id));
       setOrder(orderData);
 
       const paymentData = await getPaymentByOrderId(orderData.id);
@@ -30,7 +30,7 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
 
   useEffect(() => {
     fetchDetails();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   const handleStatusChange = async (newStatus: 'pending' | 'approved' | 'shipped' | 'completed' | 'cancelled') => {
     if (!order) return;
@@ -47,34 +47,29 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="p-16 text-center text-slate-500 flex flex-col items-center">
-          <svg className="animate-spin h-8 w-8 text-emerald-600 mb-3" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p className="font-semibold text-sm">Fetching order and payment record from PostgreSQL...</p>
-        </div>
-      </AdminLayout>
+      <div className="p-16 text-center text-slate-500 flex flex-col items-center">
+        <svg className="animate-spin h-8 w-8 text-emerald-600 mb-3" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p className="font-semibold text-sm">Fetching order and payment record from PostgreSQL...</p>
+      </div>
     );
   }
 
   if (!order) {
     return (
-      <AdminLayout>
-        <div className="p-12 text-center text-slate-500 space-y-4">
-          <p className="text-lg font-bold text-slate-800">Order #{params.id} not found</p>
-          <Link href="/admin/orders" className="text-emerald-600 font-bold text-xs hover:underline">
-            &larr; Return to Orders Management
-          </Link>
-        </div>
-      </AdminLayout>
+      <div className="p-12 text-center text-slate-500 space-y-4">
+        <p className="text-lg font-bold text-slate-800">Order #{resolvedParams.id} not found</p>
+        <Link href="/admin/orders" className="text-emerald-600 font-bold text-xs hover:underline">
+          &larr; Return to Orders Management
+        </Link>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         
         {/* Header Breadcrumb & Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -263,6 +258,5 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
         </div>
 
       </div>
-    </AdminLayout>
   );
 }

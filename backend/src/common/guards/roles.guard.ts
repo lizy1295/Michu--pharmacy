@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from '@michu/shared';
+import { UserRole, hasRole } from '@michu/shared';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 
@@ -26,7 +26,12 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<{ user: JwtPayload }>();
     const user = request.user;
 
-    if (!user || !requiredRoles.includes(user.role)) {
+    if (!user || !user.role) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
+    const allowed = hasRole(user.role as string, requiredRoles);
+    if (!allowed) {
       throw new ForbiddenException('Insufficient permissions');
     }
 

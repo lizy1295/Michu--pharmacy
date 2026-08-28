@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AdminLayout from '@/components/admin/AdminLayout';
 import { getBusinessSettings, updateBusinessSettings, BusinessSettings } from '@/lib/api/admin';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -54,26 +53,21 @@ export default function AdminSettingsPage() {
 
   if (loading) {
     return (
-      <AdminLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="w-12 h-12 border-4 border-emerald-700/30 border-t-emerald-500 rounded-full animate-spin"></div>
         </div>
-      </AdminLayout>
     );
   }
 
   if (!settings) {
     return (
-      <AdminLayout>
         <div className="text-center py-16">
           <p className="text-emerald-400">Failed to load settings</p>
         </div>
-      </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900">Store Settings</h1>
@@ -295,6 +289,5 @@ export default function AdminSettingsPage() {
           </div>
         </form>
       </div>
-    </AdminLayout>
   );
 }

@@ -4,96 +4,156 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getArticles, Article } from '@/lib/api/articles';
 
-const FALLBACK_ARTICLES: Article[] = [
+const AMHARIC_ARTICLES: Article[] = [
   {
     id: 1,
-    title: 'Understanding Hypertension: Causes, Symptoms, and Prevention',
-    slug: 'understanding-hypertension',
-    excerpt: 'High blood pressure affects millions globally. Learn about the warning signs, lifestyle changes, and treatment options available through Michu Pharmacy.',
-    content: 'Full content...',
+    title: 'ስለ የደም ግፊት (Hypertension) መንስኤዎች፣ ምልክቶች እና መከላከያ መንገዶች',
+    slug: 'understanding-hypertension-amharic',
+    excerpt: 'የደም ግፊት በኢትዮጵያ ውስጥ በስፋት ከሚታዩ የጤና እክሎች አንዱ ነው። የደም ግፊት ምልክቶች፣ የአመጋገብ ስርዓት እና የሚቹ ፋርማሲ የሚያቀርባቸውን ተገቢ መድኃኒቶች ይወቁ።',
+    content: `
+      <h2>የደም ግፊት ምንድን ነው?</h2>
+      <p>የደም ግፊት ማለት ደም በደም ሥሮቻችን ግድግዳ ላይ የሚያሳድረው ግፊት ከመደበኛው መጠን በላይ ሲጨምር የሚከሰት የጤና እክል ነው። ያልታከመ የደም ግፊት ለልብ ድካም፣ ለስትሮክ እና ለኩላሊት ህመም ሊያጋልጥ ይችላል።</p>
+      
+      <h3>ዋና ዋና ምልክቶች</h3>
+      <ul>
+        <li>ከፍተኛ የራስ ምታት (በተለይ በማለዳ ሰዓት)</li>
+        <li>የእይታ መደብዘዝ ወይም የማዞር ስሜት</li>
+        <li>የልብ ምት መጨመር እና የትንፋሽ መቆራረጥ</li>
+        <li>የድካም እና የድብታ ስሜት መሰማት</li>
+      </ul>
+
+      <h3>በቤት ውስጥ የሚደረጉ ጥንቃቄዎች</h3>
+      <p>የጨው አጠቃቀምን መቀነስ፣ አትክልት እና ፍራፍሬዎችን አዘውትሮ መመገብ፣ የአካል ብቃት እንቅስቃሴ ማድረግ እና የደም ግፊት መለኪያ መሳሪያ በቤት ውስጥ በመያዝ በየጊዜው መለካት ይመከራል።</p>
+    `,
     featuredImage: 'article-health',
-    category: 'Health Tips',
-    tags: ['hypertension', 'heart health'],
+    category: 'የጤና ምክሮች (Health Tips)',
+    tags: ['የደም ግፊት', 'hypertension', 'የልብ ጤና', 'cardiovascular'],
     status: 'published',
-    author: 'Dr. Solomon Bekele, PharmD',
+    author: 'ዶ/ር ሰሎሞን በቀለ (ፋርማሲስት)',
     relatedProductIds: [8, 14, 1, 2],
-    createdAt: '2026-07-12T10:00:00Z',
-    updatedAt: '2026-07-12T10:00:00Z',
+    createdAt: '2026-08-10T10:00:00Z',
+    updatedAt: '2026-08-10T10:00:00Z',
   },
   {
     id: 2,
-    title: 'Why Daily Multivitamins Are Essential for Your Family',
-    slug: 'importance-of-vitamins',
-    excerpt: 'Explore how the right multivitamin can bridge nutritional gaps and support immune health for every family member.',
-    content: 'Full content...',
+    title: 'የቫይታሚን እና የንጥረ-ምግብ ማሟያዎች ለቤተሰብ ጤና ያለው ወሳኝ ጠቀሜታ',
+    slug: 'importance-of-vitamins-amharic',
+    excerpt: 'ለሰውነታችን በሽታ የመከላከል አቅም፣ ለአጥንት ጥንካሬ እና ለልጆች ጤናማ እድገት የሚያስፈልጉ ወሳኝ መልቲ-ቫይታሚኖች እና ትክክለኛ አጠቃቀማቸው።',
+    content: `
+      <h2>የቫይታሚን ጠቀሜታ</h2>
+      <p>ዕለታዊ የምግብ ስርዓታችን ሁሉንም አስፈላጊ ንጥረ-ነገሮች ላያሟላ ይችላል። ጥራት ያላቸው የቫይታሚን እና ሚነራል ማሟያዎች የሰውነታችንን የበሽታ መከላከያ አቅም ያጠናክራሉ።</p>
+      
+      <h3>ለቤተሰብ አስፈላጊ የሆኑ ቫይታሚኖች</h3>
+      <ul>
+        <li><strong>ቫይታሚን ዲ እና ካልሲየም፡</strong> ለአጥንት እና ለጥርስ ጥንካሬ</li>
+        <li><strong>ቫይታሚን ሲ እና ዚንክ፡</strong> ጉንፋን እና የመተንፈሻ አካል ኢንፌክሽኖችን ለመከላከል</li>
+        <li><strong>ኦሜጋ-3 እና የዓሳ ዘይት፡</strong> ለአእምሮ ንቃት እና ለልብ ጤንነት</li>
+      </ul>
+    `,
     featuredImage: 'article-vitamins',
-    category: 'Nutrition',
-    tags: ['vitamins', 'supplements'],
+    category: 'ስነ-ምግብ (Nutrition)',
+    tags: ['ቫይታሚን', 'vitamins', 'የበሽታ መከላከያ', 'supplements'],
     status: 'published',
-    author: 'Bethlehem Tadesse',
+    author: 'ቤተልሔም ታደሰ (ክሊኒካል ፋርማሲስት)',
     relatedProductIds: [16, 17, 19, 27],
-    createdAt: '2026-07-08T10:00:00Z',
-    updatedAt: '2026-07-08T10:00:00Z',
+    createdAt: '2026-08-05T10:00:00Z',
+    updatedAt: '2026-08-05T10:00:00Z',
   },
   {
     id: 3,
-    title: 'Smart Diabetes Management: A Practical Guide',
-    slug: 'diabetes-management-tips',
-    excerpt: 'From insulin storage to diet planning, here are expert-backed tips for managing diabetes effectively at home.',
-    content: 'Full content...',
+    title: 'የስኳር በሽታ (Diabetes) አያያዝ እና በቤት ውስጥ የሚደረጉ ጥንቃቄዎች',
+    slug: 'diabetes-management-amharic',
+    excerpt: 'የኢንሱሊን አያያዝ፣ የደም ስኳር መለኪያ ግሉኮሜትር አጠቃቀም እና የስኳር መጠንን በቁጥጥር ስር ለማዋል የሚረዱ የፋርማሲ ባለሙያ ምክሮች።',
+    content: `
+      <h2>የስኳር በሽታን በዘመናዊ መንገድ መቆጣጠር</h2>
+      <p>የስኳር ህመም ያለባቸው ወገኖች የታዘዘላቸውን መድኃኒት በሰዓቱ በመውሰድ፣ ተገቢውን የአመጋገብ ስርዓት በመከተል እና ስኳራቸውን በመለካት ጤናማ ህይወት መምራት ይችላሉ።</p>
+      
+      <h3>የኢንሱሊን ማከማቻ ደንብ</h3>
+      <p>ኢንሱሊን ከ 2°C እስከ 8°C ባለው ቅዝቃዜ ውስጥ መቀመጥ አለበት። የሚቹ ፋርማሲ በማቀዝቀዣ የተጠበቁ መድኃኒቶችን በጥንቃቄ ያቀርባል።</p>
+    `,
     featuredImage: 'article-diabetes',
-    category: 'Chronic Care',
-    tags: ['diabetes', 'metformin'],
+    category: 'ስር የሰደዱ ህመሞች (Chronic Care)',
+    tags: ['የስኳር በሽታ', 'diabetes', 'ኢንሱሊን', 'metformin'],
     status: 'published',
-    author: 'Dr. Solomon Bekele, PharmD',
+    author: 'ዶ/ር ሰሎሞን በቀለ (ፋርማሲስት)',
     relatedProductIds: [6, 9],
-    createdAt: '2026-07-03T10:00:00Z',
-    updatedAt: '2026-07-03T10:00:00Z',
+    createdAt: '2026-07-28T10:00:00Z',
+    updatedAt: '2026-07-28T10:00:00Z',
   },
   {
     id: 4,
-    title: 'Building a Daily Skincare Routine That Actually Works',
-    slug: 'skincare-routine',
-    excerpt: 'Dermatologist-approved steps to achieve healthy, glowing skin using affordable and effective products available at Michu Pharmacy.',
-    content: 'Full content...',
+    title: 'ለቆዳ ጤንነት፣ ውበት እና ጥበቃ የሚመከሩ የፋርማሲ ምርቶች አጠቃቀም',
+    slug: 'skincare-routine-amharic',
+    excerpt: 'በፀሐይ እና በአቧራ ምክንያት ለሚደርስ የቆዳ መጎዳት የሚረዱ የፀሐይ መከላከያ (Sunscreen) ክሬሞች፣ የፊት ማፅጃዎች እና የቆዳ እርጥበት መጠበቂያዎች።',
+    content: `
+      <h2>የቆዳ እንክብካቤ መሰረታዊ ደረጃዎች</h2>
+      <p>የጠራ እና ጤናማ ቆዳ እንዲኖረን የቆዳችንን አይነት (ደረቅ፣ ቅባት ወይም ድብልቅ) ማወቅ እና ተስማሚ ምርቶችን መምረጥ ያስፈልጋል።</p>
+      
+      <h3>3ቱ ወሳኝ ደረጃዎች</h3>
+      <ol>
+        <li><strong>ማፅዳት (Cleanse)፡</strong> የፊትን ቆዳ በቀስታ የሚያፀዱ ጄሎች</li>
+        <li><strong>እርጥበት መስጠት (Moisturize)፡</strong> ሴራሚድ እና ሃያሉሮኒክ አሲድ ያላቸው ክሬሞች</li>
+        <li><strong>መከላከል (Protect)፡</strong> በየቀኑ SPF 50+ የፀሐይ መከላከያ መቀባት</li>
+      </ol>
+    `,
     featuredImage: 'article-skincare',
-    category: 'Beauty',
-    tags: ['skincare', 'sunscreen'],
+    category: 'የቆዳ እና ውበት (Skincare)',
+    tags: ['የቆዳ ውበት', 'skincare', 'ፀሐይ መከላከያ', 'sunscreen'],
     status: 'published',
-    author: 'Helina Worku',
+    author: 'ሄሊና ወርቁ (የውበት እና የቆዳ አማካሪ)',
     relatedProductIds: [29, 31, 34, 40],
-    createdAt: '2026-06-28T10:00:00Z',
-    updatedAt: '2026-06-28T10:00:00Z',
+    createdAt: '2026-07-20T10:00:00Z',
+    updatedAt: '2026-07-20T10:00:00Z',
   },
   {
     id: 5,
-    title: 'How to Safely Store Medications at Home',
-    slug: 'safe-medication-storage',
-    excerpt: 'Proper storage extends medication shelf life and ensures effectiveness. Learn where and how to store different types of medicines.',
-    content: 'Full content...',
+    title: 'መድኃኒቶችን በቤት ውስጥ በአግባቡ ስለመያዝ እና የማስቀመጫ ደንቦች',
+    slug: 'safe-medication-storage-amharic',
+    excerpt: 'መድኃኒቶች ጥራታቸውን እና ፈዋሽነታቸውን እንዳያጡ የት መቀመጥ አለባቸው? ከልጆች እይታ ርቆ ስለማስቀመጥ እና የቀን ገደብን ስለመቆጣጠር።',
+    content: `
+      <h2>የመድኃኒት አያያዝ እና ደህንነት</h2>
+      <p>መድኃኒቶችን በቀጥታ የፀሐይ ብርሃን፣ እርጥበት ወይም ሙቀት ባለበት ቦታ (ለምሳሌ በመታጠቢያ ቤት ውስጥ) ማስቀመጥ ፈዋሽነታቸውን ሊያሳጣው ይችላል።</p>
+      
+      <h3>አስፈላጊ ደንቦች</h3>
+      <ul>
+        <li>መድኃኒቶችን ከህፃናት እጅ በማይደርስበት ከፍ ያለ ቦታ ወይም መቆለፊያ ባለው ሳጥን ውስጥ ያስቀምጡ።</li>
+        <li>የማብቂያ ቀናቸውን (Expiry Date) በየጊዜው ያረጋግጡ።</li>
+        <li>በፈሳሽ መልክ ያሉትን መድኃኒቶች ከመውሰድዎ በፊት በደንብ ያናውጡ።</li>
+      </ul>
+    `,
     featuredImage: 'article-safety',
-    category: 'Safety',
-    tags: ['safety', 'medications'],
+    category: 'የመድኃኒት ደህንነት (Safety)',
+    tags: ['የመድኃኒት አያያዝ', 'safety', 'የፋርማሲ ህግ'],
     status: 'published',
-    author: 'Michu Pharmacy Team',
+    author: 'የሚቹ ፋርማሲ የህክምና ቡድን',
     relatedProductIds: [1, 2, 3],
-    createdAt: '2026-06-22T10:00:00Z',
-    updatedAt: '2026-06-22T10:00:00Z',
+    createdAt: '2026-07-15T10:00:00Z',
+    updatedAt: '2026-07-15T10:00:00Z',
   },
   {
     id: 6,
-    title: 'Maximizing Your Yene Card Loyalty Benefits',
-    slug: 'loyalty-program-benefits',
-    excerpt: 'Get the most out of your Yene Card. From earning points to redeeming vouchers, here is everything you need to know.',
-    content: 'Full content...',
+    title: 'የ"የኔ ካርድ" (Yene Card) የፋርማሲ የታማኝነት ነጥቦች እና የቅናሽ ኩፖኖች',
+    slug: 'yene-card-loyalty-amharic',
+    excerpt: 'በሚቹ ፋርማሲ በገዙ ቁጥር ነጥብ በመሰብሰብ ለቀጣይ ግዢዎችዎ የ 15% ቅናሽ ኩፖን እና ልዩ ሽልማቶችን የሚያገኙበት የ loyalty ፕሮግራም መመሪያ።',
+    content: `
+      <h2>የየኔ ካርድ የታማኝነት ፕሮግራም</h2>
+      <p>የሚቹ ፋርማሲ ቋሚ ደንበኞቹን ለማመስገን ያዘጋጀው የሽልማት ካርድ ነው። በቴሌብር፣ በሲቢኢ ወይም በጥሬ ገንዘብ ሲገዙ ነጥብ ይቆጠርልዎታል።</p>
+      
+      <h3>ጥቅሞቹ</h3>
+      <ul>
+        <li>በየግዢዎ 5% የሚመለስ የነጥብ ቁጠባ</li>
+        <li>ነጻ የደም ግፊት እና የክብደት መለኪያ አገልግሎት በሁሉም ቅርንጫፎቻችን</li>
+        <li>በልደትዎ እና በበዓላት ወቅት የሚሰጡ ልዩ የዋጋ ቅናሾች</li>
+      </ul>
+    `,
     featuredImage: 'article-loyalty',
-    category: 'Loyalty',
-    tags: ['yene card', 'loyalty'],
+    category: 'የሚቹ ታማኝነት (Loyalty)',
+    tags: ['የኔ ካርድ', 'yene card', 'ቅናሽ', 'discounts'],
     status: 'published',
-    author: 'Michu Support Team',
+    author: 'የሚቹ ፋርማሲ የደንበኞች አገልግሎት',
     relatedProductIds: [25, 26],
-    createdAt: '2026-06-15T10:00:00Z',
-    updatedAt: '2026-06-15T10:00:00Z',
+    createdAt: '2026-07-10T10:00:00Z',
+    updatedAt: '2026-07-10T10:00:00Z',
   },
 ];
 
@@ -117,28 +177,10 @@ const renderArticleImage = (type: string) => {
 };
 
 export default function BlogsPage() {
-  const [articles, setArticles] = useState<Article[]>(FALLBACK_ARTICLES);
+  const [articles, setArticles] = useState<Article[]>(AMHARIC_ARTICLES);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchBlogArticles = async () => {
-      try {
-        setLoading(true);
-        const data = await getArticles();
-        if (data && data.length > 0) {
-          setArticles(data);
-        }
-      } catch (err) {
-        console.error('Failed to load articles from API:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBlogArticles();
-  }, []);
+  const [loading, setLoading] = useState(false);
 
   const categories = Array.from(new Set(articles.map((a) => a.category)));
 
@@ -155,39 +197,51 @@ export default function BlogsPage() {
   const rest = filtered.slice(2);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
-      <div className="text-center max-w-2xl mx-auto mb-12">
-        <span className="text-brand-600 text-xs font-bold uppercase tracking-wider">Health & Pharmacy Insights</span>
-        <h1 className="text-4xl font-extrabold text-neutral-900 tracking-tight mt-2">Health & Pharmacy Blog</h1>
-        <p className="text-sm text-neutral-500 mt-3 leading-relaxed">
-          Expert medical advice, health tips, and wellness insights curated by Michu Pharmacy pharmacists.
+    <div className="mx-auto max-w-7xl px-4 py-10 font-sans">
+      {/* Header section in Amharic */}
+      <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-extrabold border border-emerald-200 shadow-xs">
+          <span>🇪🇹</span>
+          <span>የሚቹ ፋርማሲ የጤና እና የመድኃኒት መረጃዎች • Health Blog</span>
+        </div>
+        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          የጤና እና የህክምና መረጃ ጦማር
+        </h1>
+        <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+          በሚቹ ፋርማሲ ክሊኒካል ባለሙያዎች የተዘጋጁ የጤና፣ የመድኃኒት አጠቃቀም እና የስነ-ምግብ ምክሮች
         </p>
       </div>
 
-      {/* Search & Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-8">
+      {/* Search & Categories Filter */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-10 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
         <div className="flex-1 relative">
           <input
             type="text"
-            placeholder="Search health articles..."
+            placeholder="የጤና ጽሑፎችን በስም ወይም በርዕስ ይፈልጉ... (Search articles)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 pl-10 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 pl-10 text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 transition"
           />
-          <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${!selectedCategory ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+              !selectedCategory ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`}
           >
-            All Categories
+            ሁሉም ዘርፎች (All)
           </button>
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat === selectedCategory ? null : cat)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${selectedCategory === cat ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+                selectedCategory === cat ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
             >
               {cat}
             </button>
@@ -195,78 +249,92 @@ export default function BlogsPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="h-64 bg-white rounded-3xl border animate-pulse"></div>
-          <div className="h-64 bg-white rounded-3xl border animate-pulse"></div>
+      {/* Featured Articles Grid */}
+      {featured.length > 0 && (
+        <div className="mb-14">
+          <div className="flex items-center gap-2 mb-6">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <h2 className="text-xl font-extrabold text-slate-900">ተለይተው የቀረቡ የጤና ጽሑፎች (Featured Articles)</h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            {featured.map((article) => (
+              <Link
+                key={article.id}
+                href={`/blogs/${article.id}`}
+                className="group bg-white rounded-3xl border border-slate-200/90 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition duration-200 flex flex-col justify-between shadow-xs"
+              >
+                <div className="aspect-video w-full relative">
+                  {renderArticleImage(article.featuredImage)}
+                  <span className="absolute top-4 left-4 bg-emerald-700 text-white text-[11px] font-extrabold px-3.5 py-1 rounded-full shadow-md">
+                    {article.category}
+                  </span>
+                </div>
+                <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 text-xs text-slate-400 font-medium mb-3">
+                      <span>{new Date(article.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <span>•</span>
+                      <span className="text-emerald-700 font-bold">{article.author}</span>
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 group-hover:text-emerald-700 transition leading-snug line-clamp-2">
+                      {article.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 mt-2.5 leading-relaxed line-clamp-3">
+                      {article.excerpt}
+                    </p>
+                  </div>
+                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-700">
+                    <span>ሙሉውን ያንብቡ (Read Full Article)</span>
+                    <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-      ) : (
-        <>
-          {/* Featured Articles */}
-          {featured.length > 0 && (
-            <div className="mb-12">
-              <h2 className="text-xl font-extrabold text-neutral-900 mb-6 flex items-center gap-2">
-                <svg className="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
-                Featured Articles
-              </h2>
-              <div className="grid gap-6 md:grid-cols-2">
-                {featured.map((article) => (
-                  <Link
-                    key={article.id}
-                    href={`/blogs/${article.id}`}
-                    className="group bg-white rounded-3xl border border-neutral-200/80 overflow-hidden hover:shadow-xl transition duration-200"
-                  >
-                    <div className="aspect-video w-full relative">
-                      {renderArticleImage(article.featuredImage)}
-                      <span className="absolute top-4 left-4 bg-brand-600 text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-md">
-                        {article.category}
-                      </span>
-                    </div>
-                    <div className="p-6">
-                      <div className="flex items-center gap-3 text-[10px] text-gray-400 font-medium mb-2">
-                        <span>{new Date(article.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                        <span>{article.author}</span>
-                      </div>
-                      <h3 className="text-lg font-bold text-neutral-900 group-hover:text-brand-600 transition line-clamp-2">{article.title}</h3>
-                      <p className="text-xs text-gray-500 mt-2 line-clamp-3">{article.excerpt}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
+      )}
 
-          {/* All Articles */}
-          {rest.length > 0 && (
-            <div>
-              <h2 className="text-xl font-extrabold text-neutral-900 mb-6">Recent Articles</h2>
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {rest.map((article) => (
-                  <Link
-                    key={article.id}
-                    href={`/blogs/${article.id}`}
-                    className="group bg-white rounded-3xl border border-neutral-200/80 overflow-hidden hover:shadow-lg transition duration-200"
-                  >
-                    <div className="aspect-video w-full relative">
-                      {renderArticleImage(article.featuredImage)}
-                      <span className="absolute top-3 left-3 bg-brand-600 text-white text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full">
-                        {article.category}
-                      </span>
+      {/* More Articles */}
+      {rest.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-6">
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+            <h2 className="text-xl font-extrabold text-slate-900">ተጨማሪ የጤና ጽሑፎች (Recent Articles)</h2>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {rest.map((article) => (
+              <Link
+                key={article.id}
+                href={`/blogs/${article.id}`}
+                className="group bg-white rounded-3xl border border-slate-200/90 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition duration-200 flex flex-col justify-between shadow-xs"
+              >
+                <div className="aspect-video w-full relative">
+                  {renderArticleImage(article.featuredImage)}
+                  <span className="absolute top-3 left-3 bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                    {article.category}
+                  </span>
+                </div>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="text-[11px] text-slate-400 font-medium mb-1.5">
+                      {new Date(article.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
-                    <div className="p-5">
-                      <div className="text-[10px] text-gray-400 font-medium mb-1">
-                        {new Date(article.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </div>
-                      <h3 className="text-base font-bold text-neutral-900 group-hover:text-brand-600 transition line-clamp-2">{article.title}</h3>
-                      <p className="text-xs text-gray-500 mt-1.5 line-clamp-2">{article.excerpt}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
+                    <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 leading-snug">
+                      {article.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">
+                      {article.excerpt}
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 text-xs font-bold text-emerald-700 flex items-center justify-between">
+                    <span>ሙሉ ጽሑፍ</span>
+                    <span>&rarr;</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,6 +1,13 @@
 import { getAccessToken } from '../auth/tokens';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+const BASE_URL = API_URL.replace('/api/v1', '');
+
+export function getImageUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+  return `${BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+}
 
 async function request<T>(
   path: string,
@@ -37,7 +44,7 @@ async function request<T>(
 export interface Product {
   id: number;
   name: string;
-  price: string; // serialized as string from decimal in Postgres
+  price: string | number; // supports string from Postgres decimal or numeric representation
   brand: string | null;
   category: string | null;
   prescriptionRequired: boolean;
@@ -45,32 +52,83 @@ export interface Product {
   description: string | null;
   imageUrl: string | null;
   attributes: Record<string, any> | null;
+  status?: string | null;
+  expiryDate?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export async function getProducts(): Promise<Product[]> {
-  const res = await request<any>('/products');
-  if (Array.isArray(res)) return res;
-  if (res && Array.isArray(res.data)) return res.data;
-  return [];
+// In-memory cache for getProducts to eliminate network lag across layout & page renders
+let cachedProducts: Product[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 30000; // 30 seconds TTL
+
+export async function getProducts(forceRefresh = false): Promise<Product[]> {
+  const now = Date.now();
+  if (!forceRefresh && cachedProducts && (now - cacheTimestamp < CACHE_TTL)) {
+    return cachedProducts;
+  }
+
+  try {
+    const res = await request<any>('/products?limit=100');
+    let items: Product[] = [];
+    if (Array.isArray(res)) {
+      items = res;
+    } else if (res && Array.isArray(res.data)) {
+      items = res.data;
+    }
+    if (items.length > 0) {
+      cachedProducts = items;
+      cacheTimestamp = now;
+    }
+    return items;
+  } catch (err) {
+    console.warn('Failed to fetch products from backend API, returning available cache if present:', err);
+    return cachedProducts || [];
+  }
 }
 
 export async function getProductById(id: number): Promise<Product> {
-  return request<Product>(`/products/${id}`);
+  try {
+    return await request<Product>(`/products/${id}`);
+  } catch (err) {
+    // If cache has this product, fallback to cached instance
+    if (cachedProducts) {
+      const match = cachedProducts.find((p) => p.id === id);
+      if (match) return match;
+    }
+    throw err;
+  }
 }
 
 export async function getProductsByCategory(category: string): Promise<Product[]> {
-  const res = await request<any>(`/products/category/${encodeURIComponent(category)}`);
-  if (Array.isArray(res)) return res;
-  if (res && Array.isArray(res.data)) return res.data;
-  return [];
+  try {
+    const res = await request<any>(`/products/category/${encodeURIComponent(category)}`);
+    if (Array.isArray(res)) return res;
+    if (res && Array.isArray(res.data)) return res.data;
+    return [];
+  } catch (err) {
+    console.warn('getProductsByCategory API fallback:', err);
+    const all = await getProducts();
+    return all.filter((p) => (p.category ?? '').toLowerCase() === category.toLowerCase());
+  }
 }
 
 export async function getProductsByBrand(brand: string): Promise<Product[]> {
-  const res = await request<any>(`/products/brand/${encodeURIComponent(brand)}`);
-  if (Array.isArray(res)) return res;
-  if (res && Array.isArray(res.data)) return res.data;
-  return [];
+  try {
+    const res = await request<any>(`/products/brand/${encodeURIComponent(brand)}`);
+    if (Array.isArray(res)) return res;
+    if (res && Array.isArray(res.data)) return res.data;
+    return [];
+  } catch (err) {
+    console.warn('getProductsByBrand API fallback:', err);
+    const all = await getProducts();
+    return all.filter((p) => (p.brand ?? '').toLowerCase() === brand.toLowerCase());
+  }
 }
 
+// Invalidate cache helper (e.g. after adding/editing products)
+export function clearProductsCache(): void {
+  cachedProducts = null;
+  cacheTimestamp = 0;
+}

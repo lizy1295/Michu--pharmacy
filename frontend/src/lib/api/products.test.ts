@@ -1,10 +1,15 @@
-import { getProducts } from './products';
+import { getProducts, clearProductsCache } from './products';
 
 describe('products API helper', () => {
   const originalFetch = global.fetch;
 
+  beforeEach(() => {
+    clearProductsCache();
+  });
+
   afterEach(() => {
     global.fetch = originalFetch;
+    clearProductsCache();
     jest.resetAllMocks();
   });
 
@@ -34,7 +39,7 @@ describe('products API helper', () => {
       }),
     }) as unknown as typeof fetch;
 
-    const products = await getProducts();
+    const products = await getProducts(true);
 
     expect(products).toHaveLength(1);
     expect(products[0]).toMatchObject({ id: 1, name: 'Test Product' });

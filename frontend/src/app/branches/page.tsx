@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 const BRANCHES = [
   { name: 'Ayat Branch', address: 'Ayat Zone 2, Main Road', phone: '+251 116 889 900', hours: '24 Hours', services: ['Prescription', 'Consultation', 'Delivery Pickup', 'Loyalty'], coordinates: '9.02, 38.76' },
@@ -14,6 +15,7 @@ const BRANCHES = [
 ];
 
 export default function BranchesPage() {
+  const { t } = useLanguage();
   const [selectedBranch, setSelectedBranch] = useState(BRANCHES[0]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -26,16 +28,16 @@ export default function BranchesPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="text-center max-w-2xl mx-auto mb-10">
-        <span className="text-brand-600 text-xs font-bold uppercase tracking-wider">Find Us</span>
-        <h1 className="text-4xl font-extrabold text-neutral-900 tracking-tight mt-2">Our Branches</h1>
-        <p className="text-sm text-neutral-500 mt-3">Visit any of our 7 branches across Ethiopia for medications, consultations, and health services.</p>
+        <span className="text-brand-600 text-xs font-bold uppercase tracking-wider">{t('branches.find_us')}</span>
+        <h1 className="text-4xl font-extrabold text-neutral-900 tracking-tight mt-2">{t('branches.title')}</h1>
+        <p className="text-sm text-neutral-500 mt-3">{t('branches.subtitle')}</p>
       </div>
 
       {/* Search */}
       <div className="max-w-xl mx-auto mb-8 relative">
         <input
           type="text"
-          placeholder="Search by branch name, area, or service..."
+          placeholder={t('branches.search_placeholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pl-10 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
@@ -46,7 +48,7 @@ export default function BranchesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Branch List */}
         <div className="lg:col-span-1 space-y-3">
-          {filtered.map((branch, idx) => (
+          {filtered.map((branch) => (
             <button
               key={branch.name}
               onClick={() => setSelectedBranch(branch)}
@@ -62,7 +64,7 @@ export default function BranchesPage() {
                   <p className="text-xs text-gray-500 mt-0.5">{branch.address}</p>
                 </div>
                 {branch.hours === '24 Hours' && (
-                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full">Open 24/7</span>
+                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full">{t('branches.open_247')}</span>
                 )}
               </div>
             </button>
@@ -105,16 +107,16 @@ export default function BranchesPage() {
 
                 <div className="flex flex-col gap-2">
                   <a href={`tel:${selectedBranch.phone}`} className="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-2.5 text-sm text-center transition shadow-sm">
-                    Call Branch
+                    {t('branches.call_branch')}
                   </a>
                   <Link href="/health?action=upload" className="rounded-xl border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-6 py-2.5 text-sm text-center transition">
-                    Upload Rx
+                    {t('nav.upload_prescription')}
                   </Link>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3">Available Services</h3>
+                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3">{t('branches.services')}</h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedBranch.services.map((service) => (
                     <span key={service} className="text-xs font-semibold text-brand-700 bg-brand-50 border border-brand-100 px-3 py-1.5 rounded-full">

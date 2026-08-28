@@ -12,6 +12,10 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 
 import {
@@ -19,7 +23,19 @@ import {
   ApiOperation,
   ApiQuery,
   ApiParam,
+  ApiConsumes,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
+
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '@michu/shared';
 
 import {
   ProductsService,
@@ -27,6 +43,42 @@ import {
   UpdateProductDto,
   ProductFilterDto,
 } from './products.service';
+
+const PRODUCT_UPLOAD_PATH = './uploads/products';
+const ALLOWED_IMAGE_MIME_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+];
+const ALLOWED_IMAGE_EXTENSIONS = ['.jpeg', '.jpg', '.png', '.webp'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+if (!existsSync(PRODUCT_UPLOAD_PATH)) {
+  mkdirSync(PRODUCT_UPLOAD_PATH, { recursive: true });
+}
+
+function productImageFilename(req: any, file: Express.Multer.File, callback: (error: Error | null, filename: string) => void) {
+  const safeName = file.originalname
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9.\-_]/g, '');
+  const fileExtension = extname(safeName) || extname(file.originalname);
+  callback(null, `${Date.now()}-${safeName}${fileExtension}`);
+}
+
+function productImageFileFilter(
+  req: any,
+  file: Express.Multer.File,
+  callback: (error: Error | null, acceptFile: boolean) => void,
+) {
+  const extension = extname(file.originalname).toLowerCase();
+  if (ALLOWED_IMAGE_MIME_TYPES.includes(file.mimetype) && ALLOWED_IMAGE_EXTENSIONS.includes(extension)) {
+    callback(null, true);
+  } else {
+    callback(new BadRequestException('Invalid image type. Only JPG, JPEG, PNG, and WEBP are allowed.'), false);
+  }
+}
 
 @ApiTags('Products')
 @Controller('products')
@@ -134,7 +186,43 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
+  @Post('upload')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload a product image' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: PRODUCT_UPLOAD_PATH,
+        filename: productImageFilename,
+      }),
+      fileFilter: productImageFileFilter,
+      limits: {
+        fileSize: MAX_IMAGE_SIZE,
+      },
+    }),
+  )
+  uploadImage(@UploadedFile() file: any) {
+    if (!file) {
+      throw new BadRequestException('No image file was uploaded.');
+    }
+
+    return {
+      message: 'Image uploaded successfully',
+      filename: file.filename,
+      originalName: file.originalname,
+      size: file.size,
+      type: file.mimetype,
+      url: `/uploads/products/${file.filename}`,
+    };
+  }
+
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new product' })
   create(
@@ -144,6 +232,9 @@ export class ProductsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a product' })
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -156,6 +247,9 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a product' })
   remove(
     @Param('id', ParseIntPipe) id: number,

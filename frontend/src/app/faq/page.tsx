@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 const FAQS = [
   {
@@ -51,7 +52,7 @@ const FAQS = [
       },
       {
         q: 'How do I request a refund?',
-        a: 'Contact our customer support at +251 911 965 779 or email support@michupharmacy.et with your order ID and reason for return.',
+        a: 'Contact our customer support at 0904040364 / 0931325959 or email mkoo7891@gmail.com with your order ID and reason for return.',
       },
     ],
   },
@@ -77,6 +78,7 @@ const FAQS = [
 export default function FAQPage() {
   const [openIndex, setOpenIndex] = useState<{ cat: number; q: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const { t } = useLanguage();
 
   const filtered = FAQS.map((cat) => ({
     ...cat,
@@ -92,15 +94,15 @@ export default function FAQPage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="text-center max-w-2xl mx-auto mb-10">
         <span className="text-brand-600 text-xs font-bold uppercase tracking-wider">Help Center</span>
-        <h1 className="text-4xl font-extrabold text-neutral-900 tracking-tight mt-2">Frequently Asked Questions</h1>
-        <p className="text-sm text-neutral-500 mt-3">Find quick answers to common questions about orders, prescriptions, returns, and our loyalty program.</p>
+        <h1 className="text-4xl font-extrabold text-neutral-900 tracking-tight mt-2">{t('faq.title')}</h1>
+        <p className="text-sm text-neutral-500 mt-3">{t('faq.subtitle')}</p>
       </div>
 
       {/* Search */}
       <div className="max-w-xl mx-auto mb-8 relative">
         <input
           type="text"
-          placeholder="Search questions..."
+          placeholder={t('products.search_placeholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pl-10 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
@@ -139,11 +141,11 @@ export default function FAQPage() {
 
       {/* Contact CTA */}
       <div className="mt-12 bg-brand-50 border border-brand-100 rounded-3xl p-8 text-center">
-        <h3 className="text-lg font-bold text-brand-900 mb-2">Still have questions?</h3>
-        <p className="text-sm text-gray-500 mb-4">Our customer support team is available 24/7 to assist you.</p>
+        <h3 className="text-lg font-bold text-brand-900 mb-2">{t('faq.title')}</h3>
+        <p className="text-sm text-gray-500 mb-4">{t('faq.subtitle')}</p>
         <div className="flex flex-wrap justify-center gap-4">
-          <a href="tel:+251911965779" className="rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-2.5 text-sm transition">
-            Call +251 911 965 779
+          <a href="tel:0904040364" className="rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-2.5 text-sm transition">
+            Call 0904040364 / 0931325959
           </a>
           <Link href="/about" className="rounded-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold px-6 py-2.5 text-sm transition">
             Contact Us

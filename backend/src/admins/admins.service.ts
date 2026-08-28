@@ -1,13 +1,21 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { isStaffRole } from '@michu/shared';
 import { Admin } from './entities/admin.entity';
 import { CreateAdminDto, AdminLoginDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { AdminAuthResponse } from './interfaces/admin.interface';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AdminsService {
@@ -16,27 +24,60 @@ export class AdminsService {
     private readonly adminsRepo: Repository<Admin>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: UsersService,
   ) {}
 
   async validateCredentials(email: string, password: string): Promise<Admin | null> {
-    const admin = await this.adminsRepo.findOne({ where: { email } });
-    if (!admin || !admin.isActive) return null;
+    const normalizedEmail = email.toLowerCase().trim();
 
-    let isPasswordValid = false;
-    if (admin.passwordHash.startsWith('$2a$') || admin.passwordHash.startsWith('$2b$')) {
-      isPasswordValid = await bcrypt.compare(password, admin.passwordHash);
-    } else {
-      isPasswordValid = admin.passwordHash === password;
+    // 1. Check in admins table
+    const admin = await this.adminsRepo.findOne({ where: { email: normalizedEmail } });
+    if (admin && admin.isActive) {
+      let isPasswordValid = false;
+      if (admin.passwordHash.startsWith('$2a$') || admin.passwordHash.startsWith('$2b$')) {
+        isPasswordValid = await bcrypt.compare(password, admin.passwordHash);
+      } else {
+        isPasswordValid = admin.passwordHash === password;
+        if (isPasswordValid) {
+          // Upgrade plaintext password hash to bcrypt hash
+          admin.passwordHash = await bcrypt.hash(password, 10);
+          await this.adminsRepo.save(admin);
+        }
+      }
+
       if (isPasswordValid) {
-        // Upgrade plaintext password hash to bcrypt hash
-        admin.passwordHash = await bcrypt.hash(password, 10);
-        await this.adminsRepo.save(admin);
+        await this.adminsRepo.update(admin.id, { lastLoginAt: new Date() });
+        return admin;
       }
     }
 
-    if (!isPasswordValid) return null;
-    await this.adminsRepo.update(admin.id, { lastLoginAt: new Date() });
-    return admin;
+    // 2. Check in users table for staff / admin users
+    try {
+      const user = await this.usersService.findByEmail(normalizedEmail, true);
+      if (user && user.isActive && isStaffRole(user.role)) {
+        const isPasswordValid = await this.usersService.validatePassword(user, password);
+        if (isPasswordValid) {
+          // Map user to Admin model representation
+          const mappedAdmin = new Admin();
+          mappedAdmin.id = user.id;
+          mappedAdmin.email = user.email;
+          mappedAdmin.name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Admin';
+          mappedAdmin.role = user.role;
+          mappedAdmin.phone = user.phone ?? undefined;
+          mappedAdmin.avatar = user.profileImage ?? undefined;
+          mappedAdmin.isActive = user.isActive;
+          mappedAdmin.lastLoginAt = new Date();
+          mappedAdmin.createdAt = user.createdAt;
+          mappedAdmin.updatedAt = user.updatedAt;
+          return mappedAdmin;
+        }
+      }
+    } catch {
+      // User lookup failed
+    }
+
+    return null;
   }
 
   async login(dto: AdminLoginDto): Promise<AdminAuthResponse> {
@@ -45,15 +86,15 @@ export class AdminsService {
       throw new BadRequestException('Invalid email or password');
     }
 
-    const secret = this.configService.get<string>('JWT_ACCESS_SECRET', 'admin-jwt-secret');
-    const expiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '1d');
+    const secret = this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
+    const expiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m');
 
     const accessToken = await this.jwtService.signAsync(
       { sub: String(admin.id), email: admin.email, role: admin.role, type: 'access' },
       { secret, expiresIn: expiresIn as any },
     );
 
-    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET', 'admin-refresh-secret');
+    const refreshSecret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
     const refreshToken = await this.jwtService.signAsync(
       { sub: String(admin.id), email: admin.email, role: admin.role, type: 'refresh' },
       { secret: refreshSecret, expiresIn: '7d' as any },
@@ -74,6 +115,7 @@ export class AdminsService {
       },
     };
   }
+
 
   async findAll(): Promise<Admin[]> {
     return this.adminsRepo.find({ order: { createdAt: 'DESC' } });

@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import ProductsClient from '../ProductsClient';
-import { getProductById, Product } from '@/lib/api/products';
+import { getProductById, Product, getImageUrl } from '@/lib/api/products';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -44,6 +45,7 @@ const getProductBranches = (id: number): string[] => {
 };
 
 export default function ProductDetailPage({ params }: ProductPageProps) {
+  const { t } = useLanguage();
   const resolvedParams = use(params);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,7 +83,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       <div className="mx-auto max-w-7xl px-4 py-16 flex justify-center items-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin"></div>
-          <p className="text-sm font-semibold text-neutral-500 animate-pulse">Loading product details...</p>
+          <p className="text-sm font-semibold text-neutral-500 animate-pulse">{t('ui.loading')}</p>
         </div>
       </div>
     );
@@ -93,16 +95,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         <svg className="w-20 h-20 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h1 className="text-3xl font-extrabold text-gray-800">Product Not Found</h1>
-        <p className="text-sm text-gray-500 mt-2">{error || "The product you're looking for doesn't exist or has been removed."}</p>
+        <h1 className="text-3xl font-extrabold text-gray-800">{t('product.not_found')}</h1>
+        <p className="text-sm text-gray-500 mt-2">{error || t('product.not_found_desc')}</p>
         <Link href="/products" className="mt-6 inline-block rounded-full bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-2.5 text-sm transition">
-          Back to Products
+          {t('product.back_to_products')}
         </Link>
       </div>
     );
   }
 
-  const priceNum = parseFloat(product.price);
+  const priceNum = parseFloat(String(product.price)) || 0;
   const productBranches = getProductBranches(product.id);
 
   const getFullDescription = () => {
@@ -143,14 +145,14 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         imageType: getProductImageType(product.name, product.category) as any,
       });
     }
-    triggerToast(`Added ${quantity} x ${product.name.split(' ').slice(0, 3).join(' ')} to cart!`);
+    triggerToast(`${quantity}x ${product.name.split(' ').slice(0, 3).join(' ')} — ${t('products.added_cart')}`);
     setQuantity(1);
   };
 
   const handleWishlistToggle = () => {
     if (isInWishlist(String(product.id))) {
       removeFromWishlist(String(product.id));
-      triggerToast('Removed from wishlist');
+      triggerToast(t('products.removed_wishlist'));
     } else {
       addToWishlist({
         id: String(product.id),
@@ -161,15 +163,16 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         brand: product.brand || 'Other',
         category: product.category || 'Medicine',
       });
-      triggerToast('Added to wishlist!');
+      triggerToast(t('products.added_wishlist'));
     }
   };
 
   const renderProductImage = (type: string) => {
-    if (product.imageUrl) {
+    const fullImgUrl = getImageUrl(product.imageUrl);
+    if (fullImgUrl) {
       return (
         <img
-          src={product.imageUrl}
+          src={fullImgUrl}
           alt={product.name}
           className="w-full h-full object-cover rounded-2xl"
         />
@@ -203,9 +206,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       )}
 
       <nav className="text-xs font-semibold text-gray-500 flex items-center gap-1.5 mb-6">
-        <Link href="/" className="hover:text-brand-600 transition">Home</Link>
+        <Link href="/" className="hover:text-brand-600 transition">{t('product.home')}</Link>
         <span>&gt;</span>
-        <Link href="/products" className="hover:text-brand-600 transition">Shop</Link>
+        <Link href="/products" className="hover:text-brand-600 transition">{t('product.back_to_shop')}</Link>
         <span>&gt;</span>
         <span className="text-brand-700">{product.name.split(' ').slice(0, 3).join(' ')}...</span>
       </nav>
@@ -214,7 +217,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         <div className="aspect-square rounded-3xl overflow-hidden shadow-lg bg-gray-50 relative">
           {renderProductImage(getProductImageType(product.name, product.category))}
           {product.prescriptionRequired && (
-            <span className="absolute top-4 left-4 bg-red-50 text-red-600 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full border border-red-200 shadow-sm z-10">Rx Required</span>
+            <span className="absolute top-4 left-4 bg-red-50 text-red-600 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full border border-red-200 shadow-sm z-10">{t('cart.rx_required')}</span>
           )}
         </div>
 
@@ -239,7 +242,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
             </div>
             <button onClick={handleAddToCart} className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 text-sm active:scale-95 transition shadow-md shadow-brand-100">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-              Add to Cart
+              {t('product.add_to_cart')}
             </button>
             <button onClick={handleWishlistToggle} className={`p-3.5 rounded-xl border transition active:scale-95 ${isInWishlist(String(product.id)) ? 'bg-red-50 text-red-500 border-red-100 hover:bg-red-100' : 'text-neutral-400 hover:text-red-500 hover:bg-neutral-50 border-gray-300'}`} aria-label="Add to wishlist">
               <svg className="w-6 h-6" fill={isInWishlist(String(product.id)) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
@@ -249,12 +252,12 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           {product.prescriptionRequired && (
             <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-red-800 text-xs font-medium flex items-start gap-2">
               <svg className="w-5 h-5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-              <div><p className="font-bold">Prescription Required</p><p className="mt-0.5">This medication requires a valid prescription collected at branch.</p></div>
+              <div><p className="font-bold">{t('product.rx_required_title')}</p><p className="mt-0.5">{t('product.rx_required_desc')}</p></div>
             </div>
           )}
 
           <div className="space-y-2">
-            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Available at Branches</h3>
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">{t('product.available_branches')}</h3>
             <div className="flex flex-wrap gap-2">
               {productBranches.map((branch) => (<span key={branch} className="text-xs font-semibold text-brand-700 bg-brand-50 border border-brand-100 px-3 py-1 rounded-full">{branch}</span>))}
             </div>
@@ -269,7 +272,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               </div>
-              <h3 className="text-sm font-bold text-neutral-800">Product Details</h3>
+              <h3 className="text-sm font-bold text-neutral-800">{t('product.details_tab')}</h3>
             </div>
             <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{getFullDescription()}</p>
           </div>
@@ -278,7 +281,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
-              <h3 className="text-sm font-bold text-neutral-800">Dosage & Usage</h3>
+              <h3 className="text-sm font-bold text-neutral-800">{t('product.dosage_tab')}</h3>
             </div>
             <p className="text-xs text-gray-600 leading-relaxed">{getDosage()}</p>
           </div>
@@ -287,7 +290,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
               </div>
-              <h3 className="text-sm font-bold text-neutral-800">Safety & Storage</h3>
+              <h3 className="text-sm font-bold text-neutral-800">{t('product.safety_tab')}</h3>
             </div>
             <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{`${getSideEffects()}\n\n${getStorage()}`}</p>
           </div>
@@ -295,7 +298,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       </div>
 
       <div className="mt-12 border-t pt-8">
-        <h2 className="text-2xl font-extrabold text-neutral-900 tracking-tight mb-6">Customer Reviews</h2>
+        <h2 className="text-2xl font-extrabold text-neutral-900 tracking-tight mb-6">{t('product.reviews_title')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
             { name: 'Abebe K.', rating: 5, comment: 'Excellent product! Fast delivery and well packaged.', date: 'July 8, 2026' },
@@ -318,7 +321,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       </div>
 
       <div className="mt-12 border-t pt-8">
-        <h2 className="text-2xl font-extrabold text-neutral-900 tracking-tight mb-6">You May Also Like</h2>
+        <h2 className="text-2xl font-extrabold text-neutral-900 tracking-tight mb-6">{t('product.related_title')}</h2>
         <ProductsClient currentId={String(product.id)} category={product.category || undefined} />
       </div>
     </div>

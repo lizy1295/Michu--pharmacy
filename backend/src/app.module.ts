@@ -20,7 +20,10 @@ import { BranchesModule } from './branches/branches.module';
 import { ReportsModule } from './reports/reports.module';
 import { SettingsModule } from './settings/settings.module';
 import { PaymentsModule } from './payments/payments.module';
+import { DoctorsModule } from './doctors/doctors.module';
 import { TypeOrmConfigService } from './common/database/typeorm.config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -30,6 +33,10 @@ import { TypeOrmConfigService } from './common/database/typeorm.config';
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
     }),
     AuthModule,
     UsersModule,
@@ -50,6 +57,7 @@ import { TypeOrmConfigService } from './common/database/typeorm.config';
     BranchesModule,
     ReportsModule,
     SettingsModule,
+    DoctorsModule,
   ],
 })
 export class AppModule {}

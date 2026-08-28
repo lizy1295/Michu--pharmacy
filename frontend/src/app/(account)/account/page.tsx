@@ -2,17 +2,20 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { AuthUser } from '@michu/shared';
 import { getMe } from '@/lib/api/auth';
 import { clearTokens, getAccessToken } from '@/lib/auth/tokens';
 import { getOrdersByCustomer, Order } from '@/lib/api/orders';
+import { useLanguage, LANGUAGES, Language } from '@/context/LanguageContext';
 
 export default function AccountPage() {
+  const { language, setLanguage, t } = useLanguage();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  const [activeTab, setActiveTab] = useState<'orders' | 'rx'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'rx' | 'language'>('orders');
 
   useEffect(() => {
     const token = getAccessToken();
@@ -53,10 +56,104 @@ export default function AccountPage() {
     );
   }
 
+  // Component for Language Choice 6-Languages Card
+  const LanguagePreferencesCard = () => (
+    <div className="bg-white border rounded-2xl p-6 shadow-sm space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-4">
+        <div>
+          <h3 className="text-lg font-black text-neutral-900 flex items-center gap-2">
+            <span>🌐</span>
+            <span>{t('dashboard.lang_title')}</span>
+          </h3>
+          <p className="text-xs text-gray-500 mt-1">
+            {t('dashboard.lang_subtitle')}
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold shrink-0 self-start sm:self-auto">
+          <span>Active:</span>
+          <strong className="uppercase">{language}</strong>
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        {LANGUAGES.map((langItem) => {
+          const isSelected = language === langItem.code;
+          return (
+            <button
+              key={langItem.code}
+              type="button"
+              onClick={() => setLanguage(langItem.code)}
+              className={`p-4 rounded-xl border text-left transition relative overflow-hidden flex flex-col justify-between min-h-[105px] group ${
+                isSelected
+                  ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/30 shadow-sm'
+                  : 'border-gray-200 bg-gray-50/50 hover:bg-white hover:border-emerald-300'
+              }`}
+            >
+              {isSelected && (
+                <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl shrink-0">{langItem.flag}</span>
+                <div>
+                  <h4 className={`text-sm font-extrabold ${isSelected ? 'text-emerald-950' : 'text-neutral-800 group-hover:text-emerald-800'}`}>
+                    {langItem.nativeName}
+                  </h4>
+                  <p className="text-[11px] text-gray-500 font-medium">
+                    {langItem.name}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-2 pt-2 border-t border-gray-200/60 flex items-center justify-between text-[10px]">
+                <span className={isSelected ? 'text-emerald-700 font-bold' : 'text-gray-400'}>
+                  {isSelected ? t('dashboard.lang_active') : t('dashboard.lang_select_btn')}
+                </span>
+                <span className="font-mono text-gray-400 uppercase">
+                  {langItem.code}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   // Guest Logged-out view
   if (!user) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-12">
+      <div className="mx-auto max-w-4xl px-4 py-12 space-y-8">
+
+        {/* Hero Image Banner */}
+        <div className="relative w-full h-56 sm:h-72 rounded-3xl overflow-hidden shadow-xl">
+          <Image
+            src="/pharmacy-hero.jpg"
+            alt="Michu Pharmacy — Your trusted health partner"
+            fill
+            priority
+            className="object-cover object-center"
+          />
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/80 via-emerald-800/50 to-transparent" />
+          {/* Text on top of image */}
+          <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-emerald-300 mb-2">
+              Michu Pharmacy
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight drop-shadow-md">
+              {t('nav.slogan')}
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm text-white/80 max-w-xs leading-relaxed">
+              {t('dashboard.subtitle')}
+            </p>
+          </div>
+        </div>
+
         <div className="bg-white border rounded-3xl p-8 md:p-12 shadow-sm text-center relative overflow-hidden">
           <div className="absolute -top-12 -left-12 w-48 h-48 rounded-full bg-brand-500/5 -z-10 blur-2xl"></div>
           <div className="absolute -bottom-24 -right-12 w-64 h-64 rounded-full bg-emerald-500/5 -z-10 blur-3xl"></div>
@@ -67,9 +164,11 @@ export default function AccountPage() {
             </svg>
           </div>
 
-          <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">My Account</h1>
+          <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">
+            {t('dashboard.guest_title')}
+          </h1>
           <p className="mt-3 text-gray-500 max-w-md mx-auto leading-relaxed">
-            Create an account to upload prescriptions, track order history, book clinical consultations, and earn rewards with your Yene Card.
+            {t('dashboard.guest_desc')}
           </p>
 
           <div className="mt-8 flex justify-center gap-4">
@@ -77,13 +176,13 @@ export default function AccountPage() {
               href="/login"
               className="rounded-full bg-brand-600 px-8 py-3 text-sm font-bold text-white hover:bg-brand-700 transition active:scale-95 shadow-md shadow-brand-100"
             >
-              Sign In
+              {t('nav.sign_in')}
             </Link>
             <Link
               href="/products"
               className="rounded-full border border-gray-300 hover:bg-gray-50 px-8 py-3 text-sm font-bold text-gray-600 transition active:scale-95"
             >
-              Shop First
+              {t('dashboard.shop_products')}
             </Link>
           </div>
 
@@ -103,6 +202,9 @@ export default function AccountPage() {
             </div>
           </div>
         </div>
+
+        {/* 6 Languages Preference Card for Guests */}
+        <LanguagePreferencesCard />
       </div>
     );
   }
@@ -110,15 +212,49 @@ export default function AccountPage() {
   // User Logged-in view
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">My Account</h1>
-        <p className="text-sm text-neutral-500 mt-1">Manage details, active prescription lists, and Yene Card loyalty points.</p>
+
+      {/* Hero Welcome Banner — image-first design */}
+      <div className="relative w-full h-64 sm:h-80 rounded-3xl overflow-hidden mb-8 shadow-2xl">
+        <Image
+          src="/pharmacy-hero.jpg"
+          alt="Michu Pharmacy dashboard banner"
+          fill
+          priority
+          className="object-cover object-center"
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+
+        <div className="absolute bottom-0 left-0 right-0 px-6 sm:px-10 py-5 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.3em] text-emerald-300 mb-1 drop-shadow">
+              {t('dashboard.welcome_back')}
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight drop-shadow-lg">
+              {user.firstName} {user.lastName}
+            </h1>
+            <p className="mt-1 text-xs text-white/80 max-w-xs leading-relaxed drop-shadow">
+              {t('dashboard.subtitle')}
+            </p>
+          </div>
+
+          {/* Pill badges */}
+          <div className="shrink-0 hidden sm:flex flex-col items-end gap-2">
+            <span className="bg-white/15 backdrop-blur-md border border-white/25 text-white text-[10px] font-extrabold uppercase tracking-widest px-3 py-1.5 rounded-full">
+              {user.role.replace('_', ' ')}
+            </span>
+            <span className="bg-emerald-500/20 backdrop-blur-md border border-emerald-300/30 text-emerald-200 text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+              <span>🌐</span>
+              <span className="uppercase">{language}</span>
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Left Column: User Profile Details & Yene Card */}
-        <aside className="space-y-6">
+        {/* Left Column: User Profile Details, Language Selector Quick Card & Yene Card (Sticky) */}
+        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           
           {/* Details Card */}
           <div className="bg-white border rounded-2xl p-5 shadow-sm space-y-4">
@@ -137,7 +273,7 @@ export default function AccountPage() {
 
             <dl className="space-y-3 text-sm">
               <div>
-                <dt className="text-xs font-bold text-gray-400 uppercase">Registered Email</dt>
+                <dt className="text-xs font-bold text-gray-400 uppercase">{t('dashboard.registered_email')}</dt>
                 <dd className="font-semibold text-gray-700 mt-0.5">{user.email}</dd>
               </div>
             </dl>
@@ -146,7 +282,7 @@ export default function AccountPage() {
               onClick={handleLogout}
               className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-xs font-bold text-neutral-600 hover:bg-neutral-50 active:scale-95 transition"
             >
-              Sign Out Account
+              {t('nav.sign_out')}
             </button>
           </div>
 
@@ -158,7 +294,7 @@ export default function AccountPage() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-[10px] text-brand-300 font-extrabold uppercase tracking-widest">Michu Pharmacy Loyalty</p>
-                <h3 className="text-xl font-black tracking-tight mt-0.5">YENE CARD</h3>
+                <h3 className="text-xl font-black tracking-tight mt-0.5">{t('dashboard.yene_card')}</h3>
               </div>
               <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold border border-white/15">YC</span>
             </div>
@@ -169,38 +305,47 @@ export default function AccountPage() {
                 <p className="text-sm font-bold tracking-wide mt-0.5">{user.firstName} {user.lastName}</p>
               </div>
               <div className="text-right">
-                <p className="text-[9px] text-brand-400 font-semibold uppercase">Points Balance</p>
+                <p className="text-[9px] text-brand-400 font-semibold uppercase">{t('dashboard.points_balance')}</p>
                 <p className="text-xl font-black mt-0.5">480 <span className="text-xs font-normal text-brand-300">pts</span></p>
               </div>
             </div>
 
             <div className="mt-4 pt-3 border-t border-white/10 flex justify-between items-center text-[10px] text-brand-300">
-              <span>Tier status: <strong className="text-brand-200">Emerald Class</strong></span>
-              <span>10% Discount Coupon Active</span>
+              <span>{t('dashboard.loyalty_tier')}: <strong className="text-brand-200">Emerald Class</strong></span>
+              <span>{t('dashboard.discount_active')}</span>
             </div>
           </div>
         </aside>
 
-        {/* Right Column: Tabbed Lists (Orders / Prescriptions) */}
+        {/* Right Column: Tabbed Lists (Orders / Prescriptions / Language Choices) */}
         <section className="lg:col-span-2 space-y-6">
           
           {/* Tab selector */}
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-gray-200 overflow-x-auto">
             <button
               onClick={() => setActiveTab('orders')}
-              className={`py-3 px-6 text-sm font-bold border-b-2 transition duration-200 ${
+              className={`py-3 px-5 text-sm font-bold border-b-2 transition duration-200 whitespace-nowrap ${
                 activeTab === 'orders' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Order History ({orders.length})
+              {t('dashboard.tab_orders')} ({orders.length})
             </button>
             <button
               onClick={() => setActiveTab('rx')}
-              className={`py-3 px-6 text-sm font-bold border-b-2 transition duration-200 ${
+              className={`py-3 px-5 text-sm font-bold border-b-2 transition duration-200 whitespace-nowrap ${
                 activeTab === 'rx' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              My Prescriptions (2)
+              {t('dashboard.tab_prescriptions')} (2)
+            </button>
+            <button
+              onClick={() => setActiveTab('language')}
+              className={`py-3 px-5 text-sm font-bold border-b-2 transition duration-200 whitespace-nowrap flex items-center gap-1.5 ${
+                activeTab === 'language' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <span>🌐</span>
+              <span>{t('dashboard.tab_language')}</span>
             </button>
           </div>
 
@@ -220,11 +365,11 @@ export default function AccountPage() {
                   <div key={order.id} className="bg-white border rounded-2xl p-5 shadow-sm space-y-3.5">
                     <div className="flex flex-col sm:flex-row justify-between border-b pb-3 gap-2">
                       <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase">Order Ref</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase">{t('dashboard.order_ref')}</p>
                         <p className="text-sm font-extrabold font-mono text-neutral-800">{order.orderNumber}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase">Order Date</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase">{t('dashboard.order_date')}</p>
                         <p className="text-xs text-neutral-600 mt-0.5">{new Date(order.createdAt).toLocaleDateString()}</p>
                       </div>
                       <div>
@@ -248,17 +393,17 @@ export default function AccountPage() {
                     </div>
 
                     <div className="pt-3 border-t flex justify-between items-center text-xs">
-                      <p className="text-gray-500">Paid via <strong className="uppercase text-brand-700">{order.paymentMethod || 'cash'}</strong></p>
-                      <p className="text-sm font-extrabold text-neutral-900 font-mono">Total: {Number(order.total).toFixed(2)} ETB</p>
+                      <p className="text-gray-500">{t('dashboard.paid_via')} <strong className="uppercase text-brand-700">{order.paymentMethod || 'cash'}</strong></p>
+                      <p className="text-sm font-extrabold text-neutral-900 font-mono">{t('dashboard.total')}: {Number(order.total).toFixed(2)} ETB</p>
                     </div>
                   </div>
                 ))
               ) : (
                 <div className="p-10 border rounded-2xl bg-slate-50 text-center space-y-3">
-                  <p className="text-sm font-bold text-slate-700">No orders found in your order history</p>
-                  <p className="text-xs text-slate-400">Place an order using Telebirr or CBE Birr and it will appear here in real time.</p>
+                  <p className="text-sm font-bold text-slate-700">{t('dashboard.no_orders')}</p>
+                  <p className="text-xs text-slate-400">{t('dashboard.no_orders_sub')}</p>
                   <Link href="/products" className="inline-block rounded-full bg-brand-600 text-white font-bold text-xs px-6 py-2">
-                    Shop Products
+                    {t('dashboard.shop_products')}
                   </Link>
                 </div>
               )}
@@ -275,7 +420,7 @@ export default function AccountPage() {
                     <p className="text-xs text-gray-400 mt-0.5">Uploaded on July 10, 2026</p>
                   </div>
                   <span className="bg-brand-50 border border-brand-100 text-brand-700 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full">
-                    Awaiting Review
+                    {t('dashboard.rx_status_review')}
                   </span>
                 </div>
                 <div className="text-xs text-neutral-500 bg-neutral-50 rounded-xl p-3 border">
@@ -290,14 +435,19 @@ export default function AccountPage() {
                     <p className="text-xs text-gray-400 mt-0.5">Uploaded on May 24, 2026</p>
                   </div>
                   <span className="bg-emerald-100 border text-emerald-800 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full">
-                    Approved
+                    {t('dashboard.rx_status_approved')}
                   </span>
                 </div>
                 <div className="text-xs text-neutral-500 bg-neutral-50 rounded-xl p-3 border">
-                  <p><strong>Pharmacist Notes:</strong> Prescription validated. Medications prepared & collected at Bethel Branch.</p>
+                  <p><strong>Pharmacist Notes:</strong> {t('dashboard.rx_pick_up_notice')}</p>
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Tab 3: Language Choice (6 Languages) */}
+          {activeTab === 'language' && (
+            <LanguagePreferencesCard />
           )}
 
         </section>

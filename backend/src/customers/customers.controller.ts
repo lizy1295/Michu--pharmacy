@@ -9,9 +9,15 @@ export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all customers' })
+  @ApiOperation({ summary: 'Get all customers (registered users with role=customer)' })
   findAll() {
     return this.customersService.findAll();
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Get customer statistics (total, active, new this month)' })
+  getStats() {
+    return this.customersService.getStats();
   }
 
   @Get(':id')
@@ -28,7 +34,7 @@ export class CustomersController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update customer' })
+  @ApiOperation({ summary: 'Update customer status or details' })
   update(@Param('id') id: string, @Body() dto: any) {
     return this.customersService.update(Number(id), dto);
   }

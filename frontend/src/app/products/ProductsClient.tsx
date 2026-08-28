@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
-import { getProducts, Product } from '@/lib/api/products';
+import { getProducts, Product, getImageUrl } from '@/lib/api/products';
+import { useLanguage } from '@/context/LanguageContext';
 
 const FALLBACK_PRODUCTS = [
   { id: 'p1', name: '(Exedexe) Dextromethorphan syrup 120ml', price: 240, prescriptionRequired: false, imageType: 'syrup', brand: 'Exedexe', category: 'Medicines', branches: ['Adama Branch', 'Ayat Branch', 'Hawassa Branch'] },
@@ -26,6 +27,7 @@ interface ProductsClientProps {
 }
 
 export default function ProductsClient({ currentId, category }: ProductsClientProps) {
+  const { t } = useLanguage();
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -84,7 +86,7 @@ export default function ProductsClient({ currentId, category }: ProductsClientPr
 
   if (related.length === 0) {
     return (
-      <p className="text-sm text-gray-500">No related products found. Browse our <Link href="/products" className="text-brand-600 font-bold hover:underline">full catalog</Link>.</p>
+      <p className="text-sm text-gray-500">{t('product.no_related')} <Link href="/products" className="text-brand-600 font-bold hover:underline">{t('nav.shop')}</Link>.</p>
     );
   }
 
@@ -107,10 +109,18 @@ export default function ProductsClient({ currentId, category }: ProductsClientPr
             >
               <div>
                 <div className="aspect-video w-full rounded-xl overflow-hidden mb-4 relative shadow-inner bg-neutral-50">
-                  {renderProductIllustration(prod.imageType)}
+                  {prod.imageUrl ? (
+                    <img
+                      src={getImageUrl(prod.imageUrl) as string}
+                      alt={prod.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    renderProductIllustration(prod.imageType)
+                  )}
                   {prod.prescriptionRequired && (
                     <span className="absolute top-2 left-2 bg-red-50 text-red-600 text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border border-red-200 shadow-sm">
-                      Rx Required
+                      {t('cart.rx_required')}
                     </span>
                   )}
                 </div>
@@ -119,7 +129,7 @@ export default function ProductsClient({ currentId, category }: ProductsClientPr
               </div>
               <div className="mt-4 pt-3 border-t border-neutral-50 flex items-center justify-between">
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-neutral-400 font-semibold uppercase">Price</span>
+                  <span className="text-[10px] text-neutral-400 font-semibold uppercase">{t('products.price_label')}</span>
                   <span className="text-base font-extrabold text-neutral-900">{prod.price} <span className="text-xs font-normal">ETB</span></span>
                 </div>
                 <div className="flex gap-2">
@@ -129,10 +139,10 @@ export default function ProductsClient({ currentId, category }: ProductsClientPr
                       e.stopPropagation();
                       if (fav) {
                         removeFromWishlist(prod.id);
-                        triggerToast('Removed from wishlist');
+                        triggerToast(t('products.removed_wishlist'));
                       } else {
                         addToWishlist({ id: prod.id, name: prod.name, price: prod.price, prescriptionRequired: prod.prescriptionRequired, imageType: prod.imageType, brand: prod.brand, category: prod.category });
-                        triggerToast('Added to wishlist!');
+                        triggerToast(t('products.added_wishlist'));
                       }
                     }}
                     className={`p-2 rounded-xl border transition active:scale-95 ${
@@ -146,7 +156,7 @@ export default function ProductsClient({ currentId, category }: ProductsClientPr
                       e.preventDefault();
                       e.stopPropagation();
                       addToCart({ id: prod.id, name: prod.name, price: prod.price, prescriptionRequired: prod.prescriptionRequired, imageType: prod.imageType });
-                      triggerToast(`Added ${prod.name.split(' ')[0]} to cart!`);
+                      triggerToast(`${prod.name.split(' ')[0]} — ${t('products.added_cart')}`);
                     }}
                     className="p-2 rounded-xl bg-brand-600 text-white hover:bg-brand-700 hover:scale-105 active:scale-95 transition shadow-sm"
                   >

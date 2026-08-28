@@ -1,7 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
+import PrescriptionIntakeForm from '@/components/prescriptions/PrescriptionIntakeForm';
 
 const BRANCHES = [
   { name: 'Adama Branch', address: 'Bole Road, Near Adama Stadium', phone: '+251 221 112 233', hours: '8:00 AM - 10:00 PM' },
@@ -41,7 +44,8 @@ const DRUG_DATABASE: Record<string, { uses: string; dosage: string; warnings: st
   }
 };
 
-export default function HealthServicesPage() {
+function HealthServicesContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'upload' | 'consult' | 'drug-info'>('upload');
   
@@ -64,20 +68,8 @@ export default function HealthServicesPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Prescription Form State
-  const [rxFile, setRxFile] = useState<File | null>(null);
-  const [rxName, setRxName] = useState('');
-  const [rxPhone, setRxPhone] = useState('');
-  const [rxBranch, setRxBranch] = useState(BRANCHES[0].name);
-  const [rxNotes, setRxNotes] = useState('');
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const handleScanClick = () => {
-    fileInputRef.current?.click();
-  };
-
   // Consultation Form State
-  const [consultDoctor, setConsultDoctor] = useState('Dr. Sarah Hailu (Clinical Lead)');
+  const [consultDoctor, setConsultDoctor] = useState('Dr. Million Negasa (Founder & Chief Pharmacist)');
   const [consultDate, setConsultDate] = useState('');
   const [consultTime, setConsultTime] = useState('10:00 AM');
   const [consultReason, setConsultReason] = useState('');
@@ -86,23 +78,12 @@ export default function HealthServicesPage() {
   const [drugSearch, setDrugSearch] = useState('');
   const [drugResult, setDrugResult] = useState<{ name: string; uses: string; dosage: string; warnings: string } | null>(null);
 
-  const handlePrescriptionSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!rxFile) {
-      triggerToast('Please select or upload a prescription file first.');
-      return;
-    }
-    // Simulate API call
-    triggerToast('Prescription submitted! Our pharmacist will review it and SMS you.');
-    // Reset
-    setRxFile(null);
-    setRxName('');
-    setRxPhone('');
-    setRxNotes('');
-  };
-
   const handleConsultationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      triggerToast('⚠️ Internet Connection Required: Tele-health consultation booking requires an active internet connection.');
+      return;
+    }
     if (!consultDate) {
       triggerToast('Please select a preferred date.');
       return;
@@ -146,12 +127,27 @@ export default function HealthServicesPage() {
         </div>
       )}
 
-      {/* Header title */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">Health Services</h1>
-        <p className="mt-2 text-sm text-neutral-500 max-w-xl">
-          Upload prescriptions for rapid approval, schedule virtual video calls with pharmaceutical consultants, or query critical drug safety guidelines.
-        </p>
+      {/* Header title & Symptom Guide Feature Banner */}
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">{t('health.title')}</h1>
+          <p className="mt-2 text-sm text-neutral-500 max-w-xl">
+            {t('health.subtitle')}
+          </p>
+        </div>
+        <Link
+          href="/symptoms"
+          className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-emerald-800 to-teal-900 text-white shadow-lg hover:shadow-xl transition border border-emerald-600/40 hover:scale-[1.01]"
+        >
+          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl shrink-0">
+            🩺
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-300">New Clinical Tool</span>
+            <p className="text-sm font-black text-white">Symptom Guide & Chronic Conditions</p>
+          </div>
+          <span className="text-emerald-300 font-bold ml-1">&rarr;</span>
+        </Link>
       </div>
 
       {/* Grid: Form options on left, Branch locator & contact info on right */}
@@ -167,7 +163,7 @@ export default function HealthServicesPage() {
                 activeTab === 'upload' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Upload Prescription
+              {t('health.tab_upload')}
             </button>
             <button
               onClick={() => setActiveTab('consult')}
@@ -175,7 +171,7 @@ export default function HealthServicesPage() {
                 activeTab === 'consult' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Book Consultation
+              {t('health.tab_consult')}
             </button>
             <button
               onClick={() => setActiveTab('drug-info')}
@@ -183,124 +179,40 @@ export default function HealthServicesPage() {
                 activeTab === 'drug-info' ? 'border-brand-600 text-brand-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Drug Info Database
+              {t('health.tab_drug_info')}
             </button>
           </div>
 
           {/* Form Content */}
           <div className="bg-white border rounded-2xl p-6 shadow-sm">
             
-            {/* 1. Upload Prescription Form */}
+            {/* 1. Upload & Intake Prescription Form */}
             {activeTab === 'upload' && (
-              <form onSubmit={handlePrescriptionSubmit} className="space-y-4">
-                <h2 className="text-xl font-bold text-gray-800">Prescription Upload Portal</h2>
-                <p className="text-xs text-gray-500">
-                  Please snap a photo or scan your physical prescription. Our pharmacists will register it in our database and prepare your medications. (Pick-up only at selected branch).
-                </p>
-
-                {/* File Dropzone */}
-                <div className="border-2 border-dashed border-gray-300 hover:border-brand-500 rounded-xl p-8 flex flex-col items-center justify-center bg-gray-50 cursor-pointer transition relative">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*,application/pdf,video/*"
-                    capture="environment"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setRxFile(e.target.files[0]);
-                      }
-                    }}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                  />
-                  <svg className="w-10 h-10 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  <span className="text-sm font-bold text-gray-700">
-                    {rxFile ? rxFile.name : 'Click or Drag & Drop Prescription File'}
-                  </span>
-                  <span className="text-[10px] text-gray-400 mt-1">Accepts PNG, JPG, PDF, MP4, MOV, AVI, WEBM up to 15MB</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleScanClick}
-                  className="w-full rounded-xl border border-brand-200 bg-white text-brand-700 font-semibold py-3 text-sm mt-3 hover:bg-brand-50 transition"
-                >
-                  Scan Prescription with Camera
-                </button>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase">Patient Full Name</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. John Doe"
-                      value={rxName}
-                      onChange={(e) => setRxName(e.target.value)}
-                      className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase">Mobile Phone Number</label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="e.g. +251 911..."
-                      value={rxPhone}
-                      onChange={(e) => setRxPhone(e.target.value)}
-                      className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase">Select Target Branch for Pick-up</label>
-                  <select
-                    value={rxBranch}
-                    onChange={(e) => setRxBranch(e.target.value)}
-                    className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
-                  >
-                    {BRANCHES.map((b) => (
-                      <option key={b.name} value={b.name}>{b.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase">Pharmacist Instructions / Notes</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Provide any information about allergies, preferred generic brands, or special instructions."
-                    value={rxNotes}
-                    onChange={(e) => setRxNotes(e.target.value)}
-                    className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full flex items-center justify-center rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 text-sm active:scale-95 transition shadow-sm"
-                >
-                  Submit Prescription Review
-                </button>
-              </form>
+              <div className="space-y-6">
+                <PrescriptionIntakeForm
+                  onSuccess={() => {
+                    triggerToast('Prescription intake successfully submitted and logged with licensed pharmacist!');
+                  }}
+                />
+              </div>
             )}
 
             {/* 2. Book Tele-health Consultation Form */}
             {activeTab === 'consult' && (
               <form onSubmit={handleConsultationSubmit} className="space-y-4">
-                <h2 className="text-xl font-bold text-gray-800">Tele-Health Clinical Booking</h2>
+                <h2 className="text-xl font-bold text-gray-800">{t('health.consult_title')}</h2>
                 <p className="text-xs text-gray-500">
-                  Book a private video consultation with our certified clinical pharmacists. Ideal for reviewing drug interactions, chronic disease guidance, or medication instruction reviews.
+                  {t('health.consult_desc')}
                 </p>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase">Select Pharmacist Consultant</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_doctor')}</label>
                   <select
                     value={consultDoctor}
                     onChange={(e) => setConsultDoctor(e.target.value)}
                     className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
                   >
+                    <option value="Dr. Million Negasa (Founder & Chief Pharmacist)">Dr. Million Negasa (Founder & Chief Pharmacist)</option>
                     <option value="Dr. Sarah Hailu (Clinical Lead)">Dr. Sarah Hailu (Clinical Lead)</option>
                     <option value="Abebe Kebede (Senior Pharmacist)">Abebe Kebede (Senior Pharmacist)</option>
                     <option value="Dr. Betty Girma (Cosmetic consultant)">Dr. Betty Girma (Cosmetic consultant)</option>
@@ -309,7 +221,7 @@ export default function HealthServicesPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase">Preferred Date</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_date')}</label>
                     <input
                       type="date"
                       required
@@ -319,7 +231,7 @@ export default function HealthServicesPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase">Time Slot</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_time')}</label>
                     <select
                       value={consultTime}
                       onChange={(e) => setConsultTime(e.target.value)}
@@ -335,7 +247,7 @@ export default function HealthServicesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase">Reason for Consultation</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_reason')}</label>
                   <textarea
                     rows={3}
                     required
@@ -469,5 +381,13 @@ export default function HealthServicesPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function HealthServicesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-semibold">Loading health services...</div>}>
+      <HealthServicesContent />
+    </Suspense>
   );
 }

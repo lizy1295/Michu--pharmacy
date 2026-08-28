@@ -1,4 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
 
 export interface CustomerResponse {
   id: number;
@@ -10,51 +13,103 @@ export interface CustomerResponse {
   totalSpent: number;
   status: 'active' | 'inactive';
   createdAt: string;
+  lastLogin: string | null;
+  emailVerified: boolean;
 }
 
 @Injectable()
 export class CustomersService {
-  private customers: CustomerResponse[] = [
-    { id: 1, name: 'Abebe Kebede', email: 'abebe@example.com', phone: '+251911000001', address: 'Addis Ababa, Bole', totalOrders: 12, totalSpent: 15600, status: 'active', createdAt: '2026-07-20T10:00:00Z' },
-    { id: 2, name: 'Sara Tesfaye', email: 'sara@example.com', phone: '+251911000002', address: 'Addis Ababa, Kirkos', totalOrders: 8, totalSpent: 9200, status: 'active', createdAt: '2026-07-22T14:00:00Z' },
-    { id: 3, name: 'Dawit Hailu', email: 'dawit@example.com', phone: '+251911000003', address: 'Addis Ababa, Lideta', totalOrders: 5, totalSpent: 4500, status: 'inactive', createdAt: '2026-07-25T09:00:00Z' },
-  ];
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+
+  private mapUserToCustomer(user: User): CustomerResponse {
+    return {
+      id: user.id,
+      name: `${user.firstName} ${user.lastName}`.trim(),
+      email: user.email,
+      phone: user.phone ?? '',
+      address: '',
+      totalOrders: 0,
+      totalSpent: 0,
+      status: user.isActive ? 'active' : 'inactive',
+      createdAt: user.createdAt?.toISOString() ?? new Date().toISOString(),
+      lastLogin: user.lastLogin?.toISOString() ?? null,
+      emailVerified: user.emailVerified,
+    };
+  }
 
   async findAll(): Promise<CustomerResponse[]> {
-    return this.customers;
+    const users = await this.userRepository.find({
+      where: { role: 'customer' },
+      order: { createdAt: 'DESC' },
+    });
+    return users.map((u) => this.mapUserToCustomer(u));
   }
 
   async findOne(id: number): Promise<CustomerResponse> {
-    const customer = this.customers.find(c => c.id === id);
-    if (!customer) throw new NotFoundException(`Customer with id ${id} not found`);
-    return customer;
+    const user = await this.userRepository.findOne({
+      where: { id, role: 'customer' },
+    });
+    if (!user) {
+      throw new NotFoundException(`Customer with id ${id} not found`);
+    }
+    return this.mapUserToCustomer(user);
   }
 
   async create(dto: any): Promise<CustomerResponse> {
-    const newCustomer: CustomerResponse = {
-      id: this.customers.length + 1,
-      name: dto.name,
+    const user = this.userRepository.create({
+      firstName: dto.firstName ?? dto.name?.split(' ')[0] ?? '',
+      lastName: dto.lastName ?? dto.name?.split(' ').slice(1).join(' ') ?? '',
       email: dto.email,
-      phone: dto.phone,
-      address: dto.address || '',
-      totalOrders: 0,
-      totalSpent: 0,
-      status: 'active',
-      createdAt: new Date().toISOString(),
-    };
-    this.customers.push(newCustomer);
-    return newCustomer;
+      phone: dto.phone ?? null,
+      role: 'customer',
+      isActive: true,
+      emailVerified: false,
+      phoneVerified: false,
+      passwordHash: '',
+    });
+    const saved = await this.userRepository.save(user);
+    return this.mapUserToCustomer(saved);
   }
 
   async update(id: number, dto: any): Promise<CustomerResponse> {
-    const customer = await this.findOne(id);
-    Object.assign(customer, dto);
-    return customer;
+    const user = await this.userRepository.findOne({ where: { id, role: 'customer' } });
+    if (!user) throw new NotFoundException(`Customer with id ${id} not found`);
+
+    if (dto.status) {
+      user.isActive = dto.status === 'active';
+    }
+    if (dto.phone) user.phone = dto.phone;
+    if (dto.email) user.email = dto.email;
+
+    const saved = await this.userRepository.save(user);
+    return this.mapUserToCustomer(saved);
   }
 
   async remove(id: number): Promise<{ message: string }> {
-    const customer = await this.findOne(id);
-    this.customers = this.customers.filter(c => c.id !== id);
-    return { message: `Customer "${customer.name}" deleted` };
+    const user = await this.userRepository.findOne({ where: { id, role: 'customer' } });
+    if (!user) throw new NotFoundException(`Customer with id ${id} not found`);
+    const name = `${user.firstName} ${user.lastName}`.trim();
+    await this.userRepository.remove(user);
+    return { message: `Customer "${name}" deleted` };
+  }
+
+  async getStats(): Promise<{ total: number; active: number; newThisMonth: number }> {
+    const total = await this.userRepository.count({ where: { role: 'customer' } });
+    const active = await this.userRepository.count({ where: { role: 'customer', isActive: true } });
+
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const newThisMonth = await this.userRepository
+      .createQueryBuilder('u')
+      .where('u.role = :role', { role: 'customer' })
+      .andWhere('u.created_at >= :start', { start: startOfMonth })
+      .getCount();
+
+    return { total, active, newThisMonth };
   }
 }

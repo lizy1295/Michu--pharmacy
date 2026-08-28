@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // 1. Try admins auth endpoint
       const backendRes = await fetch(`${BACKEND_API_URL}/admins/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -22,30 +23,44 @@ export async function POST(request: NextRequest) {
         const data = await backendRes.json();
         return NextResponse.json(data);
       }
-    } catch (backendError) {
-      console.warn('Backend server unreachable during admin login, checking local fallback:', backendError);
-    }
 
-    // Fallback authentication for admin@michupharmacy.com
-    if (email === 'admin@michupharmacy.com' && password === 'password123') {
-      return NextResponse.json({
-        accessToken: 'admin_session_token_' + Date.now(),
-        refreshToken: 'admin_refresh_token_' + Date.now(),
-        admin: {
-          id: 1,
-          email: 'admin@michupharmacy.com',
-          name: 'Super Admin',
-          role: 'super_admin',
-          avatar: undefined,
-          phone: '+251-911-000-000',
-          lastLogin: new Date().toISOString(),
-          createdAt: '2026-01-01T00:00:00Z',
-        },
+      // 2. Try general auth login endpoint
+      const authRes = await fetch(`${BACKEND_API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
-    }
 
-    return NextResponse.json({ message: 'Invalid email or password' }, { status: 401 });
-  } catch (error) {
-    return NextResponse.json({ message: 'Login failed' }, { status: 500 });
+      if (authRes.ok) {
+        const authData = await authRes.json();
+        return NextResponse.json({
+          accessToken: authData.tokens.accessToken,
+          refreshToken: authData.tokens.refreshToken,
+          admin: {
+            id: authData.user.id,
+            email: authData.user.email,
+            name: `${authData.user.firstName || ''} ${authData.user.lastName || ''}`.trim() || 'Admin User',
+            role: authData.user.role,
+            phone: authData.user.phone || '',
+            lastLogin: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+          },
+        });
+      }
+
+      const errorData = await backendRes.json().catch(() => ({}));
+      return NextResponse.json(
+        { message: errorData.message || 'Invalid email or password' },
+        { status: backendRes.status || 401 }
+      );
+    } catch (backendError: any) {
+      return NextResponse.json(
+        { message: `Backend service is unreachable. Please ensure the backend is running. (${backendError.message})` },
+        { status: 503 }
+      );
+    }
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message || 'Login failed' }, { status: 500 });
   }
 }
+

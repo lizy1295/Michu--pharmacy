@@ -29,10 +29,94 @@ export default function ArticleDetailPage({ params }: ArticlePageProps) {
       try {
         setLoading(true);
         setError(null);
-        const data = await getArticleById(Number(resolvedParams.id));
+        let data: Article | null = null;
+        try {
+          data = await getArticleById(Number(resolvedParams.id));
+        } catch {
+          // Fallback to local Amharic article list
+          data = null;
+        }
+
+        if (!data) {
+          const localMatch = [
+            {
+              id: 1,
+              title: 'ስለ የደም ግፊት (Hypertension) መንስኤዎች፣ ምልክቶች እና መከላከያ መንገዶች',
+              slug: 'understanding-hypertension-amharic',
+              excerpt: 'የደም ግፊት በኢትዮጵያ ውስጥ በስፋት ከሚታዩ የጤና እክሎች አንዱ ነው። የደም ግፊት ምልክቶች፣ የአመጋገብ ስርዓት እና የሚቹ ፋርማሲ የሚያቀርባቸውን ተገቢ መድኃኒቶች ይወቁ።',
+              content: `
+                <p>የደም ግፊት ማለት ደም በደም ሥሮቻችን ግድግዳ ላይ የሚያሳድረው ግፊት ከመደበኛው መጠን በላይ ሲጨምር የሚከሰት የጤና እክል ነው። ያልታከመ የደም ግፊት ለልብ ድካም፣ ለስትሮክ እና ለኩላሊት ህመም ሊያጋልጥ ይችላል።</p>
+                <h3 class="font-bold text-lg text-slate-900 mt-4 mb-2">ዋና ዋና ምልክቶች</h3>
+                <ul class="list-disc list-inside space-y-1">
+                  <li>ከፍተኛ የራስ ምታት (በተለይ በማለዳ ሰዓት)</li>
+                  <li>የእይታ መደብዘዝ ወይም የማዞር ስሜት</li>
+                  <li>የልብ ምት መጨመር እና የትንፋሽ መቆራረጥ</li>
+                  <li>የድካም እና የድብታ ስሜት መሰማት</li>
+                </ul>
+                <h3 class="font-bold text-lg text-slate-900 mt-4 mb-2">በቤት ውስጥ የሚደረጉ ጥንቃቄዎች</h3>
+                <p>የጨው አጠቃቀምን መቀነስ፣ አትክልት እና ፍራፍሬዎችን አዘውትሮ መመገብ፣ የአካል ብቃት እንቅስቃሴ ማድረግ እና የደም ግፊት መለኪያ መሳሪያ በቤት ውስጥ በመያዝ በየጊዜው መለካት ይመከራል።</p>
+              `,
+              featuredImage: 'article-health',
+              category: 'የጤና ምክሮች (Health Tips)',
+              tags: ['የደም ግፊት', 'hypertension', 'የልብ ጤና', 'cardiovascular'],
+              status: 'published',
+              author: 'ዶ/ር ሰሎሞን በቀለ (ፋርማሲስት)',
+              relatedProductIds: [8, 14, 1, 2],
+              createdAt: '2026-08-10T10:00:00Z',
+              updatedAt: '2026-08-10T10:00:00Z',
+            },
+            {
+              id: 2,
+              title: 'የቫይታሚን እና የንጥረ-ምግብ ማሟያዎች ለቤተሰብ ጤና ያለው ወሳኝ ጠቀሜታ',
+              slug: 'importance-of-vitamins-amharic',
+              excerpt: 'ለሰውነታችን በሽታ የመከላከል አቅም፣ ለአጥንት ጥንካሬ እና ለልጆች ጤናማ እድገት የሚያስፈልጉ ወሳኝ መልቲ-ቫይታሚኖች እና ትክክለኛ አጠቃቀማቸው።',
+              content: `
+                <p>ዕለታዊ የምግብ ስርዓታችን ሁሉንም አስፈላጊ ንጥረ-ነገሮች ላያሟላ ይችላል። ጥራት ያላቸው የቫይታሚን እና ሚነራል ማሟያዎች የሰውነታችንን የበሽታ መከላከያ አቅም ያጠናክራሉ።</p>
+                <h3 class="font-bold text-lg text-slate-900 mt-4 mb-2">ለቤተሰብ አስፈላጊ የሆኑ ቫይታሚኖች</h3>
+                <ul class="list-disc list-inside space-y-1">
+                  <li><strong>ቫይታሚን ዲ እና ካልሲየም፡</strong> ለአጥንት እና ለጥርስ ጥንካሬ</li>
+                  <li><strong>ቫይታሚን ሲ እና ዚንክ፡</strong> ጉንፋን እና የመተንፈሻ አካል ኢንፌክሽኖችን ለመከላከል</li>
+                  <li><strong>ኦሜጋ-3 እና የዓሳ ዘይት፡</strong> ለአእምሮ ንቃት እና ለልብ ጤንነት</li>
+                </ul>
+              `,
+              featuredImage: 'article-vitamins',
+              category: 'ስነ-ምግብ (Nutrition)',
+              tags: ['ቫይታሚን', 'vitamins', 'የበሽታ መከላከያ', 'supplements'],
+              status: 'published',
+              author: 'ቤተልሔም ታደሰ (ክሊኒካል ፋርማሲስት)',
+              relatedProductIds: [16, 17, 19, 27],
+              createdAt: '2026-08-05T10:00:00Z',
+              updatedAt: '2026-08-05T10:00:00Z',
+            },
+            {
+              id: 3,
+              title: 'የስኳር በሽታ (Diabetes) አያያዝ እና በቤት ውስጥ የሚደረጉ ጥንቃቄዎች',
+              slug: 'diabetes-management-amharic',
+              excerpt: 'የኢንሱሊን አያያዝ፣ የደም ስኳር መለኪያ ግሉኮሜትር አጠቃቀም እና የስኳር መጠንን በቁጥጥር ስር ለማዋል የሚረዱ የፋርማሲ ባለሙያ ምክሮች።',
+              content: `
+                <p>የስኳር ህመም ያለባቸው ወገኖች የታዘዘላቸውን መድኃኒት በሰዓቱ በመውሰድ፣ ተገቢውን የአመጋገብ ስርዓት በመከተል እና ስኳራቸውን በመለካት ጤናማ ህይወት መምራት ይችላሉ።</p>
+                <h3 class="font-bold text-lg text-slate-900 mt-4 mb-2">የኢንሱሊን ማከማቻ ደንብ</h3>
+                <p>ኢንሱሊን ከ 2°C እስከ 8°C ባለው ቅዝቃዜ ውስጥ መቀመጥ አለበት። የሚቹ ፋርማሲ በማቀዝቀዣ የተጠበቁ መድኃኒቶችን በጥንቃቄ ያቀርባል።</p>
+              `,
+              featuredImage: 'article-diabetes',
+              category: 'ስር የሰደዱ ህመሞች (Chronic Care)',
+              tags: ['የስኳር በሽታ', 'diabetes', 'ኢንሱሊን', 'metformin'],
+              status: 'published',
+              author: 'ዶ/ር ሰሎሞን በቀለ (ፋርማሲስት)',
+              relatedProductIds: [6, 9],
+              createdAt: '2026-07-28T10:00:00Z',
+              updatedAt: '2026-07-28T10:00:00Z',
+            },
+          ].find((a) => a.id === Number(resolvedParams.id));
+
+          if (localMatch) {
+            data = localMatch as any;
+          }
+        }
+
         setArticle(data);
 
-        if (data.relatedProductIds && data.relatedProductIds.length > 0) {
+        if (data && data.relatedProductIds && data.relatedProductIds.length > 0) {
           const prods = await Promise.all(
             data.relatedProductIds.map((pid) =>
               getProductById(pid).catch(() => null)
