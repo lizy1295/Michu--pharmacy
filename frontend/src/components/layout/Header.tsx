@@ -211,16 +211,7 @@ export function Header() {
               <span>{t('nav.payment')}</span>
             </Link>
 
-            {/* Shop Icon */}
-            <Link
-              href="/products"
-              className="relative p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition hidden md:flex"
-              aria-label="Shop"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-3m-6.5-1.5L9 17.5M9 17.5l3.5-3.5M9 17.5l3.5 3.5" />
-              </svg>
-            </Link>
+
 
             {/* Cart Icon */}
             <Link
@@ -356,7 +347,6 @@ export function Header() {
               )}
             </div>
 
-            <Link href="/products" className="text-sm font-semibold text-gray-700 hover:text-brand-600 transition pb-1">{t('nav.shop')}</Link>
             <Link href="/blogs" className="text-sm font-semibold text-gray-700 hover:text-brand-600 transition pb-1">{t('nav.blogs')}</Link>
             <Link href="/branches" className="text-sm font-semibold text-gray-700 hover:text-brand-600 transition pb-1">{t('nav.branches')}</Link>
             <Link href="/faq" className="text-sm font-semibold text-gray-700 hover:text-brand-600 transition pb-1">{t('nav.faq')}</Link>
@@ -422,10 +412,6 @@ export function Header() {
               <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-brand-50 hover:text-brand-700 transition" onClick={() => setMobileMenuOpen(false)}>
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                 {t('nav.home')}
-              </Link>
-              <Link href="/products" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-brand-50 hover:text-brand-700 transition" onClick={() => setMobileMenuOpen(false)}>
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                {t('nav.shop')}
               </Link>
               <Link href="/blogs" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-brand-50 hover:text-brand-700 transition" onClick={() => setMobileMenuOpen(false)}>
                 <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9a2 2 0 00-2 2v1" /></svg>

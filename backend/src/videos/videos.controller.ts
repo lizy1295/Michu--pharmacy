@@ -1,6 +1,10 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { VideosService } from './videos.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '@michu/shared';
 
 @ApiTags('Videos')
 @Controller('videos')
@@ -20,20 +24,30 @@ export class VideosController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create video' })
   create(@Body() dto: any) {
     return this.videosService.create(dto);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update video' })
   update(@Param('id') id: string, @Body() dto: any) {
     return this.videosService.update(Number(id), dto);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete video' })
   remove(@Param('id') id: string) {
     return this.videosService.remove(Number(id));
   }
 }
+

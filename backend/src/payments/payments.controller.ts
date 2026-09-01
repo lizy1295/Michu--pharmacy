@@ -6,10 +6,12 @@ import {
   Param,
   Headers,
   Req,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService, InitiatePaymentDto } from './payments.service';
 import { PaymentProviderMethod } from './entities/payment.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -17,6 +19,8 @@ export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('initiate')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Initiate Telebirr or CBE payment' })
   @ApiBody({
     schema: {
@@ -34,18 +38,24 @@ export class PaymentsController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get payment details by ID' })
   findOne(@Param('id') id: string) {
     return this.paymentsService.findOne(Number(id));
   }
 
   @Get('order/:orderId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get payment details by Order ID' })
   findByOrderId(@Param('orderId') orderId: string) {
     return this.paymentsService.findByOrderId(Number(orderId));
   }
 
   @Post(':id/verify')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify payment status with provider' })
   verify(@Param('id') id: string) {
     return this.paymentsService.verifyPayment(Number(id));
@@ -61,3 +71,4 @@ export class PaymentsController {
     return this.paymentsService.handleWebhook(provider, body, headers);
   }
 }
+

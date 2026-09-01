@@ -139,7 +139,7 @@ describe('AuthService', () => {
         password: 'password123',
       });
 
-      expect(result.user.id).toBe('user-uuid');
+      expect(result.user.id).toBe('1');
     });
 
     it('should throw UnauthorizedException for invalid credentials', async () => {

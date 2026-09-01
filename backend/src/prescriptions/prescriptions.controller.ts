@@ -8,13 +8,18 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { PrescriptionsService, CreatePrescriptionDto, UpdatePrescriptionStatusDto } from './prescriptions.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '@michu/shared';
 
 const PRESCRIPTION_UPLOAD_PATH = './uploads/prescriptions';
 const ALLOWED_MIME_TYPES = [
@@ -74,30 +79,43 @@ export class PrescriptionsController {
   constructor(private readonly prescriptionsService: PrescriptionsService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all prescriptions' })
   findAll() {
     return this.prescriptionsService.findAll();
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get prescription by ID' })
   findOne(@Param('id') id: string) {
     return this.prescriptionsService.findOne(Number(id));
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create prescription' })
   create(@Body() dto: CreatePrescriptionDto) {
     return this.prescriptionsService.create(dto);
   }
 
   @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update prescription status' })
   updateStatus(@Param('id') id: string, @Body() dto: UpdatePrescriptionStatusDto) {
     return this.prescriptionsService.updateStatus(Number(id), dto);
   }
 
   @Post('upload')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Upload prescription document' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
@@ -127,3 +145,4 @@ export class PrescriptionsController {
     };
   }
 }
+
