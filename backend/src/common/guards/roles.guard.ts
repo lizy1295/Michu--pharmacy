@@ -11,7 +11,7 @@ import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(private readonly reflector: Reflector) { }
 
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
@@ -25,6 +25,12 @@ export class RolesGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<{ user: JwtPayload }>();
     const user = request.user;
+
+    console.log('========== AUTH DEBUG ==========');
+    console.log('request.user:', user);
+    console.log('request.user.role:', user?.role);
+    console.log('requiredRoles:', requiredRoles);
+    console.log('================================');
 
     if (!user || !user.role) {
       throw new ForbiddenException('Insufficient permissions');

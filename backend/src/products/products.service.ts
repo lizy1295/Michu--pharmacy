@@ -12,13 +12,15 @@ import { Product } from './product.entity';
 
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
+import { SanitizeString, sanitizeText } from '../common/utils/sanitize.util';
 
 export class CreateProductDto {
   @ApiProperty({ example: 'Paracetamol 500mg' })
   @IsString()
   @MinLength(1)
+  @SanitizeString()
   name!: string;
 
   @ApiProperty({ example: 120.50 })
@@ -28,11 +30,13 @@ export class CreateProductDto {
   @ApiPropertyOptional({ example: 'Bayer' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   brand?: string;
 
   @ApiPropertyOptional({ example: 'Analgesics' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   category?: string;
 
   @ApiPropertyOptional({ example: false })
@@ -47,11 +51,14 @@ export class CreateProductDto {
 
   @ApiPropertyOptional({ example: [] })
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   gallery?: string[];
 
   @ApiPropertyOptional({ example: 'Pain reliever' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   description?: string;
 
   @ApiPropertyOptional({ example: 100 })
@@ -77,6 +84,7 @@ export class UpdateProductDto {
   @ApiPropertyOptional({ example: 'Paracetamol 500mg' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   name?: string;
 
   @ApiPropertyOptional({ example: 120.50 })
@@ -87,11 +95,13 @@ export class UpdateProductDto {
   @ApiPropertyOptional({ example: 'Bayer' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   brand?: string;
 
   @ApiPropertyOptional({ example: 'Analgesics' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   category?: string;
 
   @ApiPropertyOptional({ example: false })
@@ -106,11 +116,14 @@ export class UpdateProductDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   gallery?: string[];
 
   @ApiPropertyOptional({ example: 'Pain reliever' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   description?: string;
 
   @ApiPropertyOptional({ example: 100 })
@@ -333,13 +346,13 @@ export class ProductsService {
     }
 
     const product = this.productsRepo.create({
-      name: productData.name,
+      name: sanitizeText(productData.name),
       price: productData.price,
-      brand: productData.brand,
-      category: productData.category,
+      brand: productData.brand ? sanitizeText(productData.brand) : undefined,
+      category: productData.category ? sanitizeText(productData.category) : undefined,
       prescriptionRequired: productData.prescriptionRequired ?? false,
       stock: productData.stock ?? 0,
-      description: productData.description,
+      description: productData.description ? sanitizeText(productData.description) : undefined,
       imageUrl: productData.imageUrl,
       attributes: productData.attributes ?? {},
       status: productData.status || 'active',
@@ -353,7 +366,17 @@ export class ProductsService {
   async update(id: number, updateData: UpdateProductDto): Promise<Product> {
     const product = await this.findOne(id);
 
-    Object.assign(product, updateData);
+    if (updateData.name !== undefined) product.name = sanitizeText(updateData.name);
+    if (updateData.price !== undefined) product.price = updateData.price;
+    if (updateData.brand !== undefined) product.brand = sanitizeText(updateData.brand);
+    if (updateData.category !== undefined) product.category = sanitizeText(updateData.category);
+    if (updateData.prescriptionRequired !== undefined) product.prescriptionRequired = updateData.prescriptionRequired;
+    if (updateData.stock !== undefined) product.stock = updateData.stock;
+    if (updateData.description !== undefined) product.description = sanitizeText(updateData.description);
+    if (updateData.imageUrl !== undefined) product.imageUrl = updateData.imageUrl;
+    if (updateData.attributes !== undefined) product.attributes = updateData.attributes;
+    if (updateData.status !== undefined) product.status = updateData.status;
+    if (updateData.expiryDate !== undefined) product.expiryDate = updateData.expiryDate ? new Date(updateData.expiryDate) : undefined;
 
     return this.productsRepo.save(product);
   }

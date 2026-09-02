@@ -85,7 +85,7 @@ function productImageFileFilter(
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
-  ) {}
+  ) { }
 
   @Get()
   @ApiOperation({ summary: 'Get all products with filters' })
@@ -233,7 +233,7 @@ export class ProductsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.ADMIN, UserRole.PHARMACIST)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a product' })
   update(

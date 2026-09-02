@@ -4,7 +4,7 @@ import { Repository, MoreThanOrEqual, In } from 'typeorm';
 import { Product } from '../products/product.entity';
 import { Order, OrderStatus } from '../orders/entities/order.entity';
 import { User } from '../users/entities/user.entity';
-import { Prescription } from '../prescriptions/entities/prescription.entity';
+import { Prescription, PrescriptionStatus } from '../prescriptions/entities/prescription.entity';
 
 export interface DashboardStats {
   totalRevenue: number;
@@ -12,6 +12,7 @@ export interface DashboardStats {
   totalProducts: number;
   totalCustomers: number;
   totalPrescriptions: number;
+  pendingPrescriptions: number; // General clinic triage queue
   pendingOrders: number;
   outOfStock: number;
   monthlySales: number;
@@ -87,6 +88,7 @@ export class DashboardService {
       totalProducts,
       totalCustomers,
       totalPrescriptions,
+      pendingPrescriptions,
       pendingOrders,
       outOfStock,
       todayOrders,
@@ -96,6 +98,7 @@ export class DashboardService {
       this.productRepo.count(),
       this.userRepo.count({ where: { role: 'customer' } }),
       this.prescriptionRepo.count(),
+      this.prescriptionRepo.count({ where: { status: PrescriptionStatus.PENDING } }),
       this.orderRepo.count({ where: { status: OrderStatus.PENDING } }),
       this.productRepo.count({ where: { stock: 0 } }),
       this.orderRepo.count({ where: { createdAt: MoreThanOrEqual(startOfToday) } }),
@@ -123,6 +126,7 @@ export class DashboardService {
       totalProducts,
       totalCustomers,
       totalPrescriptions,
+      pendingPrescriptions,
       pendingOrders,
       outOfStock,
       monthlySales: Number(monthlySales.toFixed(2)),

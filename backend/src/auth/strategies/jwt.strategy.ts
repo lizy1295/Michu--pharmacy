@@ -25,50 +25,54 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       throw new UnauthorizedException('Invalid token type');
     }
 
-    // Try to validate as a regular user first
-    try {
-      const user = await this.usersService.findById(payload.sub);
-      if (user && user.isActive) {
-        return {
-          ...payload,
-          role: (user.role || payload.role) as any,
-          branchId: user.branchId ?? payload.branchId ?? null,
-        };
-      }
-    } catch {
-      // User not found, try admin
-    }
+    // Roles that belong to the admins table
+    const adminRoles = [
+      'superadmin',
+      'admin',
+      'staff',
+      'branch_admin',
+      'pharmacist',
+      'doctor',
+      'cashier',
+      'worker',
+    ];
 
-    // Try to validate as an admin
-    try {
+    // =====================================================
+    // ADMIN / STAFF ACCOUNT
+    // =====================================================
+
+    if (adminRoles.includes(payload.role)) {
       const admin = await this.adminsService.findOne(Number(payload.sub));
-      if (admin && admin.isActive) {
-        return {
-          ...payload,
-          role: (admin.role || payload.role) as any,
-          branchId: payload.branchId ?? null,
-        };
+
+      if (!admin || !admin.isActive) {
+        throw new UnauthorizedException(
+          'Admin not found or inactive',
+        );
       }
-    } catch {
-      // Admin not found either
+
+      return {
+        ...payload,
+        role: admin.role as any,
+        branchId: payload.branchId ?? null,
+      };
     }
 
-    // Fallback lookup by email if sub ID space differed
-    if (payload.email) {
-      try {
-        const userByEmail = await this.usersService.findByEmail(payload.email);
-        if (userByEmail && userByEmail.isActive) {
-          return {
-            sub: String(userByEmail.id),
-            email: userByEmail.email,
-            role: (userByEmail.role || payload.role) as any,
-            branchId: userByEmail.branchId ?? null,
-            type: 'access',
-          };
-        }
-      } catch {}
+    // =====================================================
+    // CUSTOMER ACCOUNT
+    // =====================================================
+
+    const user = await this.usersService.findById(payload.sub);
+
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException(
+        'User not found or inactive',
+      );
     }
 
-    throw new UnauthorizedException('User not found or inactive');
+    return {
+      ...payload,
+      role: (user.role || payload.role) as any,
+      branchId: user.branchId ?? payload.branchId ?? null,
+    };
   }
-}
+}

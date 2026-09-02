@@ -6,6 +6,9 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@michu/shared';
 
+import { CreateVideoDto } from './dto/create-video.dto';
+import { UpdateVideoDto } from './dto/update-video.dto';
+
 @ApiTags('Videos')
 @Controller('videos')
 export class VideosController {
@@ -28,7 +31,7 @@ export class VideosController {
   @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create video' })
-  create(@Body() dto: any) {
+  create(@Body() dto: CreateVideoDto) {
     return this.videosService.create(dto);
   }
 
@@ -37,7 +40,7 @@ export class VideosController {
   @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update video' })
-  update(@Param('id') id: string, @Body() dto: any) {
+  update(@Param('id') id: string, @Body() dto: UpdateVideoDto) {
     return this.videosService.update(Number(id), dto);
   }
 

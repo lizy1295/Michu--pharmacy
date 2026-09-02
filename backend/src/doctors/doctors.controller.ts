@@ -50,6 +50,9 @@ function doctorImageFileFilter(
   }
 }
 
+import { CreateDoctorDto } from './dto/create-doctor.dto';
+import { UpdateDoctorDto } from './dto/update-doctor.dto';
+
 @ApiTags('Doctors')
 @Controller('doctors')
 export class DoctorsController {
@@ -72,8 +75,8 @@ export class DoctorsController {
   @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create doctor' })
-  create(@Body() data: any) {
-    return this.doctorsService.create(data);
+  create(@Body() dto: CreateDoctorDto) {
+    return this.doctorsService.create(dto);
   }
 
   @Patch(':id')
@@ -81,8 +84,8 @@ export class DoctorsController {
   @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update doctor' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() data: any) {
-    return this.doctorsService.update(id, data);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateDoctorDto) {
+    return this.doctorsService.update(id, dto);
   }
 
   @Delete(':id')

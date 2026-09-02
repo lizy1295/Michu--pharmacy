@@ -1,10 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { SanitizeString } from '../../common/utils/sanitize.util';
 
 export class CreateCustomerDto {
   @ApiProperty({ example: 'Abebe Bikila' })
   @IsString()
   @MinLength(1)
+  @SanitizeString()
   name!: string;
 
   @ApiProperty({ example: 'abebe@example.com' })
@@ -13,11 +15,13 @@ export class CreateCustomerDto {
 
   @ApiProperty({ example: '+251911121314' })
   @IsString()
+  @SanitizeString()
   phone!: string;
 
   @ApiPropertyOptional({ example: 'Addis Ababa, Ethiopia' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   address?: string;
 }
 
@@ -25,6 +29,7 @@ export class UpdateCustomerDto {
   @ApiPropertyOptional({ example: 'Abebe Bikila' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   name?: string;
 
   @ApiPropertyOptional({ example: 'abebe@example.com' })
@@ -35,14 +40,17 @@ export class UpdateCustomerDto {
   @ApiPropertyOptional({ example: '+251911121314' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   phone?: string;
 
   @ApiPropertyOptional({ example: 'Addis Ababa, Ethiopia' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   address?: string;
 
   @ApiPropertyOptional({ example: false })
   @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
 }

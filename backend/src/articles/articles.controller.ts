@@ -6,6 +6,9 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@michu/shared';
 
+import { CreateArticleDto } from './dto/create-article.dto';
+import { UpdateArticleDto } from './dto/update-article.dto';
+
 @ApiTags('Articles')
 @Controller('articles')
 export class ArticlesController {
@@ -28,7 +31,7 @@ export class ArticlesController {
   @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create article' })
-  create(@Body() dto: any) {
+  create(@Body() dto: CreateArticleDto) {
     return this.articlesService.create(dto);
   }
 
@@ -37,7 +40,7 @@ export class ArticlesController {
   @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update article' })
-  update(@Param('id') id: string, @Body() dto: any) {
+  update(@Param('id') id: string, @Body() dto: UpdateArticleDto) {
     return this.articlesService.update(Number(id), dto);
   }
 

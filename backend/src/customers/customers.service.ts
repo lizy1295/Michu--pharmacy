@@ -17,6 +17,8 @@ export interface CustomerResponse {
   emailVerified: boolean;
 }
 
+import { CreateCustomerDto, UpdateCustomerDto } from './dto/create-customer.dto';
+
 @Injectable()
 export class CustomersService {
   constructor(
@@ -58,10 +60,14 @@ export class CustomersService {
     return this.mapUserToCustomer(user);
   }
 
-  async create(dto: any): Promise<CustomerResponse> {
+  async create(dto: CreateCustomerDto): Promise<CustomerResponse> {
+    const nameParts = dto.name?.trim().split(' ') || [];
+    const firstName = nameParts[0] || 'Customer';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
     const user = this.userRepository.create({
-      firstName: dto.firstName ?? dto.name?.split(' ')[0] ?? '',
-      lastName: dto.lastName ?? dto.name?.split(' ').slice(1).join(' ') ?? '',
+      firstName,
+      lastName,
       email: dto.email,
       phone: dto.phone ?? null,
       role: 'customer',
@@ -74,12 +80,17 @@ export class CustomersService {
     return this.mapUserToCustomer(saved);
   }
 
-  async update(id: number, dto: any): Promise<CustomerResponse> {
+  async update(id: number, dto: UpdateCustomerDto): Promise<CustomerResponse> {
     const user = await this.userRepository.findOne({ where: { id, role: 'customer' } });
     if (!user) throw new NotFoundException(`Customer with id ${id} not found`);
 
-    if (dto.status) {
-      user.isActive = dto.status === 'active';
+    if (dto.isActive !== undefined) {
+      user.isActive = dto.isActive;
+    }
+    if (dto.name) {
+      const nameParts = dto.name.trim().split(' ');
+      user.firstName = nameParts[0] || user.firstName;
+      user.lastName = nameParts.slice(1).join(' ') || user.lastName;
     }
     if (dto.phone) user.phone = dto.phone;
     if (dto.email) user.email = dto.email;

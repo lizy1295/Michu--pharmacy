@@ -6,6 +6,9 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@michu/shared';
 
+import { CreateAdvertisementDto } from './dto/create-advertisement.dto';
+import { UpdateAdvertisementDto } from './dto/update-advertisement.dto';
+
 @ApiTags('Advertisements')
 @Controller('advertisements')
 export class AdvertisementsController {
@@ -28,7 +31,7 @@ export class AdvertisementsController {
   @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create advertisement' })
-  create(@Body() dto: any) {
+  create(@Body() dto: CreateAdvertisementDto) {
     return this.advertisementsService.create(dto);
   }
 
@@ -37,7 +40,7 @@ export class AdvertisementsController {
   @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update advertisement' })
-  update(@Param('id') id: string, @Body() dto: any) {
+  update(@Param('id') id: string, @Body() dto: UpdateAdvertisementDto) {
     return this.advertisementsService.update(Number(id), dto);
   }
 

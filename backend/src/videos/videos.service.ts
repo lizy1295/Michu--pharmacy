@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateVideoDto } from './dto/create-video.dto';
+import { UpdateVideoDto } from './dto/update-video.dto';
 
 export interface VideoResponse {
   id: number;
@@ -31,11 +33,11 @@ export class VideosService {
     return video;
   }
 
-  async create(dto: any): Promise<VideoResponse> {
+  async create(dto: CreateVideoDto): Promise<VideoResponse> {
     const newVideo: VideoResponse = {
       id: this.videos.length + 1,
       title: dto.title,
-      description: dto.description,
+      description: dto.description || '',
       category: dto.category,
       videoUrl: dto.videoUrl || '',
       thumbnailUrl: dto.thumbnailUrl || '',
@@ -50,7 +52,7 @@ export class VideosService {
     return newVideo;
   }
 
-  async update(id: number, dto: any): Promise<VideoResponse> {
+  async update(id: number, dto: UpdateVideoDto): Promise<VideoResponse> {
     const video = await this.findOne(id);
     Object.assign(video, dto);
     video.updatedAt = new Date().toISOString();

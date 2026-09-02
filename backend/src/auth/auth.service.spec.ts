@@ -46,6 +46,7 @@ describe('AuthService', () => {
           provide: UsersService,
           useValue: {
             findByEmail: jest.fn(),
+            findByPhone: jest.fn(),
             createCustomer: jest.fn(),
             validatePassword: jest.fn(),
             findById: jest.fn(),

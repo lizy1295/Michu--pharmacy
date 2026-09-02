@@ -1,26 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { SEED_BRANCHES, BranchSeedData } from './data/branches.seed';
+import { CreateBranchDto } from './dto/create-branch.dto';
+import { UpdateBranchDto } from './dto/update-branch.dto';
 
-export interface BranchResponse {
-  id: number;
-  name: string;
-  location: string;
-  address: string;
-  phone: string;
-  email: string;
-  manager: string;
-  openingHours: string;
-  latitude: number;
-  longitude: number;
-  status: 'active' | 'inactive';
+export interface BranchResponse extends BranchSeedData {
   createdAt: string;
   updatedAt: string;
 }
 
 @Injectable()
 export class BranchesService {
-  private branches: BranchResponse[] = [
-    { id: 1, name: 'Bole Branch', location: 'Bole, Addis Ababa', address: 'Bole Road, Near Bole Medhanialem', phone: '+251-11-123-4567', email: 'bole@michupharmacy.com', manager: 'Mr. Kebede', openingHours: '8:00 AM - 10:00 PM', latitude: 9.02, longitude: 38.75, status: 'active', createdAt: '2026-01-01T10:00:00Z', updatedAt: '2026-01-01T10:00:00Z' },
-  ];
+  private branches: BranchResponse[] = SEED_BRANCHES.map(b => ({
+    ...b,
+    createdAt: '2026-01-01T10:00:00Z',
+    updatedAt: '2026-01-01T10:00:00Z',
+  }));
 
   async findAll(): Promise<BranchResponse[]> {
     return this.branches;
@@ -32,10 +26,12 @@ export class BranchesService {
     return branch;
   }
 
-  async create(dto: any): Promise<BranchResponse> {
+  async create(dto: CreateBranchDto): Promise<BranchResponse> {
     const newBranch: BranchResponse = {
       id: this.branches.length + 1,
       name: dto.name,
+      code: dto.code || `BR-${this.branches.length + 1}`,
+      city: dto.city || 'Addis Ababa',
       location: dto.location,
       address: dto.address,
       phone: dto.phone,
@@ -44,6 +40,7 @@ export class BranchesService {
       openingHours: dto.openingHours,
       latitude: dto.latitude || 0,
       longitude: dto.longitude || 0,
+      isPlaceholderCoords: dto.isPlaceholderCoords !== undefined ? dto.isPlaceholderCoords : true,
       status: dto.status || 'active',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -52,7 +49,7 @@ export class BranchesService {
     return newBranch;
   }
 
-  async update(id: number, dto: any): Promise<BranchResponse> {
+  async update(id: number, dto: UpdateBranchDto): Promise<BranchResponse> {
     const branch = await this.findOne(id);
     Object.assign(branch, dto);
     branch.updatedAt = new Date().toISOString();

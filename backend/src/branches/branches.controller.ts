@@ -6,6 +6,9 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@michu/shared';
 
+import { CreateBranchDto } from './dto/create-branch.dto';
+import { UpdateBranchDto } from './dto/update-branch.dto';
+
 @ApiTags('Branches')
 @Controller('branches')
 export class BranchesController {
@@ -28,7 +31,7 @@ export class BranchesController {
   @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create branch' })
-  create(@Body() dto: any) {
+  create(@Body() dto: CreateBranchDto) {
     return this.branchesService.create(dto);
   }
 
@@ -37,7 +40,7 @@ export class BranchesController {
   @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update branch' })
-  update(@Param('id') id: string, @Body() dto: any) {
+  update(@Param('id') id: string, @Body() dto: UpdateBranchDto) {
     return this.branchesService.update(Number(id), dto);
   }
 

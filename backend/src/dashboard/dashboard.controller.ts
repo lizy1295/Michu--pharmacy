@@ -9,10 +9,10 @@ import { UserRole } from '@michu/shared';
 @ApiTags('Dashboard')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN)
+@Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.ADMIN)
 @Controller('dashboard')
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(private readonly dashboardService: DashboardService) { }
 
   @Get('stats')
   @ApiOperation({ summary: 'Get dashboard statistics' })

@@ -21,6 +21,7 @@ import { ReportsModule } from './reports/reports.module';
 import { SettingsModule } from './settings/settings.module';
 import { PaymentsModule } from './payments/payments.module';
 import { DoctorsModule } from './doctors/doctors.module';
+import { InquiriesModule } from './inquiries/inquiries.module';
 import { TypeOrmConfigService } from './common/database/typeorm.config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
@@ -58,6 +59,7 @@ import { join } from 'path';
     ReportsModule,
     SettingsModule,
     DoctorsModule,
+    InquiriesModule,
   ],
 })
 export class AppModule {}

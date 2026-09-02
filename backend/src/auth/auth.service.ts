@@ -36,7 +36,20 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthResponse> {
-    const user = await this.usersService.findByEmail(dto.email, true);
+    let user: User | null = null;
+
+    if (dto.email) {
+      user = await this.usersService.findByEmail(dto.email, true);
+      if (!user) {
+        user = await this.usersService.findByPhone(dto.email, true);
+      }
+    }
+
+    // Fall back to phone lookup if no user found yet and dto.phone is provided
+    if (!user && dto.phone) {
+      user = await this.usersService.findByPhone(dto.phone, true);
+    }
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -52,6 +65,7 @@ export class AuthService {
 
     return this.buildAuthResponse(user);
   }
+
 
   async refresh(refreshToken: string): Promise<AuthResponse> {
     let payload: JwtPayload;

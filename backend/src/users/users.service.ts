@@ -27,6 +27,20 @@ export class UsersService {
     return query.getOne();
   }
 
+  async findByPhone(phone: string, includePassword = false): Promise<User | null> {
+    // Normalise: strip spaces and dashes, ensure leading + is kept
+    const normalized = phone.replace(/[\s\-]/g, '');
+    const query = this.usersRepository
+      .createQueryBuilder('user')
+      .where('REPLACE(REPLACE(user.phone, \' \', \'\'), \'-\', \'\') = :phone', { phone: normalized });
+
+    if (includePassword) {
+      query.addSelect('user.passwordHash');
+    }
+
+    return query.getOne();
+  }
+
   async findById(id: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { id: Number(id) } });
   }

@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateArticleDto } from './dto/create-article.dto';
+import { UpdateArticleDto } from './dto/update-article.dto';
 
 export interface ArticleResponse {
   id: number;
@@ -123,13 +125,13 @@ export class ArticlesService {
     return article;
   }
 
-  async create(dto: any): Promise<ArticleResponse> {
+  async create(dto: CreateArticleDto): Promise<ArticleResponse> {
     const newArticle: ArticleResponse = {
       id: this.articles.length + 1,
       title: dto.title,
-      slug: dto.slug,
+      slug: dto.slug || dto.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       content: dto.content,
-      excerpt: dto.excerpt,
+      excerpt: dto.excerpt || '',
       featuredImage: dto.featuredImage || '',
       category: dto.category,
       tags: dto.tags || [],
@@ -137,6 +139,7 @@ export class ArticlesService {
       seoTitle: dto.seoTitle,
       seoDescription: dto.seoDescription,
       author: dto.author || 'Admin',
+      relatedProductIds: dto.relatedProductIds,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -144,7 +147,7 @@ export class ArticlesService {
     return newArticle;
   }
 
-  async update(id: number, dto: any): Promise<ArticleResponse> {
+  async update(id: number, dto: UpdateArticleDto): Promise<ArticleResponse> {
     const article = await this.findOne(id);
     Object.assign(article, dto);
     article.updatedAt = new Date().toISOString();

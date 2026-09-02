@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { SanitizeString } from '../../common/utils/sanitize.util';
 
 export class UpdateAdminDto {
   @ApiPropertyOptional({ example: 'admin@michupharmacy.com' })
@@ -10,16 +11,19 @@ export class UpdateAdminDto {
   @ApiPropertyOptional({ example: 'Updated Admin Name' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   name?: string;
 
   @ApiPropertyOptional({ example: 'admin' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   role?: string;
 
   @ApiPropertyOptional({ example: '+251911000000' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   phone?: string;
 
   @ApiPropertyOptional({ example: 'https://example.com/avatar.jpg' })

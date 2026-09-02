@@ -2,20 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Prescription, PrescriptionStatus } from './entities/prescription.entity';
+import { CreatePrescriptionDto } from './dto/create-prescription.dto';
+import { UpdatePrescriptionStatusDto } from './dto/update-prescription-status.dto';
+import { sanitizeText } from '../common/utils/sanitize.util';
 
-export class CreatePrescriptionDto {
-  patientName!: string;
-  patientEmail!: string;
-  doctorName?: string;
-  doctorLicense?: string;
-  imageUrl!: string;
-  notes?: string;
-}
-
-export class UpdatePrescriptionStatusDto {
-  status!: PrescriptionStatus;
-  notes?: string;
-}
+export { CreatePrescriptionDto, UpdatePrescriptionStatusDto };
 
 @Injectable()
 export class PrescriptionsService {
@@ -40,13 +31,13 @@ export class PrescriptionsService {
 
     const prescription = this.prescriptionRepo.create({
       prescriptionNumber,
-      patientName: dto.patientName,
+      patientName: sanitizeText(dto.patientName),
       patientEmail: dto.patientEmail,
-      doctorName: dto.doctorName,
-      doctorLicense: dto.doctorLicense,
+      doctorName: dto.doctorName ? sanitizeText(dto.doctorName) : undefined,
+      doctorLicense: dto.doctorLicense ? sanitizeText(dto.doctorLicense) : undefined,
       imageUrl: dto.imageUrl || '',
       status: PrescriptionStatus.PENDING,
-      notes: dto.notes,
+      notes: dto.notes ? sanitizeText(dto.notes) : undefined,
     });
 
     return this.prescriptionRepo.save(prescription);
@@ -56,7 +47,7 @@ export class PrescriptionsService {
     const prescription = await this.findOne(id);
     prescription.status = dto.status;
     if (dto.notes !== undefined) {
-      prescription.notes = dto.notes;
+      prescription.notes = sanitizeText(dto.notes);
     }
     return this.prescriptionRepo.save(prescription);
   }

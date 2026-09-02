@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateAdvertisementDto } from './dto/create-advertisement.dto';
+import { UpdateAdvertisementDto } from './dto/update-advertisement.dto';
 
 export interface AdvertisementResponse {
   id: number;
@@ -35,20 +37,20 @@ export class AdvertisementsService {
     return ad;
   }
 
-  async create(dto: any): Promise<AdvertisementResponse> {
+  async create(dto: CreateAdvertisementDto): Promise<AdvertisementResponse> {
     const newAd: AdvertisementResponse = {
       id: this.advertisements.length + 1,
       title: dto.title,
-      description: dto.description,
+      description: dto.description || '',
       mediaType: dto.mediaType || 'image',
       mediaUrl: dto.mediaUrl || '',
       thumbnailUrl: dto.thumbnailUrl,
-      targetUrl: dto.targetUrl,
-      targetPage: dto.targetPage,
-      position: dto.position,
+      targetUrl: dto.targetUrl || '',
+      targetPage: dto.targetPage || '',
+      position: dto.position || '',
       displayOrder: dto.displayOrder || 0,
-      startDate: dto.startDate,
-      endDate: dto.endDate,
+      startDate: dto.startDate || '',
+      endDate: dto.endDate || '',
       status: dto.status || 'draft',
       createdBy: dto.createdBy || 'Admin',
       createdAt: new Date().toISOString(),
@@ -58,7 +60,7 @@ export class AdvertisementsService {
     return newAd;
   }
 
-  async update(id: number, dto: any): Promise<AdvertisementResponse> {
+  async update(id: number, dto: UpdateAdvertisementDto): Promise<AdvertisementResponse> {
     const ad = await this.findOne(id);
     Object.assign(ad, dto);
     ad.updatedAt = new Date().toISOString();

@@ -5,6 +5,7 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
+import { SanitizeString } from '../../common/utils/sanitize.util';
 
 export class RegisterDto {
   @ApiProperty({ example: 'customer@example.com' })
@@ -19,23 +20,32 @@ export class RegisterDto {
   @ApiProperty({ example: 'Abebe' })
   @IsString()
   @MinLength(1)
+  @SanitizeString()
   firstName!: string;
 
   @ApiProperty({ example: 'Kebede' })
   @IsString()
   @MinLength(1)
+  @SanitizeString()
   lastName!: string;
 
   @ApiPropertyOptional({ example: '+251911000000' })
   @IsOptional()
   @IsString()
+  @SanitizeString()
   phone?: string;
 }
 
 export class LoginDto {
-  @ApiProperty({ example: 'customer@example.com' })
-  @IsEmail()
-  email!: string;
+  @ApiPropertyOptional({ example: 'customer@example.com' })
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @ApiPropertyOptional({ example: '0904040364' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
 
   @ApiProperty({ example: 'SecurePass123!' })
   @IsString()

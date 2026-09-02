@@ -80,7 +80,7 @@ export class PrescriptionsController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST, UserRole.DOCTOR)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all prescriptions' })
   findAll() {
@@ -89,7 +89,7 @@ export class PrescriptionsController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST, UserRole.DOCTOR)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get prescription by ID' })
   findOne(@Param('id') id: string) {
@@ -106,7 +106,7 @@ export class PrescriptionsController {
 
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST)
+  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST, UserRole.DOCTOR)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update prescription status' })
   updateStatus(@Param('id') id: string, @Body() dto: UpdatePrescriptionStatusDto) {

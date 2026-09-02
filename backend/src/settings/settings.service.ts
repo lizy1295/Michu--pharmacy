@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { UpsertSettingDto, UpdateSettingValueDto } from './dto/upsert-setting.dto';
+import { UpdateBusinessSettingsDto } from './dto/update-business-settings.dto';
 
 export interface SettingResponse {
   key: string;
@@ -14,6 +16,8 @@ export interface BusinessSettings {
   logo?: string;
   contactEmail: string;
   contactPhone: string;
+  contactPhones: string;   // comma-separated pharmacy contact numbers e.g. "0904040364,0931325959"
+  emergencyPhone: string;  // short emergency number, admin-editable e.g. "456"
   address?: string;
   deliveryFee: number;
   freeDeliveryThreshold?: number;
@@ -35,7 +39,9 @@ export class SettingsService {
     ['website_name', { key: 'website_name', value: 'Michu Pharmacy', type: 'string', category: 'general', description: 'Website name', updatedAt: new Date().toISOString() }],
     ['logo', { key: 'logo', value: '', type: 'string', category: 'general', description: 'Logo URL', updatedAt: new Date().toISOString() }],
     ['contact_email', { key: 'contact_email', value: 'info@michupharmacy.com', type: 'string', category: 'general', description: 'Contact email', updatedAt: new Date().toISOString() }],
-    ['contact_phone', { key: 'contact_phone', value: '+251-11-123-4567', type: 'string', category: 'general', description: 'Contact phone', updatedAt: new Date().toISOString() }],
+    ['contact_phone', { key: 'contact_phone', value: '+251-11-123-4567', type: 'string', category: 'general', description: 'Primary contact phone', updatedAt: new Date().toISOString() }],
+    ['contact_phones', { key: 'contact_phones', value: '0904040364,0931325959', type: 'string', category: 'business', description: 'Pharmacy contact numbers (comma-separated)', updatedAt: new Date().toISOString() }],
+    ['emergency_phone', { key: 'emergency_phone', value: '456', type: 'string', category: 'business', description: 'Emergency short-dial number shown on homepage (admin-editable)', updatedAt: new Date().toISOString() }],
     ['address', { key: 'address', value: 'Bole Road, Addis Ababa, Ethiopia', type: 'string', category: 'general', description: 'Business address', updatedAt: new Date().toISOString() }],
     ['currency', { key: 'currency', value: 'ETB', type: 'string', category: 'general', description: 'Currency code', updatedAt: new Date().toISOString() }],
     ['email_provider', { key: 'email_provider', value: 'smtp', type: 'string', category: 'email', description: 'Email provider', updatedAt: new Date().toISOString() }],
@@ -56,7 +62,7 @@ export class SettingsService {
       facebook: 'https://facebook.com/michupharmacy',
       instagram: 'https://instagram.com/michupharmacy',
       telegram: 'https://t.me/michupharmacy',
-      twitter: '',
+      twitter: 'https://twitter.com/michupharmacy',
     }, type: 'json', category: 'business', description: 'Social media links', updatedAt: new Date().toISOString() }],
   ]);
 
@@ -64,14 +70,16 @@ export class SettingsService {
     return Array.from(this.settings.values());
   }
 
-  async findOne(key: string): Promise<SettingResponse> {
-    const setting = this.settings.get(key);
-    if (!setting) throw new NotFoundException(`Setting with key ${key} not found`);
-    return setting;
-  }
-
   async findByCategory(category: string): Promise<SettingResponse[]> {
     return Array.from(this.settings.values()).filter(s => s.category === category);
+  }
+
+  async findOne(key: string): Promise<SettingResponse> {
+    const setting = this.settings.get(key);
+    if (!setting) {
+      throw new NotFoundException(`Setting with key "${key}" not found`);
+    }
+    return setting;
   }
 
   async getBusinessSettings(): Promise<BusinessSettings> {
@@ -79,6 +87,8 @@ export class SettingsService {
     const logo = this.settings.get('logo')?.value as string || '';
     const contactEmail = this.settings.get('contact_email')?.value as string || '';
     const contactPhone = this.settings.get('contact_phone')?.value as string || '';
+    const contactPhones = this.settings.get('contact_phones')?.value as string || '0904040364,0931325959';
+    const emergencyPhone = this.settings.get('emergency_phone')?.value as string || '456';
     const address = this.settings.get('address')?.value as string || '';
     const deliveryFee = this.settings.get('delivery_fee')?.value as number || 50;
     const freeDeliveryThreshold = this.settings.get('free_delivery_threshold')?.value as number || 500;
@@ -91,6 +101,8 @@ export class SettingsService {
       logo,
       contactEmail,
       contactPhone,
+      contactPhones,
+      emergencyPhone,
       address,
       deliveryFee,
       freeDeliveryThreshold,
@@ -100,13 +112,15 @@ export class SettingsService {
     };
   }
 
-  async updateBusinessSettings(data: Partial<BusinessSettings>): Promise<BusinessSettings> {
+  async updateBusinessSettings(data: UpdateBusinessSettingsDto): Promise<BusinessSettings> {
     const updates: { key: string; value: any }[] = [];
 
     if (data.websiteName !== undefined) updates.push({ key: 'website_name', value: data.websiteName });
     if (data.logo !== undefined) updates.push({ key: 'logo', value: data.logo });
     if (data.contactEmail !== undefined) updates.push({ key: 'contact_email', value: data.contactEmail });
     if (data.contactPhone !== undefined) updates.push({ key: 'contact_phone', value: data.contactPhone });
+    if (data.contactPhones !== undefined) updates.push({ key: 'contact_phones', value: data.contactPhones });
+    if (data.emergencyPhone !== undefined) updates.push({ key: 'emergency_phone', value: data.emergencyPhone });
     if (data.address !== undefined) updates.push({ key: 'address', value: data.address });
     if (data.deliveryFee !== undefined) updates.push({ key: 'delivery_fee', value: data.deliveryFee });
     if (data.freeDeliveryThreshold !== undefined) updates.push({ key: 'free_delivery_threshold', value: data.freeDeliveryThreshold });
@@ -126,7 +140,7 @@ export class SettingsService {
     return this.getBusinessSettings();
   }
 
-  async update(key: string, dto: { value: any }): Promise<SettingResponse> {
+  async update(key: string, dto: UpdateSettingValueDto): Promise<SettingResponse> {
     const setting = await this.findOne(key);
     setting.value = dto.value;
     setting.updatedAt = new Date().toISOString();
@@ -134,7 +148,7 @@ export class SettingsService {
     return setting;
   }
 
-  async upsert(dto: { key: string; value: any; type?: string; category?: string; description?: string }): Promise<SettingResponse> {
+  async upsert(dto: UpsertSettingDto): Promise<SettingResponse> {
     const existing = this.settings.get(dto.key);
     if (existing) {
       existing.value = dto.value;

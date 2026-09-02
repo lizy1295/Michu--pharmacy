@@ -17,11 +17,8 @@ import { Product } from '../products/product.entity';
 import { TelebirrService } from './services/telebirr.service';
 import { CbeService } from './services/cbe.service';
 
-export interface InitiatePaymentDto {
-  orderId: number;
-  paymentMethod: PaymentProviderMethod;
-  returnUrl?: string;
-}
+import { InitiatePaymentDto } from './dto/initiate-payment.dto';
+export { InitiatePaymentDto };
 
 @Injectable()
 export class PaymentsService {
