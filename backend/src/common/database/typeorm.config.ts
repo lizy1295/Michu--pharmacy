@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
+import { join } from 'path';
+import { AddCertificationsToDoctor1725450000000 } from '../../migrations/1725450000000-AddCertificationsToDoctor';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -10,10 +12,12 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
     const dbType = this.configService.get<string>('DB_TYPE', 'sqlite');
     const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
 
-    const shared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging'> = {
+    const shared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging' | 'migrations' | 'migrationsRun'> = {
       autoLoadEntities: true,
-      synchronize: !isProduction,
+      synchronize: false,
       logging: !isProduction,
+      migrations: [AddCertificationsToDoctor1725450000000],
+      migrationsRun: true,
     };
 
     if (dbType === 'postgres') {

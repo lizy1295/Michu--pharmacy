@@ -25,6 +25,7 @@ export default function AdminDoctorsNewPage() {
     contactPhone: '',
     bio: '',
     languages: [] as string[],
+    certifications: '',
     status: 'active',
     availableForConsultation: true,
     imageUrl: '',
@@ -85,6 +86,7 @@ export default function AdminDoctorsNewPage() {
         contactPhone: formData.contactPhone || undefined,
         bio: formData.bio || undefined,
         languages: formData.languages,
+        certifications: formData.certifications ? formData.certifications.split(',').map(s => s.trim()).filter(Boolean) : [],
         status: formData.status,
         availableForConsultation: formData.availableForConsultation,
         imageUrl: formData.imageUrl || undefined,
@@ -203,6 +205,18 @@ export default function AdminDoctorsNewPage() {
                 </label>
               ))}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Professional Certifications</label>
+            <input
+              type="text"
+              value={formData.certifications}
+              onChange={(e) => setFormData(prev => ({ ...prev, certifications: e.target.value }))}
+              placeholder="e.g. EFDA Board Certified, PharmD, Addis Ababa University School of Medicine (comma separated)"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-sm focus:bg-white focus:border-emerald-500 outline-none text-slate-800"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">Enter certifications separated by commas.</p>
           </div>
 
           <div>

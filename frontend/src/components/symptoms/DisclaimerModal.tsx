@@ -32,13 +32,13 @@ export function DisclaimerModal({
     >
       <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
         {/* Top Header Banner */}
-        <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800 p-6 text-white relative">
+        <div className="bg-gradient-to-r from-moss-900 via-herb-700 to-moss-900 p-6 text-white relative">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-2xl shadow-inner shrink-0">
               🛡️
             </div>
             <div>
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-200 bg-emerald-900/50 px-2.5 py-0.5 rounded-full border border-emerald-400/20">
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-gleam-200 bg-moss-950/60 px-2.5 py-0.5 rounded-full border border-herb-400/30">
                 Mandatory Health Gate
               </span>
               <h2 id="disclaimer-modal-title" className="text-xl sm:text-2xl font-black tracking-tight text-white mt-1">
@@ -76,7 +76,7 @@ export function DisclaimerModal({
 
             <div className="space-y-2.5 text-slate-600">
               <div className="flex items-start gap-2.5">
-                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-5 h-5 rounded-full bg-herb-100 text-herb-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
                   1
                 </div>
                 <p>
@@ -85,7 +85,7 @@ export function DisclaimerModal({
               </div>
 
               <div className="flex items-start gap-2.5">
-                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-5 h-5 rounded-full bg-herb-100 text-herb-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
                   2
                 </div>
                 <p>
@@ -94,7 +94,7 @@ export function DisclaimerModal({
               </div>
 
               <div className="flex items-start gap-2.5">
-                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-5 h-5 rounded-full bg-herb-100 text-herb-800 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
                   3
                 </div>
                 <p>
@@ -112,7 +112,7 @@ export function DisclaimerModal({
                 type="checkbox"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-1 w-5 h-5 rounded-lg text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer shrink-0 accent-emerald-600"
+                className="mt-1 w-5 h-5 rounded-lg text-herb-600 border-herb-300 focus:ring-herb-500 cursor-pointer shrink-0 accent-herb-600"
               />
               <span className="text-xs sm:text-sm font-semibold text-slate-800">
                 I understand and agree that this symptom tool is for informational guidance only and is not a substitute for professional clinical medical evaluation or emergency care.
@@ -124,7 +124,7 @@ export function DisclaimerModal({
         {/* Footer Actions */}
         <div className="p-5 sm:p-6 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-[11px] text-slate-500 text-center sm:text-left flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className="w-2 h-2 rounded-full bg-herb-500"></span>
             Stored in your browser session for Michu Health Safety
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -135,7 +135,7 @@ export function DisclaimerModal({
               onClick={handleConfirm}
               className={`w-full sm:w-auto px-7 py-3 rounded-2xl text-sm font-extrabold shadow-lg transition flex items-center justify-center gap-2 ${
                 agreed
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-700 hover:to-teal-800 shadow-emerald-700/20 hover:scale-[1.02] active:scale-[0.98]'
+                  ? 'bg-gradient-to-r from-herb-600 to-moss-800 text-white hover:from-herb-700 hover:to-moss-900 shadow-herb-700/20 hover:scale-[1.02] active:scale-[0.98]'
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
               }`}
             >

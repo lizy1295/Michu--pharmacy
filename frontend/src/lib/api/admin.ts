@@ -6,8 +6,12 @@ const BASE_URL = API_URL.replace('/api/v1', '');
 
 export function getImageUrl(path: string | null | undefined): string | null {
   if (!path) return null;
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) return path;
   return `${BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
+export function getMediaUrl(path: string | null | undefined): string | null {
+  return getImageUrl(path);
 }
 
 async function request<T>(
@@ -387,6 +391,36 @@ export async function deleteAdvertisement(id: number): Promise<{ message: string
   });
 }
 
+export async function uploadAdvertisementMedia(file: File): Promise<{
+  url: string;
+  type: 'image' | 'video';
+  message: string;
+  filename: string;
+}> {
+  const token = getAccessToken();
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const headers: HeadersInit = {};
+  if (token) {
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_URL}/advertisements/upload`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const message = body.message ?? `Upload failed (${response.status})`;
+    throw new Error(Array.isArray(message) ? message.join(', ') : message);
+  }
+
+  return response.json();
+}
+
 /* ── Articles ──────────────────────────────────────────── */
 export interface Article {
   id: number;
@@ -585,6 +619,7 @@ export interface Doctor {
   contactPhone?: string;
   bio?: string;
   languages?: string[];
+  certifications?: string[];
   imageUrl?: string;
   status: string;
   availableForConsultation: boolean;
@@ -686,4 +721,48 @@ export async function deleteAdmin(id: number | string): Promise<{ message: strin
     method: 'DELETE',
   });
 }
+
+/* ── Partners ─────────────────────────────────────────────── */
+export interface Partner {
+  id: number;
+  name: string;
+  category: 'manufacturer' | 'regulatory' | 'fintech' | 'health_system';
+  badge: string;
+  description?: string;
+  logoUrl?: string;
+  websiteUrl?: string;
+  displayOrder: number;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getPartners(): Promise<Partner[]> {
+  return request<Partner[]>('/partners');
+}
+
+export async function getPartnerById(id: number | string): Promise<Partner> {
+  return request<Partner>(`/partners/${id}`);
+}
+
+export async function createPartner(data: Partial<Partner>): Promise<Partner> {
+  return request<Partner>('/partners', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updatePartner(id: number | string, data: Partial<Partner>): Promise<Partner> {
+  return request<Partner>(`/partners/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deletePartner(id: number | string): Promise<{ message: string }> {
+  return request<{ message: string }>(`/partners/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 

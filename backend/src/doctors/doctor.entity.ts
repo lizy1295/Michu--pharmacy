@@ -35,6 +35,9 @@ export class Doctor {
   @Column('simple-array', { nullable: true })
   languages?: string[];
 
+  @Column('simple-array', { nullable: true })
+  certifications?: string[];
+
   @Column({ nullable: true })
   imageUrl?: string;
 

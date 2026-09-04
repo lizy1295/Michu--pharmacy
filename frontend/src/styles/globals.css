@@ -3,7 +3,29 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* ── KAUTAQ Palette ────────────────────────────── */
+    --color-beige:       #DFDFD4; /* Vaporous Beige */
+    --color-autumn:      #DC7000; /* Autumn */
+    --color-black:       #1B1E1C; /* Almost Black */
+    --color-suede:       #6E883F; /* Suede Green */
+    --color-hinterlands: #31410D; /* Hinterlands */
+
+    /* Brand / Semantic Aliases */
+    --color-herb:        #6E883F; /* Suede Green (Primary Action/Brand) */
+    --color-gleam:       #DC7000; /* Autumn (Vibrant Accent/Highlight) */
+    --color-pearl:       #DFDFD4; /* Vaporous Beige (Warm Light Background) */
+    --color-radiate:     #DC7000; /* Autumn (Terracotta/Warm CTA) */
+    --color-moss:        #1B1E1C; /* Almost Black (Deep Dark/Headings) */
+  }
+
+  ::selection {
+    background-color: #DC7000; /* Autumn */
+    color: #FFFFFF;
+  }
+
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-[#DFDFD4] text-[#1B1E1C] antialiased;
+    /* Vaporous Beige base, Almost Black text */
   }
 }

@@ -3,23 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-
-const BRANCHES = [
-  { name: 'Ayat Branch', address: 'Ayat Zone 2, Main Road', phone: '+251 116 889 900', hours: '24 Hours', services: ['Prescription', 'Consultation', 'Delivery Pickup', 'Loyalty'], coordinates: '9.02, 38.76' },
-  { name: 'Adama Branch', address: 'Bole Road, Near Adama Stadium', phone: '+251 221 112 233', hours: '8:00 AM - 10:00 PM', services: ['Prescription', 'Consultation', 'Delivery'], coordinates: '8.54, 39.27' },
-  { name: 'Bethel Branch', address: 'Bethel Hospital Street', phone: '+251 113 445 566', hours: '8:00 AM - 9:00 PM', services: ['Prescription', 'Consultation', 'Loyalty'], coordinates: '9.01, 38.74' },
-  { name: 'Dire Dawa Branch', address: 'Kezira, Opposite Train Station', phone: '+251 251 112 244', hours: '8:00 AM - 10:00 PM', services: ['Prescription', 'Delivery Pickup'], coordinates: '9.60, 41.85' },
-  { name: 'Figa Branch', address: 'Figa Junction, Next to Commercial Bank', phone: '+251 116 334 455', hours: '8:00 AM - 11:00 PM', services: ['Prescription', 'Consultation', 'Delivery'], coordinates: '9.03, 38.73' },
-  { name: 'Hawassa Branch', address: 'Piazza, Near Hawassa University', phone: '+251 462 223 344', hours: '8:00 AM - 10:00 PM', services: ['Prescription', 'Consultation', 'Delivery', 'Loyalty'], coordinates: '7.04, 38.47' },
-  { name: 'Jemo Branch', address: 'Jemo 1 Condominiums, Block 4', phone: '+251 113 889 911', hours: '7:00 AM - 11:00 PM', services: ['Prescription', 'Consultation', 'Delivery', 'Loyalty'], coordinates: '9.02, 38.80' },
-];
+import { BranchLocation, BRANCH_LOCATIONS } from '@/lib/data/branchesData';
+import BranchGoogleMap from '@/components/branches/BranchGoogleMap';
 
 export default function BranchesPage() {
-  const { t } = useLanguage();
-  const [selectedBranch, setSelectedBranch] = useState(BRANCHES[0]);
+  const { t, language } = useLanguage();
+  const [selectedBranch, setSelectedBranch] = useState<BranchLocation>(BRANCH_LOCATIONS[0]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filtered = BRANCHES.filter((b) => {
+  const filtered = BRANCH_LOCATIONS.filter((b) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return b.name.toLowerCase().includes(q) || b.address.toLowerCase().includes(q) || b.services.some(s => s.toLowerCase().includes(q));
@@ -54,16 +46,20 @@ export default function BranchesPage() {
               onClick={() => setSelectedBranch(branch)}
               className={`w-full text-left rounded-2xl p-4 transition duration-200 border ${
                 selectedBranch.name === branch.name
-                  ? 'bg-brand-50 border-brand-200 shadow-md'
+                  ? 'bg-brand-50 border-brand-200 shadow-md ring-2 ring-brand-500/20'
                   : 'bg-white border-gray-100 hover:shadow-sm'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-neutral-800">{branch.name}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">{branch.address}</p>
+                  <h3 className="text-sm font-bold text-neutral-800">
+                    {language === 'am' && branch.nameAm ? branch.nameAm : branch.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {language === 'am' && branch.addressAm ? branch.addressAm : branch.address}
+                  </p>
                 </div>
-                {branch.hours === '24 Hours' && (
+                {branch.is24Hours && (
                   <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full">{t('branches.open_247')}</span>
                 )}
               </div>
@@ -74,16 +70,14 @@ export default function BranchesPage() {
         {/* Branch Detail */}
         <div className="lg:col-span-2">
           <div className="bg-white border rounded-3xl overflow-hidden shadow-sm">
-            {/* Map Placeholder */}
-            <div className="aspect-video bg-gradient-to-br from-brand-100 to-emerald-100 relative flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-brand-600 text-white rounded-full flex items-center justify-center mx-auto text-2xl font-bold shadow-lg">
-                  {selectedBranch.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </div>
-                <p className="text-sm font-bold text-brand-900 mt-2">{selectedBranch.name}</p>
-                <p className="text-xs text-gray-500">{selectedBranch.address}</p>
-              </div>
-            </div>
+            {/* Interactive Branch Google Map */}
+            <BranchGoogleMap
+              branches={BRANCH_LOCATIONS}
+              selectedBranch={selectedBranch}
+              onSelectBranch={setSelectedBranch}
+              height="380px"
+              className="border-none rounded-none rounded-t-3xl shadow-none"
+            />
 
             <div className="p-6 space-y-6">
               <div className="flex flex-col sm:flex-row gap-4">

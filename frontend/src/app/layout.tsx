@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#047857',
+  themeColor: '#31410D',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -46,7 +46,7 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className="min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
+      <body className="min-h-screen flex flex-col selection:bg-autumn selection:text-white bg-beige-200 text-almostblack">
         <OfflineBanner />
         {isAdmin ? (
           // Admin: render children bare — AdminLayout wraps them via app/admin/layout.tsx

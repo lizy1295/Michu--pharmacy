@@ -58,6 +58,12 @@ export class UpdateDoctorDto {
   @IsString({ each: true })
   languages?: string[];
 
+  @ApiPropertyOptional({ example: ['EFDA Licensed Clinical Pharmacist', 'PharmD', 'Board Certified Pharmacotherapy Specialist'], type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  certifications?: string[];
+
   @ApiPropertyOptional({ example: '/uploads/doctors/doctor-1.jpg' })
   @IsOptional()
   @IsString()

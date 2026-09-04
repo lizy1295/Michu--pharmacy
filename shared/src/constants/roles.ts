@@ -1,8 +1,10 @@
 export enum UserRole {
   SUPERADMIN = 'superadmin',
   ADMIN = 'admin',
+  STAFF = 'staff',
   BRANCH_ADMIN = 'branch_admin',
   PHARMACIST = 'pharmacist',
+  DOCTOR = 'doctor',
   CASHIER = 'cashier',
   WORKER = 'worker',
   CUSTOMER = 'customer',
@@ -11,8 +13,10 @@ export enum UserRole {
 export const STAFF_ROLES: UserRole[] = [
   UserRole.SUPERADMIN,
   UserRole.ADMIN,
+  UserRole.STAFF,
   UserRole.BRANCH_ADMIN,
   UserRole.PHARMACIST,
+  UserRole.DOCTOR,
   UserRole.CASHIER,
   UserRole.WORKER,
 ];
@@ -53,6 +57,15 @@ export function hasRole(
 
   // Admin has access if staff roles or admin is allowed
   if (normalizedUserRole === 'admin') {
+    const isSuperAdminOnly =
+      allowedRoles.length === 1 && normalizeRole(allowedRoles[0]) === 'superadmin';
+    if (!isSuperAdminOnly) {
+      return true;
+    }
+  }
+
+  // Staff (legacy admin-table role) has access to any staff-level endpoint
+  if (normalizedUserRole === 'staff') {
     const isSuperAdminOnly =
       allowedRoles.length === 1 && normalizeRole(allowedRoles[0]) === 'superadmin';
     if (!isSuperAdminOnly) {

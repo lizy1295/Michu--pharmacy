@@ -7,6 +7,270 @@ import { useCart } from '@/context/CartContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useState, useEffect, useMemo } from 'react';
 import { getProducts, Product, getImageUrl } from '@/lib/api/products';
+import {
+  getDoctors,
+  Doctor,
+  getAdvertisements,
+  Advertisement,
+  getPartners,
+  Partner,
+  getMediaUrl,
+} from '@/lib/api/admin';
+import BranchGoogleMap from '@/components/branches/BranchGoogleMap';
+import { BranchLocation, BRANCH_LOCATIONS } from '@/lib/data/branchesData';
+
+/* ── Fallback Seed Data if Backend API is initializing ──────── */
+const FALLBACK_DOCTORS: Doctor[] = [
+  {
+    id: 1,
+    firstName: 'Helen',
+    lastName: 'Tadesse',
+    specialization: 'Internal Medicine & Clinical Pharmacology',
+    experienceYears: 12,
+    contactEmail: 'dr.helen@michupharmacy.com',
+    contactPhone: '+251 91 123 4567',
+    bio: 'Senior consultant specializing in complex medication management, chronic illness pharmacotherapy, and adverse drug interaction prevention.',
+    languages: ['Amharic', 'English'],
+    certifications: [
+      'EFDA Licensed Medical Doctor',
+      'MD - Addis Ababa University School of Medicine',
+      'Board Certified Pharmacotherapy Specialist (BCPS)',
+    ],
+    status: 'active',
+    availableForConsultation: true,
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: 2,
+    firstName: 'Dawit',
+    lastName: 'Abebe',
+    specialization: 'Chief Clinical Pharmacist & Drug Safety',
+    experienceYears: 10,
+    contactEmail: 'dr.dawit@michupharmacy.com',
+    contactPhone: '+251 92 234 5678',
+    bio: 'Experienced clinical pharmacist overseeing hospital-grade prescription verification, dosage optimization, and patient drug counseling.',
+    languages: ['Amharic', 'English', 'Oromiffa'],
+    certifications: [
+      'Doctor of Pharmacy (PharmD)',
+      'MSc in Clinical Pharmacy & Toxicology',
+      'Fellow of the Ethiopian Pharmaceutical Association',
+    ],
+    status: 'active',
+    availableForConsultation: true,
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: 3,
+    firstName: 'Selamawit',
+    lastName: 'Girma',
+    specialization: 'Consultant Pediatrician & Family Health',
+    experienceYears: 9,
+    contactEmail: 'dr.selamawit@michupharmacy.com',
+    contactPhone: '+251 93 345 6789',
+    bio: 'Dedicated pediatrician guiding infant medication safety, childhood nutritional supplementation, and respiratory infection management.',
+    languages: ['Amharic', 'English', 'Tigrigna'],
+    certifications: [
+      'MD Pediatric Medicine',
+      'EFDA Certified Clinical Care Specialist',
+      'International Pediatric Association Certified',
+    ],
+    status: 'active',
+    availableForConsultation: true,
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: 4,
+    firstName: 'Yonas',
+    lastName: 'Kassa',
+    specialization: 'Senior Pharmacist & Chronic Care Consultant',
+    experienceYears: 14,
+    contactEmail: 'dr.yonas@michupharmacy.com',
+    contactPhone: '+251 94 456 7890',
+    bio: 'Specialist in diabetes care, hypertension regimens, and elderly cardiovascular pharmacotherapy with over a decade of community practice.',
+    languages: ['Amharic', 'English'],
+    certifications: [
+      'Registered Clinical Pharmacist (RPh)',
+      'Certified Diabetes Care & Education Specialist',
+      'EFDA Good Pharmacy Practice (GPP) Auditor',
+    ],
+    status: 'active',
+    availableForConsultation: true,
+    createdAt: '',
+    updatedAt: '',
+  },
+];
+
+function getEmbedVideoUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const ytMatch = url.match(
+    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i,
+  );
+  if (ytMatch && ytMatch[1]) {
+    return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}`;
+  }
+  const vimeoMatch = url.match(/(?:vimeo\.com\/)(\d+)/i);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+  return null;
+}
+
+const FALLBACK_ADS: Advertisement[] = [
+  {
+    id: 1,
+    title: 'Clinical Video Guide: Modern Respiratory & Asthma Management Protocol',
+    description: 'Watch our clinical pharmacist team explain the 3-step preventive therapy for bronchial asthma, spacer usage, and when to seek instant nebulization at Michu branches.',
+    mediaType: 'video',
+    mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=80',
+    targetUrl: '/health?action=consult',
+    targetPage: 'homepage',
+    position: 'disease_solution',
+    displayOrder: 1,
+    startDate: '2026-08-01',
+    endDate: '2026-12-31',
+    status: 'published',
+    createdBy: 'Dr. Helen Tadesse (MD, BCPS)',
+    createdAt: '2026-08-01',
+    updatedAt: '2026-08-01',
+  },
+  {
+    id: 2,
+    title: 'Seasonal Alert: Modern Pediatric Respiratory & Asthma Relief Solutions',
+    description: 'Comprehensive protocols for seasonal bronchial allergies and asthma: portable nebulizer units, allergen-safe spacers, and pediatrician-verified syrups in stock.',
+    mediaType: 'image',
+    mediaUrl: '',
+    targetUrl: '/products?category=Medicine',
+    targetPage: 'homepage',
+    position: 'disease_solution',
+    displayOrder: 2,
+    startDate: '2026-08-10',
+    endDate: '2026-12-31',
+    status: 'published',
+    createdBy: 'Admin / Health Team',
+    createdAt: '2026-08-10',
+    updatedAt: '2026-08-10',
+  },
+  {
+    id: 3,
+    title: 'Product Innovation: Smart Continuous Blood Glucose Monitoring Kits',
+    description: 'Accurate instant readings with painless micro-sensors. Manage Type 1 and Type 2 diabetes with confidence. Free battery and test strip starter pack included.',
+    mediaType: 'image',
+    mediaUrl: '',
+    targetUrl: '/products?category=Medical Devices',
+    targetPage: 'homepage',
+    position: 'product_news',
+    displayOrder: 3,
+    startDate: '2026-08-15',
+    endDate: '2026-12-31',
+    status: 'published',
+    createdBy: 'Admin / Pharmacy Lead',
+    createdAt: '2026-08-15',
+    updatedAt: '2026-08-15',
+  },
+];
+
+const FALLBACK_PARTNERS: Partner[] = [
+  {
+    id: 1,
+    name: 'EFDA',
+    category: 'regulatory',
+    badge: 'Federal Regulatory Authority',
+    description: 'Ethiopian Food and Drug Authority — National medicine standards, safety verification, and regulatory compliance.',
+    websiteUrl: 'https://efda.gov.et',
+    displayOrder: 1,
+    status: 'active',
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: 2,
+    name: 'EPSA',
+    category: 'regulatory',
+    badge: 'National Supply Partner',
+    description: 'Ethiopian Pharmaceuticals Supply Agency — Ensuring continuous access to critical public health medicines.',
+    websiteUrl: 'https://epsa.gov.et',
+    displayOrder: 2,
+    status: 'active',
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: 3,
+    name: 'EPHARM',
+    category: 'manufacturer',
+    badge: 'National Leader',
+    description: 'Ethiopian Pharmaceuticals Manufacturing S.C. — Decades of domestic medicine manufacturing excellence.',
+    websiteUrl: 'https://epharm.com.et',
+    displayOrder: 3,
+    status: 'active',
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: 4,
+    name: 'Cadila Pharmaceuticals',
+    category: 'manufacturer',
+    badge: 'Certified WHO-GMP',
+    description: 'Cadila Pharmaceuticals Ethiopia — Quality assured critical care therapeutics and antibiotics.',
+    websiteUrl: 'https://cadilapharma.com',
+    displayOrder: 4,
+    status: 'active',
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: 5,
+    name: 'Julphar Pharmaceuticals',
+    category: 'manufacturer',
+    badge: 'Global Standard',
+    description: 'Julphar Ethiopia — International grade pharmaceutical manufacturing and advanced oral dosages.',
+    websiteUrl: 'https://julphar.net',
+    displayOrder: 5,
+    status: 'active',
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: 6,
+    name: 'Addis Pharmaceuticals (APF)',
+    category: 'manufacturer',
+    badge: 'Trusted Generic',
+    description: 'APF — High-potency generic medications for cardiovascular, gastrointestinal, and chronic care.',
+    websiteUrl: 'https://apf.com.et',
+    displayOrder: 6,
+    status: 'active',
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: 7,
+    name: 'Telebirr',
+    category: 'fintech',
+    badge: 'Official Payment',
+    description: 'Ethio Telecom SuperApp — Instant digital checkout, USSD, and zero-fee prescription payment.',
+    websiteUrl: 'https://telebirr.et',
+    displayOrder: 7,
+    status: 'active',
+    createdAt: '',
+    updatedAt: '',
+  },
+  {
+    id: 8,
+    name: 'Commercial Bank of Ethiopia',
+    category: 'fintech',
+    badge: 'Banking Gateway',
+    description: 'CBE Birr & CBE direct gateway for secure in-branch and digital medicine payment processing.',
+    websiteUrl: 'https://combanketh.et',
+    displayOrder: 8,
+    status: 'active',
+    createdAt: '',
+    updatedAt: '',
+  },
+];
 
 export default function HomePage() {
   const router = useRouter();
@@ -19,9 +283,12 @@ export default function HomePage() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const [categories, setCategories] = useState<{ name: string; count: number; color: string; icon: string }[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [liveProducts, setLiveProducts] = useState<Product[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>(FALLBACK_DOCTORS);
+  const [advertisements, setAdvertisements] = useState<Advertisement[]>(FALLBACK_ADS);
+  const [partners, setPartners] = useState<Partner[]>(FALLBACK_PARTNERS);
+  const [homeSelectedBranch, setHomeSelectedBranch] = useState<BranchLocation>(BRANCH_LOCATIONS[0]);
+  const [activeVideoModal, setActiveVideoModal] = useState<Advertisement | null>(null);
 
   const FEATURED_BRANDS = useMemo(() => [
     { name: 'EPHARM', origin: language === 'am' ? 'የኢትዮጵያ መድኃኒት ፋብሪካ' : 'Ethiopian Pharm. Mfg.', badge: 'National Leader', icon: '🇪🇹', color: 'bg-emerald-50 border-emerald-200 text-emerald-800' },
@@ -38,110 +305,152 @@ export default function HomePage() {
     { name: 'CeraVe & Skincare', origin: language === 'am' ? 'የቆዳ ህክምና ማዘዣ' : 'Dermatologist Rx', badge: 'Skin Barrier', icon: '✨', color: 'bg-cyan-50 border-cyan-200 text-cyan-800' },
   ], [language]);
 
+  // Load products, doctors, advertisements, and partners
   useEffect(() => {
     let isMounted = true;
-    const loadCategories = async () => {
+    const loadData = async () => {
       try {
-        const data = await getProducts();
-        if (!isMounted) return;
-
-        setLiveProducts(data);
-
-        const categoryMap = new Map<string, number>();
-        data.forEach((p: Product) => {
-          const cat = p.category || 'Other';
-          categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
-        });
-
-        const colorMap: Record<string, string> = {
-          'Medicine': 'bg-emerald-50 text-emerald-700 border-emerald-100',
-          'Medicines': 'bg-emerald-50 text-emerald-700 border-emerald-100',
-          'Supplement': 'bg-blue-50 text-blue-700 border-blue-100',
-          'Supplements': 'bg-blue-50 text-blue-700 border-blue-100',
-          'Cosmetic': 'bg-purple-50 text-purple-700 border-purple-100',
-          'Cosmetics': 'bg-purple-50 text-purple-700 border-purple-100',
-          'Medical Devices': 'bg-amber-50 text-amber-700 border-amber-100',
-          'Personal Care': 'bg-pink-50 text-pink-700 border-pink-100',
-        };
-
-        const iconMap: Record<string, string> = {
-          'Medicine': 'pill',
-          'Medicines': 'pill',
-          'Supplement': 'bottle',
-          'Supplements': 'bottle',
-          'Cosmetic': 'cream',
-          'Cosmetics': 'cream',
-          'Medical Devices': 'device',
-          'Personal Care': 'spray',
-        };
-
-        const dynamicCategories = Array.from(categoryMap.entries())
-          .map(([name, count]) => ({
-            name,
-            count,
-            color: colorMap[name] || 'bg-gray-50 text-gray-700 border-gray-100',
-            icon: iconMap[name] || 'default',
-          }))
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        if (dynamicCategories.length === 0) {
-          // Fallback initial categories if database is syncing
-          setCategories([
-            { name: 'Medicine', count: 45, color: colorMap['Medicine'], icon: 'pill' },
-            { name: 'Supplement', count: 28, color: colorMap['Supplement'], icon: 'bottle' },
-            { name: 'Cosmetic', count: 32, color: colorMap['Cosmetic'], icon: 'cream' },
-            { name: 'Medical Devices', count: 18, color: colorMap['Medical Devices'], icon: 'device' },
-            { name: 'Personal Care', count: 24, color: colorMap['Personal Care'], icon: 'spray' },
-          ]);
-        } else {
-          setCategories(dynamicCategories);
+        const prods = await getProducts();
+        if (isMounted && prods && prods.length > 0) {
+          setLiveProducts(prods);
         }
       } catch (err) {
-        console.error('Failed to load categories:', err);
-      } finally {
-        if (isMounted) setCategoriesLoading(false);
+        console.error('Failed to load products:', err);
+      }
+
+      try {
+        const docs = await getDoctors();
+        if (isMounted && docs && docs.length > 0) {
+          setDoctors(docs);
+        }
+      } catch {
+        // Fallback used
+      }
+
+      try {
+        const ads = await getAdvertisements();
+        if (isMounted && ads && ads.length > 0) {
+          const activeAds = ads.filter(a => a.status === 'published' || a.status === ('active' as any));
+          if (activeAds.length > 0) setAdvertisements(activeAds);
+        }
+      } catch {
+        // Fallback used
+      }
+
+      try {
+        const pts = await getPartners();
+        if (isMounted && pts && pts.length > 0) {
+          const activePts = pts.filter(p => p.status === 'active');
+          if (activePts.length > 0) setPartners(activePts);
+        }
+      } catch {
+        // Fallback used
       }
     };
 
-    loadCategories();
+    loadData();
     return () => {
       isMounted = false;
     };
   }, []);
 
-  const getTranslatedCategoryName = (name: string): string => {
-    const lower = name.toLowerCase();
-    if (lower.includes('medicine')) return t('home.cat_medicine');
-    if (lower.includes('supplement') || lower.includes('vitamin')) return t('home.cat_supplement');
-    if (lower.includes('cosmetic') || lower.includes('skin')) return t('home.cat_cosmetic');
-    if (lower.includes('device')) return t('home.cat_medical_devices');
-    if (lower.includes('personal')) return t('home.cat_personal_care');
-    return name;
-  };
-
+  // Promotional service cards (Using Herb, Pearl, Gleam, Radiate, Moss palette)
   const features = [
     {
       title: t('home.service_rx_title'),
       description: t('home.service_rx_desc'),
       link: '/health?action=upload',
       buttonText: t('home.service_rx_btn'),
-      color: 'border-emerald-200 hover:border-emerald-300 bg-emerald-50/50'
+      color: 'border-herb-200/90 hover:border-herb-400 bg-herb-50/70 shadow-xs',
+      btnColor: 'bg-herb hover:bg-herb-600 text-white shadow-herb/30'
     },
     {
       title: t('home.service_consult_title'),
       description: t('home.service_consult_desc'),
       link: '/health?action=consult',
       buttonText: t('home.service_consult_btn'),
-      color: 'border-brand-200 hover:border-brand-300 bg-brand-50/50'
+      color: 'border-gleam-400/80 hover:border-gleam bg-pearl-100/80 shadow-xs',
+      btnColor: 'bg-moss-900 hover:bg-moss-800 text-gleam shadow-moss/30'
     },
     {
-      title: t('home.service_reward_title'),
-      description: t('home.service_reward_desc'),
-      link: '/account',
-      buttonText: t('home.service_reward_btn'),
-      color: 'border-purple-200 hover:border-purple-300 bg-purple-50/50'
+      title: language === 'am' ? 'ፈጣን የቅርንጫፍ ርክክብ እና ማድረሻ' : 'Branch Pickup & Fast Delivery',
+      description: language === 'am'
+        ? 'በአዲስ አበባ እና በክልሎች በሚገኙ 7 ቅርንጫፎቻችን በደህንነቱ የተረጋገጠ መድኃኒት በቀላሉ ይረከቡ።'
+        : 'Pick up verified medications at any of our 7 physical branches or request safe cold-chain delivery.',
+      link: '/branches',
+      buttonText: language === 'am' ? 'ቅርንጫፎችን ይመልከቱ' : 'Explore Branches',
+      color: 'border-radiate-200 hover:border-radiate-300 bg-radiate-50/70 shadow-xs',
+      btnColor: 'bg-radiate hover:bg-radiate-600 text-white shadow-radiate/30'
     }
   ];
+
+  // Curated Most Trusted Products list
+  const mostTrustedProducts = useMemo(() => {
+    const list = [
+      {
+        id: 'trusted-1',
+        name: 'Actrapid 100iu/ml 10ml Soluble Insulin',
+        brand: 'Novo Nordisk',
+        price: 1155,
+        prescriptionRequired: true,
+        indication: 'Essential Diabetes Blood Sugar Control',
+        badge: 'EFDA Certified Insulin',
+        imageType: 'tablet' as const,
+        imageUrl: null as string | null,
+      },
+      {
+        id: 'trusted-2',
+        name: '(Nicardia Retard 20) Nifedipine 20mg of 100',
+        brand: 'Nicardia',
+        price: 320,
+        prescriptionRequired: true,
+        indication: 'Cardiovascular & Hypertension Management',
+        badge: 'WHO-GMP Certified',
+        imageType: 'tablet' as const,
+        imageUrl: null as string | null,
+      },
+      {
+        id: 'trusted-3',
+        name: '(Exedexe) Dextromethorphan syrup 120ml',
+        brand: 'EPHARM',
+        price: 240,
+        prescriptionRequired: false,
+        indication: 'Dry Cough Suppressant & Bronchial Relief',
+        badge: 'Trusted National Brand',
+        imageType: 'syrup' as const,
+        imageUrl: null as string | null,
+      },
+      {
+        id: 'trusted-4',
+        name: 'Acyclovir Denk 200mg (25 Tablets)',
+        brand: 'Denk Pharma Germany',
+        price: 460,
+        prescriptionRequired: true,
+        indication: 'Antiviral Therapy for Herpes & Viral Infections',
+        badge: 'German Quality Standard',
+        imageType: 'tablet' as const,
+        imageUrl: null as string | null,
+      },
+    ];
+
+    if (liveProducts.length > 0) {
+      // Enhance with real live product data if matching
+      return list.map((item) => {
+        const found = liveProducts.find(p => p.name.toLowerCase().includes(item.name.toLowerCase().split(' ')[0]));
+        if (found) {
+          return {
+            ...item,
+            id: String(found.id),
+            price: typeof found.price === 'string' ? parseFloat(found.price) : found.price,
+            imageUrl: found.imageUrl,
+          };
+        }
+        return item;
+      });
+    }
+
+    return list;
+  }, [liveProducts]);
 
   const featuredProducts = [
     {
@@ -177,41 +486,6 @@ export default function HomePage() {
       desc: 'Enamel-safe whitening toothpaste for deep stain removal'
     }
   ];
-
-  const renderIcon = (type: string) => {
-    switch (type) {
-      case 'pill':
-        return (
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        );
-      case 'bottle':
-        return (
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-        );
-      case 'cream':
-        return (
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158A6 6 0 018 16m0 0l-4 4-2-2 4-4" />
-          </svg>
-        );
-      case 'device':
-        return (
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
-          </svg>
-        );
-      default:
-        return (
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        );
-    }
-  };
 
   const renderProductIllustration = (type: string) => {
     switch (type) {
@@ -262,9 +536,8 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 1. Hero Landing Section with Clean Full-Width Background (Grid overlay removed) */}
+      {/* 1. Hero Landing Section */}
       <section className="relative w-full overflow-hidden text-white min-h-[520px] sm:min-h-[580px] md:min-h-[640px] flex items-center justify-center">
-        {/* Full-width background image with clean, smooth gradient lighting without square grid */}
         <div className="absolute inset-0 w-full h-full">
           <Image
             src="/pharmacy-hero.png"
@@ -275,50 +548,49 @@ export default function HomePage() {
             sizes="100vw"
             quality={95}
           />
-          {/* Smooth Multilayer Gradient & Lighting Overlay without any square artifacts */}
-          <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/92 via-emerald-950/80 to-neutral-950/88" />
+          <div className="absolute inset-0 bg-gradient-to-r from-moss-950/95 via-moss-900/85 to-moss-950/90" />
           <div className="absolute inset-0 bg-black/20" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 py-20 md:py-28 flex flex-col items-center text-center z-10 w-full">
           {/* Trust Badges */}
           <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
-            <span className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-sm">
+            <span className="inline-flex items-center gap-1.5 bg-herb-500/25 text-gleam border border-herb-400/50 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-sm">
               {t('home.hero_badge1')}
             </span>
-            <span className="inline-flex items-center gap-1.5 bg-white/10 text-white border border-white/20 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-md shadow-sm">
+            <span className="inline-flex items-center gap-1.5 bg-pearl-100/15 text-pearl border border-pearl-200/30 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-md shadow-sm">
               {t('home.hero_badge2')}
             </span>
           </div>
 
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl max-w-4xl leading-tight drop-shadow-md">
             {t('home.hero_title1')}<br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-emerald-200 to-teal-200">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-pearl via-gleam to-radiate-300">
               {t('home.hero_title2')}
             </span>
           </h1>
 
-          <p className="mt-6 text-base md:text-lg text-emerald-100/90 max-w-2xl leading-relaxed drop-shadow">
+          <p className="mt-6 text-base md:text-lg text-pearl-100/90 max-w-2xl leading-relaxed drop-shadow">
             {t('home.hero_desc')}
           </p>
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link
               href="/products"
-              className="rounded-full bg-brand-600 hover:bg-brand-500 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-brand-900/40 transition-all hover:scale-105 active:scale-95 duration-150"
+              className="rounded-full bg-radiate hover:bg-radiate-600 px-8 py-3.5 text-sm font-extrabold text-white shadow-xl shadow-radiate-950/40 transition-all hover:scale-105 active:scale-95 duration-150"
             >
               {t('home.hero_btn_shop')}
             </Link>
             <Link
               href="/health?action=upload"
-              className="rounded-full border border-emerald-400/40 bg-emerald-950/60 hover:bg-emerald-900/80 px-8 py-3.5 text-sm font-bold text-emerald-100 hover:text-white transition-all hover:scale-105 active:scale-95 duration-150 backdrop-blur-md shadow-lg"
+              className="rounded-full border border-gleam/40 bg-moss-900/70 hover:bg-moss-800 px-8 py-3.5 text-sm font-bold text-gleam hover:text-white transition-all hover:scale-105 active:scale-95 duration-150 backdrop-blur-md shadow-lg"
             >
               {t('home.hero_btn_rx')}
             </Link>
           </div>
 
           {/* Bottom Trust Indicators */}
-          <div className="mt-12 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 text-xs text-emerald-200/80 font-medium">
+          <div className="mt-12 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 text-xs text-pearl-200/90 font-medium">
             <span className="flex items-center gap-1.5">{t('home.hero_trust1')}</span>
             <span className="hidden sm:inline">•</span>
             <span className="flex items-center gap-1.5">{t('home.hero_trust2')}</span>
@@ -329,26 +601,26 @@ export default function HomePage() {
       </section>
 
       {/* 2. Promotions Banner */}
-      <section className="bg-emerald-900 text-white py-5 px-4 border-b border-emerald-800 shadow-inner">
+      <section className="bg-moss-900 text-pearl py-5 px-4 border-b border-moss-800 shadow-inner">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-center md:text-left">
-            <span className="px-3 py-1 rounded-full bg-amber-400 text-amber-950 font-black text-xs uppercase animate-pulse">
+            <span className="px-3 py-1 rounded-full bg-gleam text-moss-900 font-black text-xs uppercase animate-pulse shadow-sm">
               {t('home.promo_badge')}
             </span>
-            <p className="text-sm font-bold text-emerald-100">
+            <p className="text-sm font-bold text-pearl-100">
               {t('home.promo_text')}
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <Link
               href="/products"
-              className="px-4 py-2 rounded-xl bg-white text-emerald-950 text-xs font-black hover:bg-emerald-100 transition shadow-sm"
+              className="px-4 py-2 rounded-xl bg-radiate text-white text-xs font-black hover:bg-radiate-600 transition shadow-sm"
             >
               {t('home.promo_cta')}
             </Link>
             <Link
               href="/blogs"
-              className="px-4 py-2 rounded-xl bg-emerald-800/80 hover:bg-emerald-800 text-emerald-200 text-xs font-bold transition border border-emerald-700"
+              className="px-4 py-2 rounded-xl bg-moss-800 hover:bg-moss-700 text-pearl-200 text-xs font-bold transition border border-moss-700"
             >
               {t('home.promo_blogs')}
             </Link>
@@ -356,43 +628,516 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3. Shop by Category Quick Links */}
-      <section className="py-12 bg-gray-50 border-b">
+      {/* 3. NEW SECTION: Advertisements, Health Bulletins & Disease Solutions (Fed from Admin Dashboard) */}
+      <section className="py-14 bg-gradient-to-b from-slate-50 to-white border-b">
         <div className="mx-auto max-w-7xl px-4">
-          <h2 className="text-center text-2xl font-extrabold text-neutral-800">
-            {t('home.categories_title')}
-          </h2>
-          <p className="text-center text-sm text-neutral-500 mt-1 max-w-md mx-auto">
-            {t('home.categories_subtitle')}
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-6 md:gap-8">
-            {categoriesLoading ? (
-              <p className="text-sm text-neutral-500">Loading categories...</p>
-            ) : categories.length === 0 ? (
-              <p className="text-sm text-neutral-500">No categories available.</p>
-            ) : (
-              categories.map((cat, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => router.push(`/products?category=${encodeURIComponent(cat.name)}`)}
-                  className="flex flex-col items-center group focus:outline-none"
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-3">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
+                <span>📢</span>
+                <span>{language === 'am' ? 'የቅርብ ጊዜ የጤና ዜና እና መፍትሄዎች' : 'Health Breakthroughs & Disease Solutions'}</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
+                {language === 'am' ? 'የህክምና ግኝቶች፣ አዳዲስ የበሽታ መፍትሄዎችና የምርት መረጃዎች' : 'Latest Disease Solutions & Verified Product News'}
+              </h2>
+              <p className="text-sm text-neutral-500 mt-1">
+                {language === 'am'
+                  ? 'በሚቹ ፋርማሲ ክሊኒካል ባለሙያዎችና አስተዳደር የተረጋገጡ ወቅታዊ የጤና መረጃዎች'
+                  : 'Published and reviewed by certified clinical pharmacists and medical consultants at Michu Pharmacy.'}
+              </p>
+            </div>
+            <Link
+              href="/blogs"
+              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1 shrink-0"
+            >
+              {language === 'am' ? 'ሁሉንም የጤና ፅሁፎች ይመልከቱ →' : 'View All Clinical Updates →'}
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {advertisements.slice(0, 3).map((ad) => {
+              const isDisease =
+                ad.position === 'disease_solution' ||
+                ad.title.toLowerCase().includes('solution') ||
+                ad.title.toLowerCase().includes('alert');
+              const isVideo =
+                ad.mediaType === 'video' ||
+                (ad.mediaUrl &&
+                  (ad.mediaUrl.endsWith('.mp4') ||
+                    ad.mediaUrl.endsWith('.webm') ||
+                    ad.mediaUrl.endsWith('.mov') ||
+                    ad.mediaUrl.includes('youtube') ||
+                    ad.mediaUrl.includes('vimeo') ||
+                    ad.mediaUrl.includes('/uploads/advertisements/')));
+              const fullMediaUrl = getMediaUrl(ad.mediaUrl);
+              const embedUrl = getEmbedVideoUrl(ad.mediaUrl);
+
+              return (
+                <div
+                  key={ad.id}
+                  className="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1 relative overflow-hidden"
                 >
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border transition duration-200 shadow-sm group-hover:scale-105 group-hover:shadow-md ${cat.color}`}>
-                    {renderIcon(cat.icon)}
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 to-teal-400 group-hover:h-2 transition-all z-20" />
+
+                  {/* Media Viewport */}
+                  {fullMediaUrl && (
+                    <div className="relative aspect-video w-full bg-slate-950 overflow-hidden">
+                      {isVideo ? (
+                        embedUrl ? (
+                          <iframe
+                            src={embedUrl}
+                            title={ad.title}
+                            className="w-full h-full border-0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        ) : (
+                          <div className="relative w-full h-full group/vpreview flex items-center justify-center bg-black">
+                            <video
+                              src={fullMediaUrl}
+                              poster={ad.thumbnailUrl ? (getMediaUrl(ad.thumbnailUrl) as string) : undefined}
+                              controls
+                              playsInline
+                              preload="metadata"
+                              className="w-full h-full object-contain"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setActiveVideoModal(ad)}
+                              title={language === 'am' ? 'ሙሉ ቪዲዮ ይመልከቱ' : 'Watch in Cinema Modal'}
+                              className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-black/70 hover:bg-emerald-600 text-white text-[10px] font-bold backdrop-blur-md transition flex items-center gap-1 z-10 border border-white/20"
+                            >
+                              <span>⛶</span>
+                              <span>{language === 'am' ? 'አስፋ' : 'Expand'}</span>
+                            </button>
+                          </div>
+                        )
+                      ) : (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={fullMediaUrl}
+                          alt={ad.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        />
+                      )}
+
+                      {/* Video or Image tag */}
+                      <span
+                        className={`absolute bottom-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider backdrop-blur-md z-10 ${
+                          isVideo
+                            ? 'bg-purple-900/90 text-purple-200 border border-purple-400/30'
+                            : 'bg-black/70 text-white'
+                        }`}
+                      >
+                        {isVideo ? (language === 'am' ? '🎥 ቪዲዮ መረጃ' : '🎥 Clinical Video') : '🖼️ Notice'}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                            isDisease
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : 'bg-blue-100 text-blue-800 border border-blue-300'
+                          }`}
+                        >
+                          {isDisease ? 'Disease Solution' : 'Product Innovation'}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {ad.startDate || 'Current Notice'}
+                        </span>
+                      </div>
+
+                      <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition leading-snug">
+                        {ad.title}
+                      </h3>
+                      <p className="text-xs text-slate-600 mt-2.5 leading-relaxed line-clamp-3">
+                        {ad.description}
+                      </p>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                        <span>✓</span> {ad.createdBy || 'Clinical Team'}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {isVideo && fullMediaUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setActiveVideoModal(ad)}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-purple-700 hover:text-purple-800 transition"
+                          >
+                            <span>▶</span>
+                            <span>{language === 'am' ? 'ቪዲዮ ክፈት' : 'Watch Video'}</span>
+                          </button>
+                        )}
+                        <Link
+                          href={ad.targetUrl || '/health?action=consult'}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 group-hover:text-emerald-800 transition ml-1"
+                        >
+                          <span>{language === 'am' ? 'ዝርዝር ይመልከቱ' : 'Learn More'}</span>
+                          <span>&rarr;</span>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-sm font-bold text-neutral-700 mt-3 group-hover:text-brand-600 transition">
-                    {getTranslatedCategoryName(cat.name)}
-                  </span>
-                  <span className="text-[10px] text-neutral-400 mt-0.5">{cat.count} {t('home.category_products_suffix')}</span>
-                </button>
-              ))
-            )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* 4. Common Pharmacy Brands Showcase */}
-      <section className="py-12 bg-white border-b">
+      {/* 4. NEW SECTION: Most Trusted Products Showcase */}
+      <section className="py-16 bg-white border-b">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold uppercase tracking-wider mb-2">
+                <span>🛡️</span>
+                <span>{language === 'am' ? 'በጣም የታመኑ መድኃኒቶች' : 'Quality Guaranteed by EFDA'}</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
+                {language === 'am' ? 'በጣም የታመኑና የተረጋገጡ የፋርማሲ ምርቶች' : 'Most Trusted Healthcare & Prescription Products'}
+              </h2>
+              <p className="text-sm text-neutral-500 mt-1">
+                {language === 'am'
+                  ? 'ከአለም አቀፍና ሀገር በቀል አምራቾች በቀጥታ የቀረቡ፣ ጥራታቸው የተረጋገጠ ምርቶች'
+                  : 'Highest compliance medications certified for quality, purity, and clinical efficacy.'}
+              </p>
+            </div>
+            <Link
+              href="/products"
+              className="text-sm font-bold text-brand-600 hover:text-brand-700 transition flex items-center gap-1 shrink-0"
+            >
+              {language === 'am' ? 'ሁሉንም ምርቶች ይመልከቱ →' : 'View Complete Catalog →'}
+            </Link>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {mostTrustedProducts.map((item) => (
+              <div
+                key={item.id}
+                className="group bg-white rounded-2xl border border-slate-200 p-4 flex flex-col justify-between hover:shadow-xl transition-all duration-200 relative overflow-hidden"
+              >
+                {/* Trusted Badge */}
+                <div className="absolute top-3 right-3 z-10">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
+                    <span>✓</span> {item.badge}
+                  </span>
+                </div>
+
+                <div>
+                  {/* Illustration/Image */}
+                  <div className="aspect-video w-full rounded-xl overflow-hidden mb-4 relative bg-slate-50 border border-slate-100 flex items-center justify-center">
+                    {item.imageUrl ? (
+                      <img
+                        src={getImageUrl(item.imageUrl) || ''}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      renderProductIllustration(item.imageType)
+                    )}
+                    {item.prescriptionRequired && (
+                      <span className="absolute bottom-2 left-2 bg-rose-100 text-rose-700 text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border border-rose-200">
+                        {t('home.rx_required')}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">
+                    {item.brand}
+                  </p>
+                  <h3 className="text-sm font-bold text-neutral-900 group-hover:text-emerald-700 transition mt-0.5 line-clamp-2 leading-snug">
+                    {item.name}
+                  </h3>
+                  <p className="text-xs text-neutral-500 mt-1.5 line-clamp-2">
+                    {item.indication}
+                  </p>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-neutral-400 font-medium">Standard Price</span>
+                    <span className="text-base font-extrabold text-neutral-900">
+                      {item.price} <span className="text-xs font-normal">ETB</span>
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      addToCart({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        prescriptionRequired: item.prescriptionRequired,
+                        imageType: item.imageType,
+                      });
+                      triggerToast(`${item.name.split(' ')[0]} — ${t('home.toast_added')}`);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition shadow-sm shadow-emerald-700/20"
+                    aria-label="Add to cart"
+                  >
+                    <span>+</span>
+                    <span>Add to Cart</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. NEW SECTION: Well-Known Doctors with their Certifications */}
+      <section className="py-20 bg-gradient-to-b from-moss-950 via-moss-900 to-moss-950 text-white relative overflow-hidden border-t border-b border-herb-600/40">
+        <div className="absolute inset-0 pointer-events-none opacity-30">
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-herb-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-gleam-400/15 rounded-full blur-3xl" />
+        </div>
+
+        <div className="mx-auto max-w-7xl px-4 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gleam/20 text-gleam-300 border border-gleam/30 text-xs font-black uppercase tracking-wider mb-2.5 backdrop-blur-md">
+                <span>👨‍⚕️</span>
+                <span>{language === 'am' ? 'የተመሰከረላቸው ሀኪሞችና ፋርማሲስቶች' : 'Certified Clinical Specialists'}</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-pearl-50 leading-tight">
+                {language === 'am' ? 'የሚቹ ፋርማሲ ታዋቂ ዶክተሮች እና የሙያ ማረጋገጫዎቻቸው' : 'Our Well-Known Doctors & Specialists with Verified Certifications'}
+              </h2>
+              <p className="text-sm text-pearl-200/80 mt-2 max-w-2xl leading-relaxed">
+                {language === 'am'
+                  ? 'የታካሚዎቻችንን ጤንነት ለማረጋገጥ በኢትዮጵያ ምግብና መድኃኒት ባለስልጣን (EFDA) ፍቃድ ያላቸውና በክሊኒካል መስክ የሰለጠኑ ሀኪሞች።'
+                  : 'Consult directly with experienced medical doctors and clinical pharmacotherapists holding verified board certifications.'}
+              </p>
+            </div>
+            <Link
+              href="/health?action=consult"
+              className="inline-flex items-center gap-2 rounded-full bg-radiate hover:bg-radiate-600 px-6 py-3.5 text-xs font-black text-white shadow-xl shadow-radiate-950/40 transition hover:scale-105 active:scale-95 shrink-0"
+            >
+              <span>📅</span>
+              <span>{language === 'am' ? 'የህክምና ምክክር ቀጠሮ ይያዙ' : 'Book Clinical Consultation'}</span>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {doctors.slice(0, 4).map((doc) => (
+              <div
+                key={doc.id}
+                className="bg-gradient-to-b from-moss-900/90 to-moss-950/95 border border-herb-400/30 hover:border-gleam-400/60 rounded-3xl p-5 flex flex-col justify-between backdrop-blur-md transition-all duration-300 shadow-xl group hover:-translate-y-1.5"
+              >
+                <div>
+                  {/* Doctor Avatar / Image & Status Badge */}
+                  <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-moss-950 mb-4 border border-herb-400/30 flex items-center justify-center">
+                    {doc.imageUrl ? (
+                      <img
+                        src={getImageUrl(doc.imageUrl) as string}
+                        alt={`Dr. ${doc.firstName} ${doc.lastName}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-herb-500/20 text-gleam font-black text-2xl flex items-center justify-center border border-herb-400/40 shadow-inner">
+                        {doc.firstName[0]}{doc.lastName[0]}
+                      </div>
+                    )}
+                    <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1.5 bg-moss-950/90 backdrop-blur-md text-gleam text-[10px] font-bold px-2.5 py-1 rounded-full border border-gleam-400/30 shadow-md">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gleam animate-pulse" />
+                      Available
+                    </span>
+                  </div>
+
+                  <h3 className="font-extrabold text-pearl text-base group-hover:text-gleam-300 transition leading-snug">
+                    Dr. {doc.firstName} {doc.lastName}
+                  </h3>
+                  <p className="text-xs font-semibold text-herb-300 mt-0.5">
+                    {doc.specialization}
+                  </p>
+                  <p className="text-[11px] text-pearl-200/70 mt-1 font-mono">
+                    Experience: {doc.experienceYears}+ Years
+                  </p>
+
+                  {/* Certifications Badges */}
+                  <div className="mt-3.5 pt-3.5 border-t border-herb-500/30">
+                    <p className="text-[10px] font-bold text-pearl-200/60 uppercase tracking-wider mb-2">
+                      Verified Certifications:
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      {(doc.certifications && doc.certifications.length > 0
+                        ? doc.certifications
+                        : ['EFDA Licensed Practitioner', 'Board Certified Clinical Pharmacist']
+                      ).map((cert, cIdx) => (
+                        <div
+                          key={cIdx}
+                          className="px-2.5 py-1 rounded-xl bg-moss-950/80 border border-herb-500/40 text-pearl-100 text-[10px] font-semibold flex items-center gap-1.5"
+                        >
+                          <span className="text-gleam-300 text-xs font-bold">✓</span>
+                          <span className="truncate">{cert}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3.5 border-t border-herb-500/30">
+                  <Link
+                    href={`/health?action=consult&doctor=${encodeURIComponent(`Dr. ${doc.firstName} ${doc.lastName}`)}`}
+                    className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-herb-600 hover:bg-herb-500 text-white font-bold text-xs transition shadow-md shadow-herb-950/50 hover:scale-[1.02] active:scale-95"
+                  >
+                    <span>Connect with Dr. {doc.firstName}</span>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Promotional Health Services Cards (Yene Card removed) */}
+      <section className="py-16 px-4 bg-white">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center max-w-xl mx-auto mb-12">
+            <h2 className="text-3xl font-extrabold text-neutral-900 tracking-tight">
+              {t('home.services_title')}
+            </h2>
+            <p className="text-sm text-neutral-500 mt-2">
+              {t('home.services_subtitle')}
+            </p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {features.map((feat, idx) => (
+              <div
+                key={idx}
+                className={`rounded-2xl border p-6 flex flex-col justify-between transition hover:shadow-lg ${feat.color}`}
+              >
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900">{feat.title}</h3>
+                  <p className="text-sm text-neutral-600 mt-3 leading-relaxed">
+                    {feat.description}
+                  </p>
+                </div>
+                <Link
+                  href={feat.link}
+                  className={`mt-6 inline-flex justify-center items-center rounded-xl px-4 py-2.5 text-xs font-bold transition duration-150 active:scale-95 shadow-sm ${feat.btnColor}`}
+                >
+                  {feat.buttonText}
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 6B. Interactive Branch Google Map & Physical Network Showcase */}
+      <section className="py-14 bg-gradient-to-b from-pearl-50 via-white to-pearl-100/40 border-t border-b border-herb-200/80">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-herb-100 text-moss-900 border border-herb-300 text-xs font-extrabold uppercase tracking-wider mb-2">
+                <span>📍</span>
+                <span>{language === 'am' ? 'የቅርንጫፍ አውታረ መረብ' : 'Nationwide Physical Network'}</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-moss-900 tracking-tight">
+                {language === 'am' ? 'በአቅራቢያዎ የሚገኘውን የሚቹ ፋርማሲ ቅርንጫፍ ያግኙ' : 'Find Your Nearest Michu Pharmacy Branch'}
+              </h2>
+              <p className="text-sm text-stone-600 mt-1 max-w-2xl">
+                {language === 'am'
+                  ? 'በአዲስ አበባ እና በዋና ዋና የክልል ከተሞች የሚገኙ 7 ዘመናዊ ቅርንጫፎች — 24/7 ክፍት አገልግሎት፣ የመድኃኒት ማዘዣ ርክክብ እና ነፃ የምክር አገልግሎት።'
+                  : '7 modern branches across Addis Ababa & regional hubs — offering 24/7 service, cold-chain medication pickup, and licensed pharmacist consultations.'}
+              </p>
+            </div>
+            <Link
+              href="/branches"
+              className="inline-flex items-center gap-2 rounded-xl bg-moss-900 hover:bg-moss-800 text-pearl px-5 py-2.5 text-xs font-bold transition shadow-sm hover:scale-105 active:scale-95 shrink-0 border border-moss-950"
+            >
+              <span>{language === 'am' ? 'ሁሉንም ቅርንጫፎች ይመልከቱ' : 'View All 7 Branches'}</span>
+              <span>&rarr;</span>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            {/* Quick Branch Directory Card on Desktop (4 cols) */}
+            <div className="lg:col-span-4 bg-pearl-50/90 rounded-3xl border border-herb-200/80 p-5 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-herb-200/60 mb-3">
+                  <span className="text-xs font-bold text-moss-900 uppercase tracking-wider">
+                    {language === 'am' ? 'የቅርንጫፎች ዝርዝር' : 'Select Branch Location'}
+                  </span>
+                  <span className="text-[10px] bg-herb-100 text-moss-900 border border-herb-300 font-bold px-2 py-0.5 rounded-full">
+                    {BRANCH_LOCATIONS.length} {language === 'am' ? 'ቦታዎች' : 'Locations'}
+                  </span>
+                </div>
+
+                <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+                  {BRANCH_LOCATIONS.map((b) => {
+                    const isSelected = homeSelectedBranch.id === b.id;
+                    return (
+                      <button
+                        key={b.id}
+                        onClick={() => setHomeSelectedBranch(b)}
+                        className={`w-full text-left p-3 rounded-2xl transition border flex items-center justify-between gap-2 ${
+                          isSelected
+                            ? 'bg-pearl-100 border-herb-400 shadow-xs ring-2 ring-radiate/50 text-moss-900'
+                            : 'bg-white hover:bg-pearl-100/50 border-herb-100/80 text-stone-800'
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-extrabold text-moss-900 truncate">
+                              {language === 'am' && b.nameAm ? b.nameAm : b.name}
+                            </span>
+                            {b.is24Hours && (
+                              <span className="bg-moss-900 text-gleam text-[8px] font-black uppercase px-1.5 py-0.5 rounded shrink-0">
+                                24/7
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-stone-500 truncate mt-0.5">
+                            {language === 'am' && b.addressAm ? b.addressAm : b.address}
+                          </p>
+                        </div>
+                        <span className={`text-xs ${isSelected ? 'text-radiate font-bold' : 'text-stone-400'}`}>
+                          &rsaquo;
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Selected Branch Fast Contact Card */}
+              <div className="mt-4 pt-3 border-t border-herb-200/60 flex items-center justify-between text-xs">
+                <div>
+                  <span className="text-[10px] text-stone-500 font-medium">Selected Branch Phone:</span>
+                  <p className="font-bold text-herb-700">{homeSelectedBranch.phone}</p>
+                </div>
+                <a
+                  href={`tel:${homeSelectedBranch.phone}`}
+                  className="px-3.5 py-1.5 bg-radiate hover:bg-radiate-600 text-white rounded-lg font-bold text-xs shadow-sm shadow-radiate/30 transition"
+                >
+                  Call Now
+                </a>
+              </div>
+            </div>
+
+            {/* Interactive Map Component (8 cols) */}
+            <div className="lg:col-span-8 flex">
+              <BranchGoogleMap
+                branches={BRANCH_LOCATIONS}
+                selectedBranch={homeSelectedBranch}
+                onSelectBranch={setHomeSelectedBranch}
+                height="440px"
+                className="w-full shadow-lg border-herb-200"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. Common Pharmacy Brands Showcase */}
+      <section className="py-12 bg-gray-50 border-t border-b">
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
             <div>
@@ -430,267 +1175,183 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 5. Payment Options Section */}
-      <section className="py-12 bg-slate-900 text-white">
+      {/* 8. NEW SECTION: Official Partners Showcase (Manageable from Admin Dashboard) */}
+      <section className="py-16 bg-white border-b">
         <div className="mx-auto max-w-7xl px-4">
-          <div className="text-center max-w-2xl mx-auto mb-8">
-            <span className="text-emerald-400 text-xs font-bold uppercase tracking-widest">{t('home.payment_badge')}</span>
-            <h2 className="text-2xl sm:text-3xl font-black mt-2">
-              {t('home.payment_title')}
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider mb-3">
+              <span>🤝</span>
+              <span>{language === 'am' ? 'አጋሮቻችን እና አምራቾች' : 'Institutional & Manufacturing Partners'}</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+              {language === 'am' ? 'አስተማማኝ የጤናና የፋርማሲ አጋሮቻችን' : 'Our Strategic & Regulated Partners'}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-2">
-              {t('home.payment_subtitle')}
+            <p className="text-xs sm:text-sm text-slate-500 mt-2">
+              {language === 'am'
+                ? 'ከመንግስታዊ ተቆጣጣሪዎች፣ አለም አቀፍ አምራቾች እና የዲጂታል ክፍያ አውታሮች ጋር በጋራ እንሰራለን።'
+                : 'Working alongside national health authorities, certified WHO-GMP manufacturers, and trusted digital banking partners.'}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Telebirr */}
-            <div className="bg-slate-800/80 border border-sky-500/30 p-5 rounded-2xl flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xl">📱</span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 text-[10px] font-bold">1-Click USSD</span>
-                </div>
-                <h3 className="text-base font-extrabold text-sky-300">{t('home.payment_telebirr_title')}</h3>
-                <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                  {t('home.payment_telebirr_desc')}
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-700/60 text-[11px] font-mono text-sky-400">
-                {t('home.payment_telebirr_code')}
-              </div>
-            </div>
-
-            {/* CBE Birr */}
-            <div className="bg-slate-800/80 border border-purple-500/30 p-5 rounded-2xl flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xl">🏦</span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-bold">CBE Gateway</span>
-                </div>
-                <h3 className="text-base font-extrabold text-purple-300">{t('home.payment_cbe_title')}</h3>
-                <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                  {t('home.payment_cbe_desc')}
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-700/60 text-[11px] font-mono text-purple-400">
-                {t('home.payment_cbe_code')}
-              </div>
-            </div>
-
-            {/* Awash Bank */}
-            <div className="bg-slate-800/80 border border-blue-500/30 p-5 rounded-2xl flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xl">💳</span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-bold">Awash Pay</span>
-                </div>
-                <h3 className="text-base font-extrabold text-blue-300">{t('home.payment_awash_title')}</h3>
-                <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                  {t('home.payment_awash_desc')}
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-700/60 text-[11px] font-mono text-blue-400">
-                {t('home.payment_awash_code')}
-              </div>
-            </div>
-
-            {/* Cash on Pickup */}
-            <div className="bg-slate-800/80 border border-emerald-500/30 p-5 rounded-2xl flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xl">💵</span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">In-Branch</span>
-                </div>
-                <h3 className="text-base font-extrabold text-emerald-300">{t('home.payment_cash_title')}</h3>
-                <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                  {t('home.payment_cash_desc')}
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-700/60 text-[11px] font-mono text-emerald-400">
-                {t('home.payment_cash_branches')}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. Promotional Health Services Cards */}
-      <section className="py-16 px-4 bg-white">
-        <div className="mx-auto max-w-7xl">
-          <div className="text-center max-w-xl mx-auto mb-12">
-            <h2 className="text-3xl font-extrabold text-neutral-900 tracking-tight">
-              {t('home.services_title')}
-            </h2>
-            <p className="text-sm text-neutral-500 mt-2">
-              {t('home.services_subtitle')}
-            </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {features.map((feat, idx) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {partners.map((p) => (
               <div
-                key={idx}
-                className={`rounded-2xl border p-6 flex flex-col justify-between transition hover:shadow-lg ${feat.color}`}
+                key={p.id}
+                className="bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-emerald-500/50 rounded-2xl p-5 flex flex-col justify-between transition-all duration-200 hover:shadow-md"
               >
                 <div>
-                  <h3 className="text-lg font-bold text-neutral-900">{feat.title}</h3>
-                  <p className="text-sm text-neutral-600 mt-3 leading-relaxed">
-                    {feat.description}
-                  </p>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[9px] font-bold text-slate-600 uppercase">
+                      {p.category}
+                    </span>
+                    <span className="text-emerald-600 text-xs font-bold">✓ Verified</span>
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 text-sm mt-1">{p.name}</h3>
+                  <p className="text-[11px] font-semibold text-emerald-700 mt-0.5">{p.badge}</p>
+                  {p.description && (
+                    <p className="text-[11px] text-slate-500 mt-2 line-clamp-2 leading-relaxed">
+                      {p.description}
+                    </p>
+                  )}
                 </div>
-                <Link
-                  href={feat.link}
-                  className="mt-6 inline-flex justify-center items-center rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-brand-700 active:scale-95 transition"
-                >
-                  {feat.buttonText}
-                </Link>
+
+                {p.websiteUrl && (
+                  <div className="mt-4 pt-2 border-t border-slate-200/50">
+                    <a
+                      href={p.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-bold text-emerald-600 hover:text-emerald-800 transition flex items-center gap-1"
+                    >
+                      <span>Official Website</span>
+                      <span>&rarr;</span>
+                    </a>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 6.5 Founder & Clinical Leadership Spotlight Section */}
-      <section className="py-16 px-4 bg-gradient-to-b from-white via-slate-900 to-neutral-950 text-white relative overflow-hidden">
-        {/* Background glow & subtle patterns */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 -left-20 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
-        </div>
+      {/* 9. Payment Options Section */}
+      <section className="py-16 bg-gradient-to-b from-pearl-50 via-white to-pearl-100/60 border-t border-b border-herb-200/80 text-slate-900">
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-moss-900 text-gleam text-xs font-black uppercase tracking-wider mb-2.5 shadow-sm">
+              <span>💳</span>
+              <span>{t('home.payment_badge')}</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-black text-moss-900 tracking-tight">
+              {t('home.payment_title')}
+            </h2>
+            <p className="text-xs sm:text-sm text-stone-600 mt-2 leading-relaxed">
+              {t('home.payment_subtitle')}
+            </p>
+          </div>
 
-        <div className="mx-auto max-w-7xl relative z-10">
-          <div className="rounded-3xl bg-neutral-900/95 border border-emerald-500/25 shadow-2xl p-6 sm:p-10 lg:p-14 backdrop-blur-xl relative overflow-hidden">
-            {/* Top decorative accent ribbon */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-brand-500" />
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-              
-              {/* Left Column: Image with layered glass styling, verification badge & status */}
-              <div className="lg:col-span-5 flex flex-col items-center">
-                <div className="relative group w-full max-w-sm sm:max-w-md">
-                  {/* Glowing ambient ring */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-brand-500 via-emerald-400 to-teal-400 rounded-3xl blur opacity-30 group-hover:opacity-60 transition duration-500" />
-                  
-                  {/* Photo Container */}
-                  <div className="relative aspect-[3/4] w-full rounded-3xl overflow-hidden bg-neutral-800 border-2 border-emerald-400/30 shadow-2xl">
-                    <Image
-                      src="/dr-million-negasa.png"
-                      alt="Dr. Million Negasa - Founder & Owner of Michu Pharmacy"
-                      fill
-                      className="object-cover object-top transition duration-500 group-hover:scale-105"
-                      sizes="(max-width: 768px) 100vw, 400px"
-                      priority
-                    />
-                    
-                    {/* Dark gradient fade at bottom of image for readability of floating badges */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/95 via-neutral-950/20 to-neutral-950/30" />
-                    
-                    {/* Top Floating Badges */}
-                    <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-                      <span className="inline-flex items-center gap-1.5 bg-neutral-900/85 backdrop-blur-md text-emerald-300 border border-emerald-500/40 rounded-full px-3.5 py-1.5 text-xs font-bold shadow-lg">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        {language === 'am' ? 'መስራች እና ባለቤት' : 'Founder & Owner'}
-                      </span>
-                      <span className="inline-flex items-center gap-1 bg-brand-600/90 backdrop-blur-md text-white border border-brand-400/30 rounded-full px-3 py-1 text-[11px] font-bold shadow-md">
-                        ✓ EFDA Licensed
-                      </span>
-                    </div>
-
-                    {/* Bottom Floating Info Over Image */}
-                    <div className="absolute bottom-4 left-4 right-4 p-3.5 rounded-2xl bg-neutral-950/85 backdrop-blur-md border border-white/10 shadow-xl">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-[11px] font-medium text-emerald-300 uppercase tracking-wider">{language === 'am' ? 'የሚቹ ፋርማሲ ክሊኒካል መሪ' : 'Clinical Leadership'}</p>
-                          <h4 className="text-base font-extrabold text-white">{language === 'am' ? 'ዶ/ር ሚሊዮን ነጋሳ' : 'Dr. Million Negasa'}</h4>
-                        </div>
-                        <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 font-black text-xs">
-                          MPH
-                        </div>
-                      </div>
-                    </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Telebirr */}
+            <div className="bg-white hover:bg-sky-50/40 border-2 border-sky-300/80 hover:border-sky-500 p-6 rounded-3xl flex flex-col justify-between shadow-xs hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center text-2xl shadow-inner">
+                    📱
                   </div>
+                  <span className="px-2.5 py-1 rounded-full bg-sky-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
+                    1-Click USSD
+                  </span>
                 </div>
+                <h3 className="text-base font-black text-sky-950 group-hover:text-sky-700 transition">
+                  {t('home.payment_telebirr_title')}
+                </h3>
+                <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                  {t('home.payment_telebirr_desc')}
+                </p>
               </div>
-
-              {/* Right Column: Founder's Story, Vision, Core Commitments & CTA */}
-              <div className="lg:col-span-7 flex flex-col justify-center space-y-6">
-                <div>
-                  <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-widest mb-3">
-                    <span>✨</span>
-                    <span>{language === 'am' ? 'የመስራቹ መልእክት እና ራዕይ' : "Founder's Vision & Clinical Leadership"}</span>
-                  </div>
-                  <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
-                    {language === 'am' ? (
-                      <>ጥራት ያለው የጤና አገልግሎት <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 to-teal-200">ለሁሉም ቤተሰብ</span></>
-                    ) : (
-                      <>Committed to Transforming <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 to-teal-200">Pharmacy Care</span> Across Ethiopia</>
-                    )}
-                  </h3>
-                  <p className="text-sm font-semibold text-emerald-400 mt-1">
-                    {language === 'am' ? 'ዶክተር ሚሊዮን ነጋሳ — የሚቹ ፋርማሲ መስራች እና ባለቤት' : 'Dr. Million Negasa — Founder, Owner & Managing Director'}
-                  </p>
-                </div>
-
-                {/* Personal Vision Statement Quote */}
-                <div className="relative pl-5 border-l-2 border-emerald-500/60 bg-white/5 rounded-r-2xl p-4 sm:p-5 backdrop-blur-sm">
-                  <p className="text-sm sm:text-base text-neutral-200 italic leading-relaxed">
-                    {language === 'am'
-                      ? "«የሚቹ ፋርማሲ የተመሰረተው በኢትዮጵያ ውስጥ የሚገኝ ማንኛውም ዜጋ ትክክለኛ እና የተረጋገጠ መድኃኒት፣ ሙያዊ የፋርማሲስት ምክር እንዲሁም ፈጣን የዲጂታል ክፍያና ርክክብ በቀላሉ እንዲያገኝ ለማስቻል ነው። ጤናዎ ሁሌም ቀዳሚ ምርጫችን ነው!»"
-                      : '"At Michu Pharmacy, our founding mission is to ensure every family in Ethiopia receives genuine, WHO-GMP certified medications, transparent pharmacist guidance, and modern digital healthcare convenience at all times."'}
-                  </p>
-                </div>
-
-                {/* 3 Core Trust Pillars */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                  <div className="p-3.5 rounded-2xl bg-neutral-800/80 border border-neutral-700/60 hover:border-emerald-500/40 transition">
-                    <div className="text-2xl mb-1.5">🛡️</div>
-                    <h5 className="font-bold text-xs text-white">{language === 'am' ? '100% የተረጋገጠ ጥራት' : '100% EFDA Licensed'}</h5>
-                    <p className="text-[11px] text-neutral-400 mt-1">{language === 'am' ? 'ከአስተማማኝ አምራቾች የቀረበ' : 'Genuine WHO-GMP medications'}</p>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-neutral-800/80 border border-neutral-700/60 hover:border-emerald-500/40 transition">
-                    <div className="text-2xl mb-1.5">🏥</div>
-                    <h5 className="font-bold text-xs text-white">{language === 'am' ? '8 አጠቃላይ ቅርንጫፎች' : '8 Physical Branches'}</h5>
-                    <p className="text-[11px] text-neutral-400 mt-1">{language === 'am' ? 'አዲስ አበባ እና ክልሎች' : 'Addis Ababa & Regional centers'}</p>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-neutral-800/80 border border-neutral-700/60 hover:border-emerald-500/40 transition">
-                    <div className="text-2xl mb-1.5">⚡</div>
-                    <h5 className="font-bold text-xs text-white">{language === 'am' ? 'ዲጂታል ፈጣን አገልግሎት' : 'Instant Digital Care'}</h5>
-                    <p className="text-[11px] text-neutral-400 mt-1">{language === 'am' ? 'በቴሌብርና ሲቢኢ ፈጣን ግዢ' : 'Prescription upload & Telebirr'}</p>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="pt-3 flex flex-wrap items-center gap-3.5">
-                  <Link
-                    href="/health?action=consult"
-                    className="inline-flex items-center gap-2 rounded-full bg-brand-600 hover:bg-brand-500 px-6 py-3 text-xs font-extrabold text-white shadow-lg shadow-brand-900/50 hover:scale-105 active:scale-95 transition"
-                  >
-                    <span>👨‍⚕️</span>
-                    <span>{language === 'am' ? 'የህክምና ምክክር ቀጠሮ ይያዙ' : 'Book Clinical Consultation'}</span>
-                  </Link>
-                  <Link
-                    href="/health?action=upload"
-                    className="inline-flex items-center gap-2 rounded-full bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-400/40 px-6 py-3 text-xs font-bold text-emerald-200 hover:text-white transition hover:scale-105 active:scale-95"
-                  >
-                    <span>📸</span>
-                    <span>{language === 'am' ? 'የሐኪም ማዘዣ ይላኩ' : 'Upload Prescription'}</span>
-                  </Link>
-                  <Link
-                    href="/branches"
-                    className="text-xs font-bold text-neutral-300 hover:text-white transition flex items-center gap-1.5 px-3 py-2"
-                  >
-                    <span>{language === 'am' ? 'ቅርንጫፎቻችንን ይጎብኙ →' : 'View All Branches →'}</span>
-                  </Link>
-                </div>
+              <div className="mt-5 pt-3.5 border-t border-sky-100 flex items-center justify-between bg-sky-50/90 text-sky-900 font-mono text-xs font-bold px-3.5 py-2 rounded-xl border border-sky-200/80">
+                <span>Code:</span>
+                <span className="text-sky-700 font-black">{t('home.payment_telebirr_code')}</span>
               </div>
+            </div>
 
+            {/* CBE Birr */}
+            <div className="bg-white hover:bg-purple-50/40 border-2 border-purple-300/80 hover:border-purple-500 p-6 rounded-3xl flex flex-col justify-between shadow-xs hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-2xl shadow-inner">
+                    🏦
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
+                    CBE Gateway
+                  </span>
+                </div>
+                <h3 className="text-base font-black text-purple-950 group-hover:text-purple-700 transition">
+                  {t('home.payment_cbe_title')}
+                </h3>
+                <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                  {t('home.payment_cbe_desc')}
+                </p>
+              </div>
+              <div className="mt-5 pt-3.5 border-t border-purple-100 flex items-center justify-between bg-purple-50/90 text-purple-900 font-mono text-xs font-bold px-3.5 py-2 rounded-xl border border-purple-200/80">
+                <span>Direct:</span>
+                <span className="text-purple-800 font-black">{t('home.payment_cbe_code')}</span>
+              </div>
+            </div>
+
+            {/* Awash Bank */}
+            <div className="bg-white hover:bg-blue-50/40 border-2 border-blue-300/80 hover:border-blue-500 p-6 rounded-3xl flex flex-col justify-between shadow-xs hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl shadow-inner">
+                    💳
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
+                    Awash Pay
+                  </span>
+                </div>
+                <h3 className="text-base font-black text-blue-950 group-hover:text-blue-700 transition">
+                  {t('home.payment_awash_title')}
+                </h3>
+                <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                  {t('home.payment_awash_desc')}
+                </p>
+              </div>
+              <div className="mt-5 pt-3.5 border-t border-blue-100 flex items-center justify-between bg-blue-50/90 text-blue-900 font-mono text-xs font-bold px-3.5 py-2 rounded-xl border border-blue-200/80">
+                <span>Account:</span>
+                <span className="text-blue-800 font-black">{t('home.payment_awash_code')}</span>
+              </div>
+            </div>
+
+            {/* Cash on Pickup */}
+            <div className="bg-white hover:bg-emerald-50/40 border-2 border-emerald-300/80 hover:border-emerald-500 p-6 rounded-3xl flex flex-col justify-between shadow-xs hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl shadow-inner">
+                    💵
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-herb-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
+                    In-Branch
+                  </span>
+                </div>
+                <h3 className="text-base font-black text-moss-900 group-hover:text-herb-700 transition">
+                  {t('home.payment_cash_title')}
+                </h3>
+                <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                  {t('home.payment_cash_desc')}
+                </p>
+              </div>
+              <div className="mt-5 pt-3.5 border-t border-emerald-100 flex items-center justify-between bg-emerald-50/90 text-emerald-950 text-xs font-bold px-3.5 py-2 rounded-xl border border-emerald-200/80">
+                <span>Locations:</span>
+                <span className="text-herb-700 font-black">{t('home.payment_cash_branches')}</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 7. Featured Best Sellers Grid */}
-      <section className="py-16 bg-neutral-50 border-t border-b">
+      {/* 10. Featured Best Sellers Grid */}
+      <section className="py-16 bg-neutral-50 border-t">
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
             <div>
@@ -725,7 +1386,6 @@ export default function HomePage() {
                 className="group bg-white rounded-2xl border border-neutral-100 p-4 flex flex-col justify-between hover:shadow-xl transition duration-200"
               >
                 <div>
-                  {/* Image container */}
                   <div className="aspect-video w-full rounded-xl overflow-hidden mb-4 relative bg-neutral-50">
                     {'imageUrl' in prod && prod.imageUrl ? (
                       <img
@@ -742,7 +1402,6 @@ export default function HomePage() {
                       </span>
                     )}
                   </div>
-                  {/* Category and Title */}
                   <h3 className="text-sm font-bold text-neutral-800 group-hover:text-brand-600 transition truncate">
                     {prod.name}
                   </h3>
@@ -781,35 +1440,83 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 8. Health Quote Banner with Dr. Million Negasa */}
-      <section className="bg-gradient-to-r from-emerald-50 via-brand-50 to-teal-50 py-16 px-4 border-t border-emerald-100">
-        <div className="mx-auto max-w-5xl text-center">
-          <p className="text-xs font-bold text-brand-700 uppercase tracking-widest bg-brand-100/80 border border-brand-200 rounded-full px-4 py-1 inline-block mb-3">
-            {t('home.quote_badge')}
-          </p>
-          <blockquote className="text-xl md:text-2xl font-semibold text-brand-950 italic max-w-3xl mx-auto leading-relaxed">
-            {t('home.quote_text')}
-          </blockquote>
-          <div className="mt-6 flex justify-center items-center gap-3.5">
-            <div className="relative w-12 h-12 rounded-full overflow-hidden ring-2 ring-brand-600 shadow-md shrink-0">
-              <Image
-                src="/dr-million-negasa.png"
-                alt="Dr. Million Negasa"
-                fill
-                className="object-cover object-top"
-              />
+      {/* 11. Interactive Video Advertisement Cinema Modal */}
+      {activeVideoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-4xl bg-slate-950 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/90 text-white">
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm">
+                  ▶
+                </span>
+                <div>
+                  <h3 className="text-base font-extrabold text-white truncate max-w-lg">
+                    {activeVideoModal.title}
+                  </h3>
+                  <p className="text-xs text-emerald-400 font-medium">
+                    {activeVideoModal.createdBy || 'Michu Pharmacy Clinical Team'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveVideoModal(null)}
+                className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
             </div>
-            <div className="text-left">
-              <p className="text-sm font-extrabold text-neutral-900">
-                {language === 'am' ? 'ዶ/ር ሚሊዮን ነጋሳ' : 'Dr. Million Negasa'}
-              </p>
-              <p className="text-xs text-brand-700 font-semibold">
-                {language === 'am' ? 'የሚቹ ፋርማሲ መስራች እና ባለቤት' : 'Founder & Owner, Michu Pharmacy'}
-              </p>
+
+            {/* Video Viewport */}
+            <div className="relative aspect-video w-full bg-black flex items-center justify-center">
+              {getEmbedVideoUrl(activeVideoModal.mediaUrl) ? (
+                <iframe
+                  src={getEmbedVideoUrl(activeVideoModal.mediaUrl) as string}
+                  title={activeVideoModal.title}
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <video
+                  src={getMediaUrl(activeVideoModal.mediaUrl) as string}
+                  poster={
+                    activeVideoModal.thumbnailUrl
+                      ? (getMediaUrl(activeVideoModal.thumbnailUrl) as string)
+                      : undefined
+                  }
+                  controls
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-contain"
+                />
+              )}
+            </div>
+
+            {/* Modal Footer / Description */}
+            <div className="p-6 bg-slate-900/95 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="max-w-2xl">
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  {activeVideoModal.description}
+                </p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <Link
+                  href={activeVideoModal.targetUrl || '/health?action=consult'}
+                  onClick={() => setActiveVideoModal(null)}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg flex items-center gap-1.5"
+                >
+                  <span>
+                    {language === 'am' ? 'ምክክር ወይም ምርት ይመልከቱ' : 'Consult Pharmacist / Products'}
+                  </span>
+                  <span>&rarr;</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }

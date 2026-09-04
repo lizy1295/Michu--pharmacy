@@ -71,6 +71,15 @@ function AdminDoctorsContent() {
                 </div>
                 <h3 className="font-bold text-slate-900 text-lg">Dr. {doctor.firstName} {doctor.lastName}</h3>
                 <p className="text-sm text-emerald-600 font-semibold mb-2">{doctor.specialization}</p>
+                {doctor.certifications && doctor.certifications.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-1">
+                    {doctor.certifications.map((cert, idx) => (
+                      <span key={idx} className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200 flex items-center gap-1">
+                        <span>✓</span> {cert}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="space-y-1">
                   <p className="text-xs text-slate-500 font-medium flex items-center gap-2">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>

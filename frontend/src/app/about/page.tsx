@@ -114,7 +114,7 @@ export default function AboutPage() {
             <h2 className="text-3xl font-extrabold text-white">Dr. Million Negasa</h2>
             <p className="text-sm font-medium text-emerald-300">Founder, Owner & Clinical Director of Michu Pharmacy</p>
             <blockquote className="text-neutral-300 text-sm sm:text-base leading-relaxed italic border-l-2 border-emerald-400 pl-4 py-1 bg-white/5 rounded-r-xl">
-              "We founded Michu Pharmacy with a deep passion to make certified pharmaceutical care, authentic medications, and transparent guidance accessible to every Ethiopian household through both our community branches and digital health technology."
+              &ldquo;We founded Michu Pharmacy with a deep passion to make certified pharmaceutical care, authentic medications, and transparent guidance accessible to every Ethiopian household through both our community branches and digital health technology.&rdquo;
             </blockquote>
             <div className="flex flex-wrap gap-3 pt-2">
               <span className="px-3 py-1 rounded-lg bg-neutral-800 border border-neutral-700 text-xs text-neutral-300">✓ EFDA Certified</span>
