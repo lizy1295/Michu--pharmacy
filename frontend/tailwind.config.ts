@@ -17,7 +17,7 @@ const config: Config = {
         // Hinterlands    #31410D  →  hinterlands (deep forest olive)
 
         beige: {
-          50:  '#FAF9F6',
+          50: '#FAF9F6',
           100: '#F4F4EE',
           200: '#DFDFD4', // Vaporous Beige (Base)
           300: '#CBCBBF',
@@ -31,7 +31,7 @@ const config: Config = {
         },
 
         autumn: {
-          50:  '#FEF7EE',
+          50: '#FEF7EE',
           100: '#FDEDD3',
           200: '#FBD8A5',
           300: '#F7BD6E',
@@ -45,7 +45,7 @@ const config: Config = {
         },
 
         almostblack: {
-          50:  '#F5F6F5',
+          50: '#F5F6F5',
           100: '#E6E8E6',
           200: '#C5C9C5',
           300: '#9EA49F',
@@ -60,7 +60,7 @@ const config: Config = {
         },
 
         suede: {
-          50:  '#F4F7EF',
+          50: '#F4F7EF',
           100: '#E5ECDB',
           200: '#CCDAB9',
           300: '#ADC390',
@@ -74,7 +74,7 @@ const config: Config = {
         },
 
         hinterlands: {
-          50:  '#F3F6EC',
+          50: '#F3F6EC',
           100: '#E3EBD3',
           200: '#C8D7AD',
           300: '#A7C07E',
@@ -90,7 +90,7 @@ const config: Config = {
 
         // ── Standard Tailwind Color Overrides (Mapping all to KAUTAQ) ────
         emerald: {
-          50:  '#F4F7EF',
+          50: '#F4F7EF',
           100: '#E5ECDB',
           200: '#CCDAB9',
           300: '#ADC390',
@@ -105,7 +105,7 @@ const config: Config = {
         },
 
         teal: {
-          50:  '#F3F6EC',
+          50: '#F3F6EC',
           100: '#E3EBD3',
           200: '#C8D7AD',
           300: '#A7C07E',
@@ -119,7 +119,7 @@ const config: Config = {
         },
 
         green: {
-          50:  '#F4F7EF',
+          50: '#F4F7EF',
           100: '#E5ECDB',
           200: '#CCDAB9',
           300: '#ADC390',
@@ -133,7 +133,7 @@ const config: Config = {
         },
 
         indigo: {
-          50:  '#F3F6EC',
+          50: '#F3F6EC',
           100: '#E3EBD3',
           200: '#C8D7AD',
           300: '#A7C07E',
@@ -147,7 +147,7 @@ const config: Config = {
         },
 
         blue: {
-          50:  '#F4F7EF',
+          50: '#F4F7EF',
           100: '#E5ECDB',
           200: '#CCDAB9',
           300: '#ADC390',
@@ -161,7 +161,7 @@ const config: Config = {
         },
 
         amber: {
-          50:  '#FEF7EE',
+          50: '#FEF7EE',
           100: '#FDEDD3',
           200: '#FBD8A5',
           300: '#F7BD6E',
@@ -175,7 +175,7 @@ const config: Config = {
         },
 
         orange: {
-          50:  '#FEF7EE',
+          50: '#FEF7EE',
           100: '#FDEDD3',
           200: '#FBD8A5',
           300: '#F7BD6E',
@@ -189,7 +189,7 @@ const config: Config = {
         },
 
         slate: {
-          50:  '#FAF9F6',
+          50: '#FAF9F6',
           100: '#F4F4EE',
           200: '#DFDFD4', // Vaporous Beige
           300: '#CBCBBF',
@@ -204,7 +204,7 @@ const config: Config = {
         },
 
         gray: {
-          50:  '#FAF9F6',
+          50: '#FAF9F6',
           100: '#F4F4EE',
           200: '#DFDFD4', // Vaporous Beige
           300: '#CBCBBF',
@@ -219,7 +219,7 @@ const config: Config = {
         },
 
         zinc: {
-          50:  '#FAF9F6',
+          50: '#FAF9F6',
           100: '#F4F4EE',
           200: '#DFDFD4', // Vaporous Beige
           300: '#CBCBBF',
@@ -235,7 +235,7 @@ const config: Config = {
 
         // ── Semantic & Theme Aliases ─────────────────────────────────────
         pearl: {
-          50:  '#FAF9F6',
+          50: '#FAF9F6',
           100: '#F4F4EE',
           200: '#DFDFD4', // Vaporous Beige
           300: '#CBCBBF',
@@ -249,7 +249,7 @@ const config: Config = {
         },
 
         gleam: {
-          50:  '#FEF7EE',
+          50: '#FEF7EE',
           100: '#FDEDD3',
           200: '#FBD8A5',
           300: '#F7BD6E',
@@ -263,7 +263,7 @@ const config: Config = {
         },
 
         radiate: {
-          50:  '#FEF7EE',
+          50: '#FEF7EE',
           100: '#FDEDD3',
           200: '#FBD8A5',
           300: '#F7BD6E',
@@ -277,7 +277,7 @@ const config: Config = {
         },
 
         herb: {
-          50:  '#F4F7EF',
+          50: '#F4F7EF',
           100: '#E5ECDB',
           200: '#CCDAB9',
           300: '#ADC390',
@@ -291,7 +291,7 @@ const config: Config = {
         },
 
         brand: {
-          50:  '#F4F7EF',
+          50: '#F4F7EF',
           100: '#E5ECDB',
           200: '#CCDAB9',
           300: '#ADC390',
@@ -305,7 +305,7 @@ const config: Config = {
         },
 
         moss: {
-          50:  '#F5F6F5',
+          50: '#F5F6F5',
           100: '#E6E8E6',
           200: '#C5C9C5',
           300: '#9EA49F',
