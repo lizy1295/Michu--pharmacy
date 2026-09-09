@@ -29,8 +29,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export interface InitiatePaymentParams {
   orderId: number;
+  /**
+   * Payment method to use.
+   * Do NOT include an `amount` field — the backend reads it from the database.
+   */
   paymentMethod: 'telebirr' | 'cbe';
-  returnUrl?: string;
 }
 
 export interface InitiatePaymentResult {
@@ -68,9 +71,14 @@ export interface VerifyPaymentResult {
 }
 
 export async function initiatePayment(params: InitiatePaymentParams): Promise<InitiatePaymentResult> {
-  return request<InitiatePaymentResult>('/payments/initiate', {
+  // Send ONLY orderId + paymentMethod.
+  // Amount is always determined server-side from the database — never from the frontend.
+  return request<InitiatePaymentResult>('/payments/initialize', {
     method: 'POST',
-    body: JSON.stringify(params),
+    body: JSON.stringify({
+      orderId: params.orderId,
+      paymentMethod: params.paymentMethod,
+    }),
   });
 }
 
@@ -87,3 +95,38 @@ export async function verifyPayment(paymentId: number): Promise<VerifyPaymentRes
     method: 'POST',
   });
 }
+
+export interface ReceiptItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  prescriptionRequired?: boolean;
+  imageType?: string;
+}
+
+export interface ReceiptDetails {
+  id: number;
+  receiptNumber: string;
+  orderId: number;
+  paymentId: number;
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  items: ReceiptItem[];
+  subtotal: number;
+  tax: number;
+  deliveryFee: number;
+  total: number;
+  issuedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getReceiptByOrderId(orderId: number): Promise<ReceiptDetails | null> {
+  return request<ReceiptDetails>(`/receipts/order/${orderId}`).catch(() => null);
+}
+

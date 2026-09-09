@@ -86,3 +86,32 @@ export async function logout(): Promise<void> {
 export async function getMe(): Promise<AuthUser> {
   return request<AuthUser>('/auth/me');
 }
+
+export async function forgotPassword(email: string, phone?: string): Promise<{ message: string }> {
+  // Always returns the same safe message — never throws on unknown email
+  return request<{ message: string }>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, phone }),
+  });
+}
+
+export async function verifyOtp(
+  email: string,
+  otp: string,
+): Promise<{ resetToken: string; message: string }> {
+  return request<{ resetToken: string; message: string }>('/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp }),
+  });
+}
+
+export async function resetPassword(
+  resetToken: string,
+  newPassword: string,
+): Promise<{ message: string }> {
+  return request<{ message: string }>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ resetToken, token: resetToken, newPassword }),
+  });
+}
+

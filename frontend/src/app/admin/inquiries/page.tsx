@@ -13,20 +13,20 @@ export default function AdminInquiriesPage() {
   const [submittingId, setSubmittingId] = useState<number | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const fetchInquiries = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getInquiries(statusFilter === 'all' ? undefined : statusFilter);
-      setInquiries(data);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to load inquiries.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
+    const fetchInquiries = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getInquiries(statusFilter === 'all' ? undefined : statusFilter);
+        setInquiries(data);
+      } catch (err: any) {
+        setError(err?.message || 'Failed to load inquiries.');
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchInquiries();
   }, [statusFilter]);
 

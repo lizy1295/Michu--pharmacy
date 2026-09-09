@@ -1,5 +1,64 @@
 import type { Config } from 'tailwindcss';
 
+const primaryScale = {
+  50: 'rgb(var(--primary-50-rgb) / <alpha-value>)',
+  100: 'rgb(var(--primary-100-rgb) / <alpha-value>)',
+  200: 'rgb(var(--primary-200-rgb) / <alpha-value>)',
+  300: 'rgb(var(--primary-300-rgb) / <alpha-value>)',
+  400: 'rgb(var(--primary-400-rgb) / <alpha-value>)',
+  500: 'rgb(var(--primary-500-rgb) / <alpha-value>)',
+  600: 'rgb(var(--primary-600-rgb) / <alpha-value>)',
+  700: 'rgb(var(--primary-700-rgb) / <alpha-value>)',
+  800: 'rgb(var(--primary-800-rgb) / <alpha-value>)',
+  900: 'rgb(var(--primary-900-rgb) / <alpha-value>)',
+  950: 'rgb(var(--primary-950-rgb) / <alpha-value>)',
+  DEFAULT: 'rgb(var(--primary-600-rgb) / <alpha-value>)',
+};
+
+const backgroundScale = {
+  50: 'rgb(var(--bg-50-rgb) / <alpha-value>)',
+  100: 'rgb(var(--bg-100-rgb) / <alpha-value>)',
+  200: 'rgb(var(--bg-200-rgb) / <alpha-value>)',
+  300: 'rgb(var(--bg-300-rgb) / <alpha-value>)',
+  400: 'rgb(var(--bg-400-rgb) / <alpha-value>)',
+  500: 'rgb(var(--bg-500-rgb) / <alpha-value>)',
+  600: 'rgb(var(--bg-600-rgb) / <alpha-value>)',
+  700: 'rgb(var(--bg-700-rgb) / <alpha-value>)',
+  800: 'rgb(var(--bg-800-rgb) / <alpha-value>)',
+  900: 'rgb(var(--bg-900-rgb) / <alpha-value>)',
+  DEFAULT: 'rgb(var(--bg-200-rgb) / <alpha-value>)',
+};
+
+const darkNightScale = {
+  50: 'rgb(var(--primary-50-rgb) / <alpha-value>)',
+  100: 'rgb(var(--primary-100-rgb) / <alpha-value>)',
+  200: 'rgb(var(--primary-200-rgb) / <alpha-value>)',
+  300: 'rgb(var(--primary-300-rgb) / <alpha-value>)',
+  400: 'rgb(var(--primary-400-rgb) / <alpha-value>)',
+  500: 'rgb(var(--primary-600-rgb) / <alpha-value>)',
+  600: 'rgb(var(--primary-700-rgb) / <alpha-value>)',
+  700: 'rgb(var(--primary-800-rgb) / <alpha-value>)',
+  800: 'rgb(var(--primary-900-rgb) / <alpha-value>)',
+  900: 'rgb(var(--primary-900-rgb) / <alpha-value>)',
+  950: 'rgb(var(--primary-950-rgb) / <alpha-value>)',
+  DEFAULT: 'rgb(var(--text-dark-rgb) / <alpha-value>)',
+};
+
+const neutralScale = {
+  50: 'rgb(var(--bg-50-rgb) / <alpha-value>)',
+  100: 'rgb(var(--bg-100-rgb) / <alpha-value>)',
+  200: 'rgb(var(--bg-200-rgb) / <alpha-value>)',
+  300: 'rgb(var(--border-rgb) / <alpha-value>)',
+  400: 'rgb(var(--text-muted-rgb) / <alpha-value>)',
+  500: 'rgb(var(--text-muted-rgb) / <alpha-value>)',
+  600: 'rgb(var(--text-body-rgb) / <alpha-value>)',
+  700: 'rgb(var(--primary-700-rgb) / <alpha-value>)',
+  800: 'rgb(var(--primary-800-rgb) / <alpha-value>)',
+  900: 'rgb(var(--text-dark-rgb) / <alpha-value>)',
+  950: 'rgb(var(--primary-950-rgb) / <alpha-value>)',
+  DEFAULT: 'rgb(var(--text-dark-rgb) / <alpha-value>)',
+};
+
 const config: Config = {
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,315 +68,50 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ── KAUTAQ Base Palette ─────────────────────────────────────────
-        // Vaporous Beige #DFDFD4  →  beige / pearl (warm neutral background)
-        // Autumn         #DC7000  →  autumn / gleam / radiate (warm amber CTA & accent)
-        // Almost Black   #1B1E1C  →  almostblack / moss (deep charcoal dark)
-        // Suede Green    #6E883F  →  suede / herb / brand (earthy olive green)
-        // Hinterlands    #31410D  →  hinterlands (deep forest olive)
+        // ── Dynamic Theme CSS-Variable Mappings ─────────────────────────
+        primary: primaryScale,
+        eastbay: primaryScale,
+        brand: primaryScale,
+        herb: primaryScale,
+        suede: primaryScale,
 
-        beige: {
-          50: '#FAF9F6',
-          100: '#F4F4EE',
-          200: '#DFDFD4', // Vaporous Beige (Base)
-          300: '#CBCBBF',
-          400: '#B4B4A4',
-          500: '#999988',
-          600: '#7D7D6E',
-          700: '#626256',
-          800: '#48483F',
-          900: '#31312B',
-          DEFAULT: '#DFDFD4',
-        },
+        secondary: backgroundScale,
+        rumswizzle: backgroundScale,
+        beige: backgroundScale,
+        pearl: backgroundScale,
 
-        autumn: {
-          50: '#FEF7EE',
-          100: '#FDEDD3',
-          200: '#FBD8A5',
-          300: '#F7BD6E',
-          400: '#F19830',
-          500: '#DC7000', // Autumn (Base)
-          600: '#C05900',
-          700: '#984102',
-          800: '#7B3408',
-          900: '#652D0C',
-          DEFAULT: '#DC7000',
-        },
+        almostblack: darkNightScale,
+        moss: darkNightScale,
+        hinterlands: darkNightScale,
 
-        almostblack: {
-          50: '#F5F6F5',
-          100: '#E6E8E6',
-          200: '#C5C9C5',
-          300: '#9EA49F',
-          400: '#6E7670',
-          500: '#4B534D',
-          600: '#383E3A',
-          700: '#2A2F2B',
-          800: '#202421',
-          900: '#1B1E1C', // Almost Black (Base)
-          950: '#111312',
-          DEFAULT: '#1B1E1C',
-        },
-
-        suede: {
-          50: '#F4F7EF',
-          100: '#E5ECDB',
-          200: '#CCDAB9',
-          300: '#ADC390',
-          400: '#8DA762',
-          500: '#6E883F', // Suede Green (Base)
-          600: '#566C31',
-          700: '#425426',
-          800: '#364321',
-          900: '#2F3A1E',
-          DEFAULT: '#6E883F',
-        },
-
-        hinterlands: {
-          50: '#F3F6EC',
-          100: '#E3EBD3',
-          200: '#C8D7AD',
-          300: '#A7C07E',
-          400: '#668031',
-          500: '#485F1B',
-          600: '#3B4E15',
-          700: '#31410D', // Hinterlands (Base)
-          800: '#25330A',
-          900: '#1A2407',
-          950: '#111804',
-          DEFAULT: '#31410D',
-        },
-
-        // ── Standard Tailwind Color Overrides (Mapping all to KAUTAQ) ────
-        emerald: {
-          50: '#F4F7EF',
-          100: '#E5ECDB',
-          200: '#CCDAB9',
-          300: '#ADC390',
-          400: '#8DA762',
-          500: '#6E883F', // Suede Green
-          600: '#566C31',
-          700: '#425426',
-          800: '#31410D', // Hinterlands
-          900: '#25330A',
-          950: '#111804',
-          DEFAULT: '#6E883F',
-        },
-
-        teal: {
-          50: '#F3F6EC',
-          100: '#E3EBD3',
-          200: '#C8D7AD',
-          300: '#A7C07E',
-          400: '#668031',
-          500: '#6E883F',
-          600: '#566C31',
-          700: '#31410D', // Hinterlands
-          800: '#25330A',
-          900: '#1A2407',
-          DEFAULT: '#31410D',
-        },
-
-        green: {
-          50: '#F4F7EF',
-          100: '#E5ECDB',
-          200: '#CCDAB9',
-          300: '#ADC390',
-          400: '#8DA762',
-          500: '#6E883F', // Suede Green
-          600: '#566C31',
-          700: '#425426',
-          800: '#31410D', // Hinterlands
-          900: '#25330A',
-          DEFAULT: '#6E883F',
-        },
-
-        indigo: {
-          50: '#F3F6EC',
-          100: '#E3EBD3',
-          200: '#C8D7AD',
-          300: '#A7C07E',
-          400: '#668031',
-          500: '#485F1B',
-          600: '#3B4E15',
-          700: '#31410D', // Hinterlands
-          800: '#25330A',
-          900: '#1A2407',
-          DEFAULT: '#31410D',
-        },
-
-        blue: {
-          50: '#F4F7EF',
-          100: '#E5ECDB',
-          200: '#CCDAB9',
-          300: '#ADC390',
-          400: '#8DA762',
-          500: '#6E883F',
-          600: '#566C31',
-          700: '#31410D', // Hinterlands
-          800: '#25330A',
-          900: '#1A2407',
-          DEFAULT: '#6E883F',
-        },
-
-        amber: {
-          50: '#FEF7EE',
-          100: '#FDEDD3',
-          200: '#FBD8A5',
-          300: '#F7BD6E',
-          400: '#F19830',
-          500: '#DC7000', // Autumn
-          600: '#C05900',
-          700: '#984102',
-          800: '#7B3408',
-          900: '#652D0C',
-          DEFAULT: '#DC7000',
-        },
-
-        orange: {
-          50: '#FEF7EE',
-          100: '#FDEDD3',
-          200: '#FBD8A5',
-          300: '#F7BD6E',
-          400: '#F19830',
-          500: '#DC7000', // Autumn
-          600: '#C05900',
-          700: '#984102',
-          800: '#7B3408',
-          900: '#652D0C',
-          DEFAULT: '#DC7000',
-        },
-
-        slate: {
-          50: '#FAF9F6',
-          100: '#F4F4EE',
-          200: '#DFDFD4', // Vaporous Beige
-          300: '#CBCBBF',
-          400: '#9EA49F',
-          500: '#6E7670',
-          600: '#4B534D',
-          700: '#383E3A',
-          800: '#202421',
-          900: '#1B1E1C', // Almost Black
-          950: '#111312',
-          DEFAULT: '#1B1E1C',
-        },
-
-        gray: {
-          50: '#FAF9F6',
-          100: '#F4F4EE',
-          200: '#DFDFD4', // Vaporous Beige
-          300: '#CBCBBF',
-          400: '#9EA49F',
-          500: '#6E7670',
-          600: '#4B534D',
-          700: '#383E3A',
-          800: '#202421',
-          900: '#1B1E1C', // Almost Black
-          950: '#111312',
-          DEFAULT: '#1B1E1C',
-        },
-
-        zinc: {
-          50: '#FAF9F6',
-          100: '#F4F4EE',
-          200: '#DFDFD4', // Vaporous Beige
-          300: '#CBCBBF',
-          400: '#9EA49F',
-          500: '#6E7670',
-          600: '#4B534D',
-          700: '#383E3A',
-          800: '#202421',
-          900: '#1B1E1C', // Almost Black
-          950: '#111312',
-          DEFAULT: '#1B1E1C',
-        },
-
-        // ── Semantic & Theme Aliases ─────────────────────────────────────
-        pearl: {
-          50: '#FAF9F6',
-          100: '#F4F4EE',
-          200: '#DFDFD4', // Vaporous Beige
-          300: '#CBCBBF',
-          400: '#B4B4A4',
-          500: '#999988',
-          600: '#7D7D6E',
-          700: '#626256',
-          800: '#48483F',
-          900: '#31312B',
-          DEFAULT: '#DFDFD4',
-        },
-
+        autumn: primaryScale,
+        radiate: primaryScale,
         gleam: {
-          50: '#FEF7EE',
-          100: '#FDEDD3',
-          200: '#FBD8A5',
-          300: '#F7BD6E',
-          400: '#F19830',
-          500: '#DC7000', // Autumn
-          600: '#C05900',
-          700: '#984102',
-          800: '#7B3408',
-          900: '#652D0C',
-          DEFAULT: '#DC7000',
+          50: 'rgb(var(--bg-50-rgb) / <alpha-value>)',
+          100: 'rgb(var(--bg-100-rgb) / <alpha-value>)',
+          200: 'rgb(var(--bg-200-rgb) / <alpha-value>)',
+          300: 'rgb(var(--bg-300-rgb) / <alpha-value>)',
+          400: 'rgb(var(--bg-400-rgb) / <alpha-value>)',
+          500: 'rgb(var(--primary-500-rgb) / <alpha-value>)',
+          600: 'rgb(var(--primary-600-rgb) / <alpha-value>)',
+          700: 'rgb(var(--primary-700-rgb) / <alpha-value>)',
+          800: 'rgb(var(--primary-800-rgb) / <alpha-value>)',
+          900: 'rgb(var(--primary-900-rgb) / <alpha-value>)',
+          DEFAULT: 'rgb(var(--primary-600-rgb) / <alpha-value>)',
         },
 
-        radiate: {
-          50: '#FEF7EE',
-          100: '#FDEDD3',
-          200: '#FBD8A5',
-          300: '#F7BD6E',
-          400: '#F19830',
-          500: '#DC7000', // Autumn
-          600: '#C05900',
-          700: '#984102',
-          800: '#7B3408',
-          900: '#652D0C',
-          DEFAULT: '#DC7000',
-        },
+        // Standard Tailwind Overrides for dynamic theme compatibility
+        emerald: primaryScale,
+        teal: primaryScale,
+        green: primaryScale,
+        indigo: primaryScale,
+        blue: primaryScale,
+        amber: primaryScale,
+        orange: primaryScale,
 
-        herb: {
-          50: '#F4F7EF',
-          100: '#E5ECDB',
-          200: '#CCDAB9',
-          300: '#ADC390',
-          400: '#8DA762',
-          500: '#6E883F', // Suede Green
-          600: '#566C31',
-          700: '#425426',
-          800: '#364321',
-          900: '#2F3A1E',
-          DEFAULT: '#6E883F',
-        },
-
-        brand: {
-          50: '#F4F7EF',
-          100: '#E5ECDB',
-          200: '#CCDAB9',
-          300: '#ADC390',
-          400: '#8DA762',
-          500: '#6E883F', // Suede Green
-          600: '#566C31',
-          700: '#425426',
-          800: '#364321',
-          900: '#2F3A1E',
-          DEFAULT: '#6E883F',
-        },
-
-        moss: {
-          50: '#F5F6F5',
-          100: '#E6E8E6',
-          200: '#C5C9C5',
-          300: '#9EA49F',
-          400: '#6E7670',
-          500: '#4B534D',
-          600: '#383E3A',
-          700: '#2A2F2B',
-          800: '#202421',
-          900: '#1B1E1C', // Almost Black
-          950: '#111312',
-          DEFAULT: '#1B1E1C',
-        },
+        slate: neutralScale,
+        gray: neutralScale,
+        zinc: neutralScale,
       },
     },
   },

@@ -7,6 +7,8 @@ import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { AiAssistant } from '@/components/ai/AiAssistant';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#31410D',
+  themeColor: '#474C80',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -40,30 +42,39 @@ export default async function RootLayout({
   const isAdmin = pathname.startsWith('/admin');
 
   return (
-    <html lang="en">
+    <html lang="en" data-theme="theme-1" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        {/* Anti-flash inline script for instant theme loading before hydration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('mph_theme')||'theme-1';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`,
+          }}
+        />
       </head>
-      <body className="min-h-screen flex flex-col selection:bg-autumn selection:text-white bg-beige-200 text-almostblack">
-        <OfflineBanner />
-        {isAdmin ? (
-          // Admin: render children bare — AdminLayout wraps them via app/admin/layout.tsx
-          <>{children}</>
-        ) : (
-          // Storefront: full shell with LanguageProvider, CartProvider, WishlistProvider, Header, AiAssistant, Footer
-          <LanguageProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <Header />
-                <main className="flex-1">{children}</main>
-                <Footer />
-                <AiAssistant />
-              </WishlistProvider>
-            </CartProvider>
-          </LanguageProvider>
-        )}
+      <body className="min-h-screen flex flex-col selection:bg-brand-600 selection:text-white bg-rumswizzle text-almostblack">
+        <ThemeProvider>
+          <OfflineBanner />
+          {isAdmin ? (
+            // Admin: render children bare — AdminLayout wraps them via app/admin/layout.tsx
+            <>{children}</>
+          ) : (
+            // Storefront: full shell with LanguageProvider, CartProvider, WishlistProvider, Header, AiAssistant, Footer, ThemeSwitcher
+            <LanguageProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <Header />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                  <AiAssistant />
+                  <ThemeSwitcher />
+                </WishlistProvider>
+              </CartProvider>
+            </LanguageProvider>
+          )}
+        </ThemeProvider>
       </body>
     </html>
   );

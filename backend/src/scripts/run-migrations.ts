@@ -1,11 +1,12 @@
 import 'reflect-metadata';
 import { AppDataSource } from '../data-source';
+import { InitialSchema1725440000000 } from '../migrations/1725440000000-InitialSchema';
 import { AddCertificationsToDoctor1725450000000 } from '../migrations/1725450000000-AddCertificationsToDoctor';
 
 async function run() {
   console.log('Initializing DataSource for Migration Execution...');
   AppDataSource.setOptions({
-    migrations: [AddCertificationsToDoctor1725450000000],
+    migrations: [InitialSchema1725440000000, AddCertificationsToDoctor1725450000000],
   });
 
   await AppDataSource.initialize();

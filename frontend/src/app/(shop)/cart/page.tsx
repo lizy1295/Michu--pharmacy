@@ -3,8 +3,16 @@
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useState, useEffect } from 'react';
-import { createOrder, Order } from '@/lib/api/orders';
-import { initiatePayment, verifyPayment, InitiatePaymentResult, PaymentDetails } from '@/lib/api/payments';
+import { createOrder, getOrderById, Order } from '@/lib/api/orders';
+import {
+  initiatePayment,
+  verifyPayment,
+  getPaymentByOrderId,
+  getReceiptByOrderId,
+  InitiatePaymentResult,
+  PaymentDetails,
+  ReceiptDetails,
+} from '@/lib/api/payments';
 import { getMe } from '@/lib/api/auth';
 import { getAccessToken } from '@/lib/auth/tokens';
 import { useLanguage } from '@/context/LanguageContext';
@@ -31,7 +39,47 @@ export default function CartPage() {
   const [paymentResult, setPaymentResult] = useState<InitiatePaymentResult | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [verifiedPayment, setVerifiedPayment] = useState<PaymentDetails | null>(null);
+  const [receipt, setReceipt] = useState<ReceiptDetails | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<'CART' | 'PAYMENT_PENDING' | 'SUCCESS'>('CART');
+
+  // Check for return from Chapa: /cart?orderId=...&paymentNumber=...
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const orderIdParam = params.get('orderId');
+    if (orderIdParam) {
+      const oid = Number(orderIdParam);
+      if (!isNaN(oid) && oid > 0) {
+        getOrderById(oid)
+          .then(async (orderData) => {
+            setCreatedOrder(orderData);
+            const payData = await getPaymentByOrderId(oid);
+            if (payData) setVerifiedPayment(payData);
+
+            if (orderData.paymentStatus === 'paid') {
+              const recData = await getReceiptByOrderId(oid);
+              if (recData) setReceipt(recData);
+              setCheckoutStep('SUCCESS');
+              clearCart();
+            } else {
+              setCheckoutStep('PAYMENT_PENDING');
+              if (payData) {
+                setPaymentResult({
+                  paymentId: payData.id,
+                  paymentNumber: payData.paymentNumber,
+                  paymentMethod: payData.paymentMethod as any,
+                  amount: payData.amount,
+                  checkoutUrl: payData.checkoutUrl,
+                  providerReference: payData.providerReference,
+                  status: payData.status,
+                });
+              }
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [clearCart]);
 
   // Auto fill logged in user
   useEffect(() => {
@@ -96,6 +144,13 @@ export default function CartPage() {
       });
 
       setPaymentResult(payRes);
+
+      // If Chapa checkout URL is returned, redirect customer immediately
+      if (payRes.checkoutUrl) {
+        window.location.href = payRes.checkoutUrl;
+        return;
+      }
+
       setCheckoutStep('PAYMENT_PENDING');
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to initiate checkout. Please check network connection.');
@@ -113,6 +168,10 @@ export default function CartPage() {
       const res = await verifyPayment(paymentResult.paymentId);
       if (res.success && res.status === 'PAID') {
         setVerifiedPayment(res.payment);
+        if (createdOrder) {
+          const rec = await getReceiptByOrderId(createdOrder.id);
+          if (rec) setReceipt(rec);
+        }
         setCheckoutStep('SUCCESS');
         clearCart();
       } else {
@@ -218,6 +277,60 @@ export default function CartPage() {
               </div>
             </div>
           </div>
+
+          {/* Phase 4: Full Digital Receipt Card */}
+          {receipt && (
+            <div className="bg-white border-2 border-emerald-500/30 rounded-2xl p-6 text-left space-y-4 shadow-sm">
+              <div className="flex justify-between items-center border-b pb-3">
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">Official Payment Receipt</h3>
+                  <p className="text-xs text-slate-400">Michu Pharmacy &bull; Digital Tax Invoice</p>
+                </div>
+                <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full uppercase">
+                  VERIFIED & ISSUED
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-slate-400 block font-bold">RECEIPT NO</span>
+                  <span className="font-mono font-extrabold text-emerald-700">{receipt.receiptNumber}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block font-bold">DATE & TIME</span>
+                  <span className="font-mono text-slate-700">{new Date(receipt.issuedAt).toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="border-t pt-3 space-y-1.5 text-xs text-slate-600">
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span className="font-mono font-bold text-slate-800">{Number(receipt.subtotal).toFixed(2)} ETB</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>VAT (15%):</span>
+                  <span className="font-mono font-bold text-slate-800">{Number(receipt.tax).toFixed(2)} ETB</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Delivery:</span>
+                  <span className="font-mono font-bold text-slate-800">{Number(receipt.deliveryFee).toFixed(2)} ETB</span>
+                </div>
+                <div className="flex justify-between border-t pt-2 text-sm font-black text-slate-900">
+                  <span>Total Settled:</span>
+                  <span className="font-mono text-emerald-600">{Number(receipt.total).toFixed(2)} {receipt.currency}</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => typeof window !== 'undefined' && window.print()}
+                className="w-full py-2.5 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-bold transition flex items-center justify-center gap-2"
+              >
+                <span>🖨️</span>
+                <span>Print / Save Receipt</span>
+              </button>
+            </div>
+          )}
 
           {hasPrescriptionItems ? (
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs text-left leading-relaxed">

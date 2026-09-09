@@ -19,7 +19,7 @@ import {
 import BranchGoogleMap from '@/components/branches/BranchGoogleMap';
 import { BranchLocation, BRANCH_LOCATIONS } from '@/lib/data/branchesData';
 
-/* ── Fallback Seed Data if Backend API is initializing ──────── */
+/* ΓöÇΓöÇ Fallback Seed Data if Backend API is initializing ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 const FALLBACK_DOCTORS: Doctor[] = [
   {
     id: 1,
@@ -179,7 +179,7 @@ const FALLBACK_PARTNERS: Partner[] = [
     name: 'EFDA',
     category: 'regulatory',
     badge: 'Federal Regulatory Authority',
-    description: 'Ethiopian Food and Drug Authority — National medicine standards, safety verification, and regulatory compliance.',
+    description: 'Ethiopian Food and Drug Authority ΓÇö National medicine standards, safety verification, and regulatory compliance.',
     websiteUrl: 'https://efda.gov.et',
     displayOrder: 1,
     status: 'active',
@@ -191,7 +191,7 @@ const FALLBACK_PARTNERS: Partner[] = [
     name: 'EPSA',
     category: 'regulatory',
     badge: 'National Supply Partner',
-    description: 'Ethiopian Pharmaceuticals Supply Agency — Ensuring continuous access to critical public health medicines.',
+    description: 'Ethiopian Pharmaceuticals Supply Agency ΓÇö Ensuring continuous access to critical public health medicines.',
     websiteUrl: 'https://epsa.gov.et',
     displayOrder: 2,
     status: 'active',
@@ -203,7 +203,7 @@ const FALLBACK_PARTNERS: Partner[] = [
     name: 'EPHARM',
     category: 'manufacturer',
     badge: 'National Leader',
-    description: 'Ethiopian Pharmaceuticals Manufacturing S.C. — Decades of domestic medicine manufacturing excellence.',
+    description: 'Ethiopian Pharmaceuticals Manufacturing S.C. ΓÇö Decades of domestic medicine manufacturing excellence.',
     websiteUrl: 'https://epharm.com.et',
     displayOrder: 3,
     status: 'active',
@@ -215,7 +215,7 @@ const FALLBACK_PARTNERS: Partner[] = [
     name: 'Cadila Pharmaceuticals',
     category: 'manufacturer',
     badge: 'Certified WHO-GMP',
-    description: 'Cadila Pharmaceuticals Ethiopia — Quality assured critical care therapeutics and antibiotics.',
+    description: 'Cadila Pharmaceuticals Ethiopia ΓÇö Quality assured critical care therapeutics and antibiotics.',
     websiteUrl: 'https://cadilapharma.com',
     displayOrder: 4,
     status: 'active',
@@ -227,7 +227,7 @@ const FALLBACK_PARTNERS: Partner[] = [
     name: 'Julphar Pharmaceuticals',
     category: 'manufacturer',
     badge: 'Global Standard',
-    description: 'Julphar Ethiopia — International grade pharmaceutical manufacturing and advanced oral dosages.',
+    description: 'Julphar Ethiopia ΓÇö International grade pharmaceutical manufacturing and advanced oral dosages.',
     websiteUrl: 'https://julphar.net',
     displayOrder: 5,
     status: 'active',
@@ -239,7 +239,7 @@ const FALLBACK_PARTNERS: Partner[] = [
     name: 'Addis Pharmaceuticals (APF)',
     category: 'manufacturer',
     badge: 'Trusted Generic',
-    description: 'APF — High-potency generic medications for cardiovascular, gastrointestinal, and chronic care.',
+    description: 'APF ΓÇö High-potency generic medications for cardiovascular, gastrointestinal, and chronic care.',
     websiteUrl: 'https://apf.com.et',
     displayOrder: 6,
     status: 'active',
@@ -251,7 +251,7 @@ const FALLBACK_PARTNERS: Partner[] = [
     name: 'Telebirr',
     category: 'fintech',
     badge: 'Official Payment',
-    description: 'Ethio Telecom SuperApp — Instant digital checkout, USSD, and zero-fee prescription payment.',
+    description: 'Ethio Telecom SuperApp ΓÇö Instant digital checkout, USSD, and zero-fee prescription payment.',
     websiteUrl: 'https://telebirr.et',
     displayOrder: 7,
     status: 'active',
@@ -291,18 +291,18 @@ export default function HomePage() {
   const [activeVideoModal, setActiveVideoModal] = useState<Advertisement | null>(null);
 
   const FEATURED_BRANDS = useMemo(() => [
-    { name: 'EPHARM', origin: language === 'am' ? 'የኢትዮጵያ መድኃኒት ፋብሪካ' : 'Ethiopian Pharm. Mfg.', badge: 'National Leader', icon: '🇪🇹', color: 'bg-emerald-50 border-emerald-200 text-emerald-800' },
-    { name: 'Cadila Pharmaceuticals', origin: language === 'am' ? 'ካዲላ ኢትዮጵያ' : 'Cadila Ethiopia', badge: 'Certified GMP', icon: '💊', color: 'bg-blue-50 border-blue-200 text-blue-800' },
-    { name: 'Julphar Pharmaceuticals', origin: language === 'am' ? 'ጁልፋር ኢትዮጵያ' : 'Julphar Ethiopia', badge: 'Global Standard', icon: '🏢', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' },
-    { name: 'Addis Pharmaceuticals (APF)', origin: language === 'am' ? 'ኤፒኤፍ ዓዲግራት / አዲስ' : 'APF Adigrat / Addis', badge: 'Trusted Generic', icon: '🛡️', color: 'bg-amber-50 border-amber-200 text-amber-800' },
-    { name: 'Novartis', origin: language === 'am' ? 'ስዊዘርላንድ' : 'Switzerland', badge: 'Premium Rx', icon: '⚕️', color: 'bg-rose-50 border-rose-200 text-rose-800' },
-    { name: 'Sanofi', origin: language === 'am' ? 'ፈረንሳይ' : 'France', badge: 'Specialty Care', icon: '💉', color: 'bg-purple-50 border-purple-200 text-purple-800' },
-    { name: 'GSK', origin: language === 'am' ? 'ግላክሶ ስሚዝ ክላይን ዩኬ' : 'GlaxoSmithKline UK', badge: 'Vaccines & OTC', icon: '🔬', color: 'bg-orange-50 border-orange-200 text-orange-800' },
-    { name: 'Pfizer', origin: language === 'am' ? 'አሜሪካ' : 'USA', badge: 'Therapeutics', icon: '🧪', color: 'bg-sky-50 border-sky-200 text-sky-800' },
-    { name: 'AstraZeneca', origin: language === 'am' ? 'ዩኬ / ስዊድን' : 'UK / Sweden', badge: 'Cardio & Resp.', icon: '🫀', color: 'bg-teal-50 border-teal-200 text-teal-800' },
-    { name: 'Denk Pharma', origin: language === 'am' ? 'ጀርመን' : 'Germany', badge: 'German Quality', icon: '🇩🇪', color: 'bg-slate-50 border-slate-200 text-slate-800' },
-    { name: 'DKT Ethiopia', origin: language === 'am' ? 'የቤተሰብ ጤና' : 'Family Health', badge: 'Reproductive Care', icon: '🩺', color: 'bg-pink-50 border-pink-200 text-pink-800' },
-    { name: 'CeraVe & Skincare', origin: language === 'am' ? 'የቆዳ ህክምና ማዘዣ' : 'Dermatologist Rx', badge: 'Skin Barrier', icon: '✨', color: 'bg-cyan-50 border-cyan-200 text-cyan-800' },
+    { name: 'EPHARM', origin: language === 'am' ? 'ßï¿ßèóßë╡ßï«ßî╡ßï½ ßêÿßï╡ßèâßèÆßë╡ ßìïßëÑßê¬ßè½' : 'Ethiopian Pharm. Mfg.', badge: 'National Leader', icon: '≡ƒç¬≡ƒç╣', color: 'bg-emerald-50 border-emerald-200 text-emerald-800' },
+    { name: 'Cadila Pharmaceuticals', origin: language === 'am' ? 'ßè½ßï▓ßêï ßèóßë╡ßï«ßî╡ßï½' : 'Cadila Ethiopia', badge: 'Certified GMP', icon: '≡ƒÆè', color: 'bg-blue-50 border-blue-200 text-blue-800' },
+    { name: 'Julphar Pharmaceuticals', origin: language === 'am' ? 'ßîüßêìßìïßê¡ ßèóßë╡ßï«ßî╡ßï½' : 'Julphar Ethiopia', badge: 'Global Standard', icon: '≡ƒÅó', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' },
+    { name: 'Addis Pharmaceuticals (APF)', origin: language === 'am' ? 'ßèñßìÆßèñßìì ßïôßï▓ßîìßê½ßë╡ / ßèáßï▓ßê╡' : 'APF Adigrat / Addis', badge: 'Trusted Generic', icon: '≡ƒ¢í∩╕Å', color: 'bg-amber-50 border-amber-200 text-amber-800' },
+    { name: 'Novartis', origin: language === 'am' ? 'ßê╡ßïèßïÿßê¡ßêïßèòßï╡' : 'Switzerland', badge: 'Premium Rx', icon: 'ΓÜò∩╕Å', color: 'bg-rose-50 border-rose-200 text-rose-800' },
+    { name: 'Sanofi', origin: language === 'am' ? 'ßìêßê¿ßèòßê│ßï¡' : 'France', badge: 'Specialty Care', icon: '≡ƒÆë', color: 'bg-purple-50 border-purple-200 text-purple-800' },
+    { name: 'GSK', origin: language === 'am' ? 'ßîìßêïßè¡ßê╢ ßê╡ßêÜßï¥ ßè¡ßêïßï¡ßèò ßï⌐ßè¼' : 'GlaxoSmithKline UK', badge: 'Vaccines & OTC', icon: '≡ƒö¼', color: 'bg-orange-50 border-orange-200 text-orange-800' },
+    { name: 'Pfizer', origin: language === 'am' ? 'ßèáßê£ßê¬ßè½' : 'USA', badge: 'Therapeutics', icon: '≡ƒº¬', color: 'bg-sky-50 border-sky-200 text-sky-800' },
+    { name: 'AstraZeneca', origin: language === 'am' ? 'ßï⌐ßè¼ / ßê╡ßïèßï╡ßèò' : 'UK / Sweden', badge: 'Cardio & Resp.', icon: '≡ƒ½Ç', color: 'bg-teal-50 border-teal-200 text-teal-800' },
+    { name: 'Denk Pharma', origin: language === 'am' ? 'ßîÇßê¡ßêÿßèò' : 'Germany', badge: 'German Quality', icon: '≡ƒç⌐≡ƒç¬', color: 'bg-slate-50 border-slate-200 text-slate-800' },
+    { name: 'DKT Ethiopia', origin: language === 'am' ? 'ßï¿ßëñßë░ßê░ßëÑ ßîñßèô' : 'Family Health', badge: 'Reproductive Care', icon: '≡ƒ⌐║', color: 'bg-pink-50 border-pink-200 text-pink-800' },
+    { name: 'CeraVe & Skincare', origin: language === 'am' ? 'ßï¿ßëåßï│ ßêàßè¡ßê¥ßèô ßê¢ßïÿßïú' : 'Dermatologist Rx', badge: 'Skin Barrier', icon: 'Γ£¿', color: 'bg-cyan-50 border-cyan-200 text-cyan-800' },
   ], [language]);
 
   // Load products, doctors, advertisements, and partners
@@ -373,12 +373,12 @@ export default function HomePage() {
       btnColor: 'bg-moss-900 hover:bg-moss-800 text-gleam shadow-moss/30'
     },
     {
-      title: language === 'am' ? 'ፈጣን የቅርንጫፍ ርክክብ እና ማድረሻ' : 'Branch Pickup & Fast Delivery',
+      title: language === 'am' ? 'ßìêßîúßèò ßï¿ßëàßê¡ßèòßî½ßìì ßê¡ßè¡ßè¡ßëÑ ßèÑßèô ßê¢ßï╡ßê¿ßê╗' : 'Branch Pickup & Fast Delivery',
       description: language === 'am'
-        ? 'በአዲስ አበባ እና በክልሎች በሚገኙ 7 ቅርንጫፎቻችን በደህንነቱ የተረጋገጠ መድኃኒት በቀላሉ ይረከቡ።'
+        ? 'ßëáßèáßï▓ßê╡ ßèáßëáßëú ßèÑßèô ßëáßè¡ßêìßêÄßë╜ ßëáßêÜßîêßèÖ 7 ßëàßê¡ßèòßî½ßìÄßë╗ßë╜ßèò ßëáßï░ßêàßèòßèÉßë▒ ßï¿ßë░ßê¿ßîïßîêßîá ßêÿßï╡ßèâßèÆßë╡ ßëáßëÇßêïßêë ßï¡ßê¿ßè¿ßëíßìó'
         : 'Pick up verified medications at any of our 7 physical branches or request safe cold-chain delivery.',
       link: '/branches',
-      buttonText: language === 'am' ? 'ቅርንጫፎችን ይመልከቱ' : 'Explore Branches',
+      buttonText: language === 'am' ? 'ßëàßê¡ßèòßî½ßìÄßë╜ßèò ßï¡ßêÿßêìßè¿ßë▒' : 'Explore Branches',
       color: 'border-radiate-200 hover:border-radiate-300 bg-radiate-50/70 shadow-xs',
       btnColor: 'bg-radiate hover:bg-radiate-600 text-white shadow-radiate/30'
     }
@@ -544,12 +544,12 @@ export default function HomePage() {
             alt="Michu Pharmacy — Quality Medicines & Health Products"
             fill
             priority
-            className="object-cover object-center w-full h-full"
+            className="object-cover object-center w-full h-full scale-105 blur-sm"
             sizes="100vw"
             quality={95}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-moss-950/95 via-moss-900/85 to-moss-950/90" />
-          <div className="absolute inset-0 bg-black/20" />
+          {/* Overlay — keeps text crisp over the blurred image */}
+          <div className="absolute inset-0 bg-gradient-to-r from-moss-950/70 via-moss-900/50 to-moss-950/60" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 py-20 md:py-28 flex flex-col items-center text-center z-10 w-full">
@@ -563,9 +563,9 @@ export default function HomePage() {
             </span>
           </div>
 
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl max-w-4xl leading-tight drop-shadow-md">
+          <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl max-w-4xl leading-tight drop-shadow-lg text-white">
             {t('home.hero_title1')}<br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-pearl via-gleam to-radiate-300">
+            <span className="text-white">
               {t('home.hero_title2')}
             </span>
           </h1>
@@ -592,9 +592,9 @@ export default function HomePage() {
           {/* Bottom Trust Indicators */}
           <div className="mt-12 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 text-xs text-pearl-200/90 font-medium">
             <span className="flex items-center gap-1.5">{t('home.hero_trust1')}</span>
-            <span className="hidden sm:inline">•</span>
+            <span className="hidden sm:inline">ΓÇó</span>
             <span className="flex items-center gap-1.5">{t('home.hero_trust2')}</span>
-            <span className="hidden sm:inline">•</span>
+            <span className="hidden sm:inline">ΓÇó</span>
             <span className="flex items-center gap-1.5">{t('home.hero_trust3')}</span>
           </div>
         </div>
@@ -634,15 +634,15 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-3">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
-                <span>📢</span>
-                <span>{language === 'am' ? 'የቅርብ ጊዜ የጤና ዜና እና መፍትሄዎች' : 'Health Breakthroughs & Disease Solutions'}</span>
+                <span>≡ƒôó</span>
+                <span>{language === 'am' ? 'ßï¿ßëàßê¡ßëÑ ßîèßï£ ßï¿ßîñßèô ßï£ßèô ßèÑßèô ßêÿßììßë╡ßêäßïÄßë╜' : 'Health Breakthroughs & Disease Solutions'}</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
-                {language === 'am' ? 'የህክምና ግኝቶች፣ አዳዲስ የበሽታ መፍትሄዎችና የምርት መረጃዎች' : 'Latest Disease Solutions & Verified Product News'}
+                {language === 'am' ? 'ßï¿ßêàßè¡ßê¥ßèô ßîìßè¥ßë╢ßë╜ßìú ßèáßï│ßï▓ßê╡ ßï¿ßëáßê╜ßë│ ßêÿßììßë╡ßêäßïÄßë╜ßèô ßï¿ßê¥ßê¡ßë╡ ßêÿßê¿ßîâßïÄßë╜' : 'Latest Disease Solutions & Verified Product News'}
               </h2>
               <p className="text-sm text-neutral-500 mt-1">
                 {language === 'am'
-                  ? 'በሚቹ ፋርማሲ ክሊኒካል ባለሙያዎችና አስተዳደር የተረጋገጡ ወቅታዊ የጤና መረጃዎች'
+                  ? 'ßëáßêÜßë╣ ßìïßê¡ßê¢ßê▓ ßè¡ßêèßèÆßè½ßêì ßëúßêêßêÖßï½ßïÄßë╜ßèô ßèáßê╡ßë░ßï│ßï░ßê¡ ßï¿ßë░ßê¿ßîïßîêßîí ßïêßëàßë│ßïè ßï¿ßîñßèô ßêÿßê¿ßîâßïÄßë╜'
                   : 'Published and reviewed by certified clinical pharmacists and medical consultants at Michu Pharmacy.'}
               </p>
             </div>
@@ -650,7 +650,7 @@ export default function HomePage() {
               href="/blogs"
               className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1 shrink-0"
             >
-              {language === 'am' ? 'ሁሉንም የጤና ፅሁፎች ይመልከቱ →' : 'View All Clinical Updates →'}
+              {language === 'am' ? 'ßêüßêëßèòßê¥ ßï¿ßîñßèô ßìàßêüßìÄßë╜ ßï¡ßêÿßêìßè¿ßë▒ ΓåÆ' : 'View All Clinical Updates ΓåÆ'}
             </Link>
           </div>
 
@@ -704,11 +704,11 @@ export default function HomePage() {
                             <button
                               type="button"
                               onClick={() => setActiveVideoModal(ad)}
-                              title={language === 'am' ? 'ሙሉ ቪዲዮ ይመልከቱ' : 'Watch in Cinema Modal'}
+                              title={language === 'am' ? 'ßêÖßêë ßë¬ßï▓ßï« ßï¡ßêÿßêìßè¿ßë▒' : 'Watch in Cinema Modal'}
                               className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-black/70 hover:bg-emerald-600 text-white text-[10px] font-bold backdrop-blur-md transition flex items-center gap-1 z-10 border border-white/20"
                             >
-                              <span>⛶</span>
-                              <span>{language === 'am' ? 'አስፋ' : 'Expand'}</span>
+                              <span>Γ¢╢</span>
+                              <span>{language === 'am' ? 'ßèáßê╡ßìï' : 'Expand'}</span>
                             </button>
                           </div>
                         )
@@ -729,7 +729,7 @@ export default function HomePage() {
                             : 'bg-black/70 text-white'
                         }`}
                       >
-                        {isVideo ? (language === 'am' ? '🎥 ቪዲዮ መረጃ' : '🎥 Clinical Video') : '🖼️ Notice'}
+                        {isVideo ? (language === 'am' ? '≡ƒÄÑ ßë¬ßï▓ßï« ßêÿßê¿ßîâ' : '≡ƒÄÑ Clinical Video') : '≡ƒû╝∩╕Å Notice'}
                       </span>
                     </div>
                   )}
@@ -761,7 +761,7 @@ export default function HomePage() {
 
                     <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
                       <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
-                        <span>✓</span> {ad.createdBy || 'Clinical Team'}
+                        <span>Γ£ô</span> {ad.createdBy || 'Clinical Team'}
                       </span>
                       <div className="flex items-center gap-2">
                         {isVideo && fullMediaUrl && (
@@ -770,15 +770,15 @@ export default function HomePage() {
                             onClick={() => setActiveVideoModal(ad)}
                             className="inline-flex items-center gap-1 text-xs font-bold text-purple-700 hover:text-purple-800 transition"
                           >
-                            <span>▶</span>
-                            <span>{language === 'am' ? 'ቪዲዮ ክፈት' : 'Watch Video'}</span>
+                            <span>Γû╢</span>
+                            <span>{language === 'am' ? 'ßë¬ßï▓ßï« ßè¡ßìêßë╡' : 'Watch Video'}</span>
                           </button>
                         )}
                         <Link
                           href={ad.targetUrl || '/health?action=consult'}
                           className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 group-hover:text-emerald-800 transition ml-1"
                         >
-                          <span>{language === 'am' ? 'ዝርዝር ይመልከቱ' : 'Learn More'}</span>
+                          <span>{language === 'am' ? 'ßï¥ßê¡ßï¥ßê¡ ßï¡ßêÿßêìßè¿ßë▒' : 'Learn More'}</span>
                           <span>&rarr;</span>
                         </Link>
                       </div>
@@ -797,15 +797,15 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold uppercase tracking-wider mb-2">
-                <span>🛡️</span>
-                <span>{language === 'am' ? 'በጣም የታመኑ መድኃኒቶች' : 'Quality Guaranteed by EFDA'}</span>
+                <span>≡ƒ¢í∩╕Å</span>
+                <span>{language === 'am' ? 'ßëáßîúßê¥ ßï¿ßë│ßêÿßèæ ßêÿßï╡ßèâßèÆßë╢ßë╜' : 'Quality Guaranteed by EFDA'}</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
-                {language === 'am' ? 'በጣም የታመኑና የተረጋገጡ የፋርማሲ ምርቶች' : 'Most Trusted Healthcare & Prescription Products'}
+                {language === 'am' ? 'ßëáßîúßê¥ ßï¿ßë│ßêÿßèæßèô ßï¿ßë░ßê¿ßîïßîêßîí ßï¿ßìïßê¡ßê¢ßê▓ ßê¥ßê¡ßë╢ßë╜' : 'Most Trusted Healthcare & Prescription Products'}
               </h2>
               <p className="text-sm text-neutral-500 mt-1">
                 {language === 'am'
-                  ? 'ከአለም አቀፍና ሀገር በቀል አምራቾች በቀጥታ የቀረቡ፣ ጥራታቸው የተረጋገጠ ምርቶች'
+                  ? 'ßè¿ßèáßêêßê¥ ßèáßëÇßììßèô ßêÇßîêßê¡ ßëáßëÇßêì ßèáßê¥ßê½ßë╛ßë╜ ßëáßëÇßîÑßë│ ßï¿ßëÇßê¿ßëíßìú ßîÑßê½ßë│ßë╕ßïì ßï¿ßë░ßê¿ßîïßîêßîá ßê¥ßê¡ßë╢ßë╜'
                   : 'Highest compliance medications certified for quality, purity, and clinical efficacy.'}
               </p>
             </div>
@@ -813,7 +813,7 @@ export default function HomePage() {
               href="/products"
               className="text-sm font-bold text-brand-600 hover:text-brand-700 transition flex items-center gap-1 shrink-0"
             >
-              {language === 'am' ? 'ሁሉንም ምርቶች ይመልከቱ →' : 'View Complete Catalog →'}
+              {language === 'am' ? 'ßêüßêëßèòßê¥ ßê¥ßê¡ßë╢ßë╜ ßï¡ßêÿßêìßè¿ßë▒ ΓåÆ' : 'View Complete Catalog ΓåÆ'}
             </Link>
           </div>
 
@@ -826,7 +826,7 @@ export default function HomePage() {
                 {/* Trusted Badge */}
                 <div className="absolute top-3 right-3 z-10">
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1">
-                    <span>✓</span> {item.badge}
+                    <span>Γ£ô</span> {item.badge}
                   </span>
                 </div>
 
@@ -876,7 +876,7 @@ export default function HomePage() {
                         prescriptionRequired: item.prescriptionRequired,
                         imageType: item.imageType,
                       });
-                      triggerToast(`${item.name.split(' ')[0]} — ${t('home.toast_added')}`);
+                      triggerToast(`${item.name.split(' ')[0]} ΓÇö ${t('home.toast_added')}`);
                     }}
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition shadow-sm shadow-emerald-700/20"
                     aria-label="Add to cart"
@@ -902,15 +902,15 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gleam/20 text-gleam-300 border border-gleam/30 text-xs font-black uppercase tracking-wider mb-2.5 backdrop-blur-md">
-                <span>👨‍⚕️</span>
-                <span>{language === 'am' ? 'የተመሰከረላቸው ሀኪሞችና ፋርማሲስቶች' : 'Certified Clinical Specialists'}</span>
+                <span>≡ƒæ¿ΓÇìΓÜò∩╕Å</span>
+                <span>{language === 'am' ? 'ßï¿ßë░ßêÿßê░ßè¿ßê¿ßêïßë╕ßïì ßêÇßè¬ßê₧ßë╜ßèô ßìïßê¡ßê¢ßê▓ßê╡ßë╢ßë╜' : 'Certified Clinical Specialists'}</span>
               </div>
               <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-pearl-50 leading-tight">
-                {language === 'am' ? 'የሚቹ ፋርማሲ ታዋቂ ዶክተሮች እና የሙያ ማረጋገጫዎቻቸው' : 'Our Well-Known Doctors & Specialists with Verified Certifications'}
+                {language === 'am' ? 'ßï¿ßêÜßë╣ ßìïßê¡ßê¢ßê▓ ßë│ßïïßëé ßï╢ßè¡ßë░ßê«ßë╜ ßèÑßèô ßï¿ßêÖßï½ ßê¢ßê¿ßîïßîêßî½ßïÄßë╗ßë╕ßïì' : 'Our Well-Known Doctors & Specialists with Verified Certifications'}
               </h2>
               <p className="text-sm text-pearl-200/80 mt-2 max-w-2xl leading-relaxed">
                 {language === 'am'
-                  ? 'የታካሚዎቻችንን ጤንነት ለማረጋገጥ በኢትዮጵያ ምግብና መድኃኒት ባለስልጣን (EFDA) ፍቃድ ያላቸውና በክሊኒካል መስክ የሰለጠኑ ሀኪሞች።'
+                  ? 'ßï¿ßë│ßè½ßêÜßïÄßë╗ßë╜ßèòßèò ßîñßèòßèÉßë╡ ßêêßê¢ßê¿ßîïßîêßîÑ ßëáßèóßë╡ßï«ßî╡ßï½ ßê¥ßîìßëÑßèô ßêÿßï╡ßèâßèÆßë╡ ßëúßêêßê╡ßêìßîúßèò (EFDA) ßììßëâßï╡ ßï½ßêïßë╕ßïìßèô ßëáßè¡ßêèßèÆßè½ßêì ßêÿßê╡ßè¡ ßï¿ßê░ßêêßîáßèæ ßêÇßè¬ßê₧ßë╜ßìó'
                   : 'Consult directly with experienced medical doctors and clinical pharmacotherapists holding verified board certifications.'}
               </p>
             </div>
@@ -918,8 +918,8 @@ export default function HomePage() {
               href="/health?action=consult"
               className="inline-flex items-center gap-2 rounded-full bg-radiate hover:bg-radiate-600 px-6 py-3.5 text-xs font-black text-white shadow-xl shadow-radiate-950/40 transition hover:scale-105 active:scale-95 shrink-0"
             >
-              <span>📅</span>
-              <span>{language === 'am' ? 'የህክምና ምክክር ቀጠሮ ይያዙ' : 'Book Clinical Consultation'}</span>
+              <span>≡ƒôà</span>
+              <span>{language === 'am' ? 'ßï¿ßêàßè¡ßê¥ßèô ßê¥ßè¡ßè¡ßê¡ ßëÇßîáßê« ßï¡ßï½ßïÖ' : 'Book Clinical Consultation'}</span>
             </Link>
           </div>
 
@@ -973,7 +973,7 @@ export default function HomePage() {
                           key={cIdx}
                           className="px-2.5 py-1 rounded-xl bg-moss-950/80 border border-herb-500/40 text-pearl-100 text-[10px] font-semibold flex items-center gap-1.5"
                         >
-                          <span className="text-gleam-300 text-xs font-bold">✓</span>
+                          <span className="text-gleam-300 text-xs font-bold">Γ£ô</span>
                           <span className="truncate">{cert}</span>
                         </div>
                       ))}
@@ -1036,23 +1036,23 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-herb-100 text-moss-900 border border-herb-300 text-xs font-extrabold uppercase tracking-wider mb-2">
-                <span>📍</span>
-                <span>{language === 'am' ? 'የቅርንጫፍ አውታረ መረብ' : 'Nationwide Physical Network'}</span>
+                <span>≡ƒôì</span>
+                <span>{language === 'am' ? 'ßï¿ßëàßê¡ßèòßî½ßìì ßèáßïìßë│ßê¿ ßêÿßê¿ßëÑ' : 'Nationwide Physical Network'}</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-moss-900 tracking-tight">
-                {language === 'am' ? 'በአቅራቢያዎ የሚገኘውን የሚቹ ፋርማሲ ቅርንጫፍ ያግኙ' : 'Find Your Nearest Michu Pharmacy Branch'}
+                {language === 'am' ? 'ßëáßèáßëàßê½ßëóßï½ßïÄ ßï¿ßêÜßîêßèÿßïìßèò ßï¿ßêÜßë╣ ßìïßê¡ßê¢ßê▓ ßëàßê¡ßèòßî½ßìì ßï½ßîìßèÖ' : 'Find Your Nearest Michu Pharmacy Branch'}
               </h2>
               <p className="text-sm text-stone-600 mt-1 max-w-2xl">
                 {language === 'am'
-                  ? 'በአዲስ አበባ እና በዋና ዋና የክልል ከተሞች የሚገኙ 7 ዘመናዊ ቅርንጫፎች — 24/7 ክፍት አገልግሎት፣ የመድኃኒት ማዘዣ ርክክብ እና ነፃ የምክር አገልግሎት።'
-                  : '7 modern branches across Addis Ababa & regional hubs — offering 24/7 service, cold-chain medication pickup, and licensed pharmacist consultations.'}
+                  ? 'ßëáßèáßï▓ßê╡ ßèáßëáßëú ßèÑßèô ßëáßïïßèô ßïïßèô ßï¿ßè¡ßêìßêì ßè¿ßë░ßê₧ßë╜ ßï¿ßêÜßîêßèÖ 7 ßïÿßêÿßèôßïè ßëàßê¡ßèòßî½ßìÄßë╜ ΓÇö 24/7 ßè¡ßììßë╡ ßèáßîêßêìßîìßêÄßë╡ßìú ßï¿ßêÿßï╡ßèâßèÆßë╡ ßê¢ßïÿßïú ßê¡ßè¡ßè¡ßëÑ ßèÑßèô ßèÉßìâ ßï¿ßê¥ßè¡ßê¡ ßèáßîêßêìßîìßêÄßë╡ßìó'
+                  : '7 modern branches across Addis Ababa & regional hubs ΓÇö offering 24/7 service, cold-chain medication pickup, and licensed pharmacist consultations.'}
               </p>
             </div>
             <Link
               href="/branches"
               className="inline-flex items-center gap-2 rounded-xl bg-moss-900 hover:bg-moss-800 text-pearl px-5 py-2.5 text-xs font-bold transition shadow-sm hover:scale-105 active:scale-95 shrink-0 border border-moss-950"
             >
-              <span>{language === 'am' ? 'ሁሉንም ቅርንጫፎች ይመልከቱ' : 'View All 7 Branches'}</span>
+              <span>{language === 'am' ? 'ßêüßêëßèòßê¥ ßëàßê¡ßèòßî½ßìÄßë╜ ßï¡ßêÿßêìßè¿ßë▒' : 'View All 7 Branches'}</span>
               <span>&rarr;</span>
             </Link>
           </div>
@@ -1063,10 +1063,10 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-herb-200/60 mb-3">
                   <span className="text-xs font-bold text-moss-900 uppercase tracking-wider">
-                    {language === 'am' ? 'የቅርንጫፎች ዝርዝር' : 'Select Branch Location'}
+                    {language === 'am' ? 'ßï¿ßëàßê¡ßèòßî½ßìÄßë╜ ßï¥ßê¡ßï¥ßê¡' : 'Select Branch Location'}
                   </span>
                   <span className="text-[10px] bg-herb-100 text-moss-900 border border-herb-300 font-bold px-2 py-0.5 rounded-full">
-                    {BRANCH_LOCATIONS.length} {language === 'am' ? 'ቦታዎች' : 'Locations'}
+                    {BRANCH_LOCATIONS.length} {language === 'am' ? 'ßëªßë│ßïÄßë╜' : 'Locations'}
                   </span>
                 </div>
 
@@ -1180,15 +1180,15 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-xs font-bold uppercase tracking-wider mb-3">
-              <span>🤝</span>
-              <span>{language === 'am' ? 'አጋሮቻችን እና አምራቾች' : 'Institutional & Manufacturing Partners'}</span>
+              <span>≡ƒñ¥</span>
+              <span>{language === 'am' ? 'ßèáßîïßê«ßë╗ßë╜ßèò ßèÑßèô ßèáßê¥ßê½ßë╛ßë╜' : 'Institutional & Manufacturing Partners'}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              {language === 'am' ? 'አስተማማኝ የጤናና የፋርማሲ አጋሮቻችን' : 'Our Strategic & Regulated Partners'}
+              {language === 'am' ? 'ßèáßê╡ßë░ßê¢ßê¢ßè¥ ßï¿ßîñßèôßèô ßï¿ßìïßê¡ßê¢ßê▓ ßèáßîïßê«ßë╗ßë╜ßèò' : 'Our Strategic & Regulated Partners'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-2">
               {language === 'am'
-                ? 'ከመንግስታዊ ተቆጣጣሪዎች፣ አለም አቀፍ አምራቾች እና የዲጂታል ክፍያ አውታሮች ጋር በጋራ እንሰራለን።'
+                ? 'ßè¿ßêÿßèòßîìßê╡ßë│ßïè ßë░ßëåßîúßîúßê¬ßïÄßë╜ßìú ßèáßêêßê¥ ßèáßëÇßìì ßèáßê¥ßê½ßë╛ßë╜ ßèÑßèô ßï¿ßï▓ßîéßë│ßêì ßè¡ßììßï½ ßèáßïìßë│ßê«ßë╜ ßîïßê¡ ßëáßîïßê½ ßèÑßèòßê░ßê½ßêêßèòßìó'
                 : 'Working alongside national health authorities, certified WHO-GMP manufacturers, and trusted digital banking partners.'}
             </p>
           </div>
@@ -1204,7 +1204,7 @@ export default function HomePage() {
                     <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[9px] font-bold text-slate-600 uppercase">
                       {p.category}
                     </span>
-                    <span className="text-emerald-600 text-xs font-bold">✓ Verified</span>
+                    <span className="text-emerald-600 text-xs font-bold">Γ£ô Verified</span>
                   </div>
                   <h3 className="font-extrabold text-slate-900 text-sm mt-1">{p.name}</h3>
                   <p className="text-[11px] font-semibold text-emerald-700 mt-0.5">{p.badge}</p>
@@ -1239,7 +1239,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-moss-900 text-gleam text-xs font-black uppercase tracking-wider mb-2.5 shadow-sm">
-              <span>💳</span>
+              <span>≡ƒÆ│</span>
               <span>{t('home.payment_badge')}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-black text-moss-900 tracking-tight">
@@ -1256,7 +1256,7 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center text-2xl shadow-inner">
-                    📱
+                    ≡ƒô▒
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-sky-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
                     1-Click USSD
@@ -1280,7 +1280,7 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-2xl shadow-inner">
-                    🏦
+                    ≡ƒÅª
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
                     CBE Gateway
@@ -1304,7 +1304,7 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl shadow-inner">
-                    💳
+                    ≡ƒÆ│
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
                     Awash Pay
@@ -1328,7 +1328,7 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl shadow-inner">
-                    💵
+                    ≡ƒÆ╡
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-herb-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
                     In-Branch
@@ -1424,7 +1424,7 @@ export default function HomePage() {
                         prescriptionRequired: prod.prescriptionRequired,
                         imageType: prod.imageType,
                       });
-                      triggerToast(`${prod.name.split('...')[0]} — ${t('home.toast_added')}`);
+                      triggerToast(`${prod.name.split('...')[0]} ΓÇö ${t('home.toast_added')}`);
                     }}
                     className="p-2 rounded-xl bg-brand-600 text-white hover:bg-brand-700 hover:scale-105 active:scale-95 transition shadow-sm"
                     aria-label="Add to cart"
@@ -1448,7 +1448,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/90 text-white">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm">
-                  ▶
+                  Γû╢
                 </span>
                 <div>
                   <h3 className="text-base font-extrabold text-white truncate max-w-lg">
@@ -1464,7 +1464,7 @@ export default function HomePage() {
                 className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition"
                 aria-label="Close modal"
               >
-                ✕
+                Γ£ò
               </button>
             </div>
 
@@ -1508,7 +1508,7 @@ export default function HomePage() {
                   className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg flex items-center gap-1.5"
                 >
                   <span>
-                    {language === 'am' ? 'ምክክር ወይም ምርት ይመልከቱ' : 'Consult Pharmacist / Products'}
+                    {language === 'am' ? 'ßê¥ßè¡ßè¡ßê¡ ßïêßï¡ßê¥ ßê¥ßê¡ßë╡ ßï¡ßêÿßêìßè¿ßë▒' : 'Consult Pharmacist / Products'}
                   </span>
                   <span>&rarr;</span>
                 </Link>

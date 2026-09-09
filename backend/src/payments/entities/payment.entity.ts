@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
+import { User } from '../../users/entities/user.entity';
 
 export enum PaymentProviderMethod {
   TELEBIRR = 'telebirr',
@@ -37,6 +38,14 @@ export class Payment {
   @ManyToOne(() => Order, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order?: Order;
+
+  /** The authenticated user who initiated this payment. Nullable for legacy rows. */
+  @Column({ name: 'user_id', type: 'integer', nullable: true })
+  userId?: number;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'user_id' })
+  user?: User;
 
   @Column({
     name: 'payment_method',

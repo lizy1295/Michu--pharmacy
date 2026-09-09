@@ -27,28 +27,44 @@ export default function OrdersPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const res = await getOrders({
-        status: statusFilter || undefined,
-        search: search || undefined,
-      });
-      setOrders(res.data || []);
-    } catch (err) {
-      console.error('Failed to load orders', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // `search` is intentionally excluded from the dependency array: it is applied
+  // only on form submit, not on every keystroke — adding it would refetch on every char.
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const res = await getOrders({
+          status: statusFilter || undefined,
+          search: search || undefined,
+        });
+        setOrders(res.data || []);
+      } catch (err) {
+        console.error('Failed to load orders', err);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchOrders();
   }, [statusFilter]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchOrders();
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await getOrders({
+          status: statusFilter || undefined,
+          search: search || undefined,
+        });
+        setOrders(res.data || []);
+      } catch (err) {
+        console.error('Failed to load orders', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   };
 
   const formatProductsSummary = (items: any[]) => {

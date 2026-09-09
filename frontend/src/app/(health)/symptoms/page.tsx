@@ -165,7 +165,7 @@ function SymptomCheckerContent() {
 
       {/* 2. Hero & Fuzzy Search Header Section */}
       <section className="bg-gradient-to-b from-moss-950 via-moss-900 to-moss-950 text-pearl-50 pt-10 pb-14 px-4 sm:px-6 relative overflow-hidden border-b border-herb-600/40">
-        <div className="absolute inset-0 bg-[radial-gradient(#327039_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(#474C80_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
 
         <div className="mx-auto max-w-6xl relative z-10 space-y-6 text-center">
           {/* Badge */}

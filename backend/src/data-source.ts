@@ -11,11 +11,16 @@ export const dataSourceOptions: DataSourceOptions =
   dbType === 'postgres'
     ? {
         type: 'postgres',
-        host: process.env.DB_HOST || 'localhost',
-        port: Number(process.env.DB_PORT || 5432),
-        username: process.env.DB_USERNAME || 'postgres',
-        password: process.env.DB_PASSWORD || '1234567uiui',
-        database: process.env.DB_NAME || 'MPH',
+        ...(process.env.DATABASE_URL
+          ? { url: process.env.DATABASE_URL }
+          : {
+              host: process.env.DB_HOST || 'localhost',
+              port: Number(process.env.DB_PORT || 5432),
+              username: process.env.DB_USERNAME || 'postgres',
+              password: process.env.DB_PASSWORD || '1234567uiui',
+              database: process.env.DB_NAME || 'MPH',
+            }),
+        ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
         entities: [join(__dirname, '/**/*.entity.{ts,js}')],
         migrations: [join(__dirname, '/migrations/*.{ts,js}')],
         synchronize: false,
@@ -31,4 +36,3 @@ export const dataSourceOptions: DataSourceOptions =
       };
 
 export const AppDataSource = new DataSource(dataSourceOptions);
-export default AppDataSource;

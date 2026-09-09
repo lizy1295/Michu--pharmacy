@@ -20,26 +20,26 @@ export interface BranchGoogleMapProps {
   compact?: boolean;
 }
 
-// Generate custom SVG branded pin data URI for Google Maps Marker (Using Herb/Moss/Gleam/Radiate palette)
+// Generate custom SVG branded pin data URI for Google Maps Marker (Using East Bay / Rum Swizzle palette)
 export function createBrandedPinSvg(selected: boolean = false): string {
-  const primaryColor = selected ? '#1E3006' : '#6A8042'; // MOSS if selected, HERB standard
-  const strokeColor = selected ? '#ED7A13' : '#FFE787';  // RADIATE gold/orange highlight if selected, GLEAM standard
+  const primaryColor = selected ? '#22253F' : '#474C80'; // Midnight East Bay if selected, East Bay standard
+  const strokeColor = selected ? '#F8F7E2' : '#CBD0E4';  // Rum Swizzle highlight if selected, soft cool border
   const strokeWidth = selected ? '3.5' : '2';
 
   const svg = `
   <svg width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
     <filter id="shadow" x="0" y="0" width="44" height="54" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#1E3006" flood-opacity="0.4"/>
+      <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#22253F" flood-opacity="0.35"/>
     </filter>
     <g filter="url(#shadow)">
       <!-- Main Pin Body -->
       <path d="M22 2C11.5066 2 3 10.5066 3 21C3 34.5 19.8 45.8 20.9 46.5C21.5 46.9 22.5 46.9 23.1 46.5C24.2 45.8 41 34.5 41 21C41 10.5066 32.4934 2 22 2Z" 
             fill="${primaryColor}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/>
-      <!-- Circular Core Badge in PEARL -->
-      <circle cx="22" cy="20" r="12" fill="#FFFADD"/>
-      <!-- Michu Pharmacy Logo Mark in MOSS / HERB -->
-      <path d="M19 12H25V14.5L22.8 17.2C22.4 17.7 22.2 18.3 22.2 19V21.5C22.2 22.3 21.5 23 20.7 23H19.3C18.5 23 17.8 22.3 17.8 21.5V19C17.8 18.3 17.6 17.7 17.2 17.2L15 14.5V12H19Z" fill="${selected ? '#ED7A13' : '#1E3006'}"/>
-      <circle cx="22" cy="20" r="2.2" fill="${selected ? '#1E3006' : '#6A8042'}"/>
+      <!-- Circular Core Badge in RUM SWIZZLE -->
+      <circle cx="22" cy="20" r="12" fill="#F8F7E2"/>
+      <!-- Michu Pharmacy Logo Mark in East Bay -->
+      <path d="M19 12H25V14.5L22.8 17.2C22.4 17.7 22.2 18.3 22.2 19V21.5C22.2 22.3 21.5 23 20.7 23H19.3C18.5 23 17.8 22.3 17.8 21.5V19C17.8 18.3 17.6 17.7 17.2 17.2L15 14.5V12H19Z" fill="${selected ? '#22253F' : '#474C80'}"/>
+      <circle cx="22" cy="20" r="2.2" fill="${selected ? '#474C80' : '#22253F'}"/>
     </g>
   </svg>
   `.trim();
@@ -105,25 +105,25 @@ export default function BranchGoogleMap({
   const createInfoWindowContent = (branch: BranchLocation) => {
     const is24Hours = branch.is24Hours;
     return `
-      <div style="padding: 12px 14px; font-family: system-ui, -apple-system, sans-serif; max-width: 275px; color: #1e3006; background: #fffadd; border-radius: 12px;">
+      <div style="padding: 12px 14px; font-family: system-ui, -apple-system, sans-serif; max-width: 275px; color: #22253F; background: #F8F7E2; border: 1px solid #CBD0E4; border-radius: 12px; box-shadow: 0 4px 12px rgba(34,37,63,0.15);">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
-          <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #1e3006;">${branch.name}</h4>
-          ${is24Hours ? '<span style="background: #1e3006; color: #ffe787; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">24/7 OPEN</span>' : ''}
+          <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #474C80;">${branch.name}</h4>
+          ${is24Hours ? '<span style="background: #474C80; color: #F8F7E2; font-size: 9px; font-weight: 800; padding: 2px 7px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">24/7 OPEN</span>' : ''}
         </div>
-        <p style="margin: 0 0 6px 0; font-size: 12px; color: #445427; display: flex; align-items: flex-start; gap: 4px;">
+        <p style="margin: 0 0 6px 0; font-size: 12px; color: #4D5276; display: flex; align-items: flex-start; gap: 4px;">
           <span>📍</span> <span>${branch.address}, ${branch.city}</span>
         </p>
-        <p style="margin: 0 0 6px 0; font-size: 12px; color: #445427; display: flex; align-items: center; gap: 4px;">
+        <p style="margin: 0 0 6px 0; font-size: 12px; color: #4D5276; display: flex; align-items: center; gap: 4px;">
           <span>⏰</span> <span>${branch.hours}</span>
         </p>
-        <p style="margin: 0 0 10px 0; font-size: 12px; color: #6a8042; font-weight: 700;">
-          📞 <a href="tel:${branch.phone}" style="color: #6a8042; text-decoration: none;">${branch.phone}</a>
+        <p style="margin: 0 0 10px 0; font-size: 12px; color: #474C80; font-weight: 700;">
+          📞 <a href="tel:${branch.phone}" style="color: #474C80; text-decoration: none;">${branch.phone}</a>
         </p>
         <div style="display: flex; gap: 6px;">
           <a href="https://www.google.com/maps/dir/?api=1&destination=${branch.lat},${branch.lng}" 
              target="_blank" 
-             rel="noopener noreferrer"
-             style="display: inline-block; flex: 1; text-align: center; background: #ed7a13; color: #ffffff; font-size: 11px; font-weight: 800; padding: 7px 12px; border-radius: 8px; text-decoration: none; box-shadow: 0 2px 4px rgba(237,122,19,0.3);">
+             rel="noopener noreferrer" 
+             style="display: inline-block; flex: 1; text-align: center; background: #474C80; color: #F8F7E2; font-size: 11px; font-weight: 800; padding: 7px 12px; border-radius: 8px; text-decoration: none; box-shadow: 0 2px 4px rgba(71,76,128,0.3);">
             Get Directions ↗
           </a>
         </div>
@@ -299,13 +299,13 @@ export default function BranchGoogleMap({
               <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#9db470" strokeWidth="0.75" strokeDasharray="3 3"/>
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#CBD0E4" strokeWidth="0.75" strokeDasharray="3 3"/>
                   </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
                 {/* Connecting routes between Addis Ababa and regional hubs */}
-                <path d="M 32% 42% Q 40% 55% 48% 68%" fill="none" stroke="#6a8042" strokeWidth="2.5" strokeDasharray="4 4" opacity="0.6"/>
-                <path d="M 32% 42% Q 60% 32% 82% 26%" fill="none" stroke="#ed7a13" strokeWidth="2" strokeDasharray="4 4" opacity="0.5"/>
+                <path d="M 32% 42% Q 40% 55% 48% 68%" fill="none" stroke="#474C80" strokeWidth="2.5" strokeDasharray="4 4" opacity="0.6"/>
+                <path d="M 32% 42% Q 60% 32% 82% 26%" fill="none" stroke="#7A83B8" strokeWidth="2" strokeDasharray="4 4" opacity="0.5"/>
               </svg>
             </div>
 

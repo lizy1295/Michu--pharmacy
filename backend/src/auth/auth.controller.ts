@@ -11,7 +11,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthResponse, AuthUser } from '@michu/shared';
 import { AuthService } from './auth.service';
-import { LoginDto, RefreshTokenDto, RegisterDto } from './dto/auth.dto';
+import { ForgotPasswordDto, LoginDto, RefreshTokenDto, RegisterDto, ResetPasswordDto, VerifyOtpDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
@@ -71,4 +71,27 @@ export class AuthController {
       branchId: user.branchId ?? null,
     };
   }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request a 6-digit password-reset OTP (returns safe anti-enumeration response)' })
+  forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+    return this.authService.forgotPassword(dto.email, dto.phone);
+  }
+
+  @Post('verify-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify 6-digit OTP code and receive a short-lived single-use resetToken' })
+  verifyOtp(@Body() dto: VerifyOtpDto): Promise<{ resetToken: string; message: string }> {
+    return this.authService.verifyOtp(dto.email, dto.otp);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Consume resetToken and update password' })
+  resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+    const token = dto.resetToken ?? dto.token ?? '';
+    return this.authService.resetPassword(token, dto.newPassword);
+  }
 }
+

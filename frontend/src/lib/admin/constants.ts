@@ -19,10 +19,10 @@ export const ADMIN_MENU_ITEMS = [
 ];
 
 export const PHARMACY_COLORS = {
-  primary: '#16A34A',
-  accent: '#22C55E',
-  background: '#F8FAFC',
-  text: '#0F172A',
-  muted: '#64748B',
-  border: '#E2E8F0',
+  primary: '#474C80',
+  accent: '#58609D',
+  background: '#F8F7E2',
+  text: '#22253F',
+  muted: '#6B7192',
+  border: '#E3E0CE',
 };

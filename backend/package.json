@@ -35,10 +35,12 @@
     "@nestjs/swagger": "^11.0.3",
     "@nestjs/typeorm": "^11.0.3",
     "@prisma/client": "^7.8.0",
+    "@types/nodemailer": "^8.0.1",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.11.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "nodemailer": "^10.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.22.0",
@@ -83,7 +85,7 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@michu/shared$": "<rootDir>/../../shared/src/index.ts"
+      "^@michu/shared$": "<rootDir>/../../shared/dist/index.js"
     }
   }
 }

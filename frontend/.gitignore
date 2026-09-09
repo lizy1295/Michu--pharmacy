@@ -1,0 +1,3 @@
+
+# Production build dir (separate from dev to avoid conflicts)
+.next-build/

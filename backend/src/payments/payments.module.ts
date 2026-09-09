@@ -7,15 +7,18 @@ import { PaymentsService } from './payments.service';
 import { PaymentsController } from './payments.controller';
 import { TelebirrService } from './services/telebirr.service';
 import { CbeService } from './services/cbe.service';
+import { ChapaService } from './services/chapa.service';
 import { OrdersModule } from '../orders/orders.module';
+import { ReceiptsModule } from '../receipts/receipts.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Payment, Order, Product]),
     OrdersModule,
+    ReceiptsModule,
   ],
   controllers: [PaymentsController],
-  providers: [PaymentsService, TelebirrService, CbeService],
+  providers: [PaymentsService, TelebirrService, CbeService, ChapaService],
   exports: [PaymentsService],
 })
 export class PaymentsModule {}

@@ -3,29 +3,240 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* ── KAUTAQ Palette ────────────────────────────── */
-    --color-beige:       #DFDFD4; /* Vaporous Beige */
-    --color-autumn:      #DC7000; /* Autumn */
-    --color-black:       #1B1E1C; /* Almost Black */
-    --color-suede:       #6E883F; /* Suede Green */
-    --color-hinterlands: #31410D; /* Hinterlands */
+  /* ── Theme 1: Orange (#F87B1B) & Light Gray (#EEEEEE) (Default) ── */
+  :root,
+  [data-theme="theme-1"] {
+    --primary-50-rgb:   255 245 235;
+    --primary-100-rgb:  255 228 200;
+    --primary-200-rgb:  255 203 152;
+    --primary-300-rgb:  253 170 96;
+    --primary-400-rgb:  250 140 57;
+    --primary-500-rgb:  248 123 27;  /* #F87B1B Base Primary */
+    --primary-600-rgb:  222 93 8;
+    --primary-700-rgb:  176 70 6;
+    --primary-800-rgb:  140 54 7;
+    --primary-900-rgb:  113 44 8;
+    --primary-950-rgb:  61 21 3;
+    --primary-rgb:      248 123 27;
 
-    /* Brand / Semantic Aliases */
-    --color-herb:        #6E883F; /* Suede Green (Primary Action/Brand) */
-    --color-gleam:       #DC7000; /* Autumn (Vibrant Accent/Highlight) */
-    --color-pearl:       #DFDFD4; /* Vaporous Beige (Warm Light Background) */
-    --color-radiate:     #DC7000; /* Autumn (Terracotta/Warm CTA) */
-    --color-moss:        #1B1E1C; /* Almost Black (Deep Dark/Headings) */
+    --bg-50-rgb:        255 255 255;
+    --bg-100-rgb:       249 249 249;
+    --bg-200-rgb:       238 238 238; /* #EEEEEE Base Background */
+    --bg-300-rgb:       220 220 220;
+    --bg-400-rgb:       192 192 192;
+    --bg-500-rgb:       160 160 160;
+    --bg-600-rgb:       128 128 128;
+    --bg-700-rgb:       96 96 96;
+    --bg-800-rgb:       64 64 64;
+    --bg-900-rgb:       32 32 32;
+    --bg-rgb:           238 238 238;
+
+    --text-dark-rgb:    28 20 10;
+    --text-body-rgb:    72 60 45;
+    --text-muted-rgb:   120 105 88;
+    --border-rgb:       208 200 190;
+
+    --color-primary:    #F87B1B;
+    --color-secondary:  #EEEEEE;
+    --color-background: #EEEEEE;
+  }
+
+  /* ── Theme 2: Apple Green (#708D23) & Ivory Cream (#F9F5EB) ── */
+  [data-theme="theme-2"] {
+    --primary-50-rgb:   245 248 237;
+    --primary-100-rgb:  233 240 216;
+    --primary-200-rgb:  213 228 180;
+    --primary-300-rgb:  188 212 138;
+    --primary-400-rgb:  151 188 82;
+    --primary-500-rgb:  127 164 51;
+    --primary-600-rgb:  112 141 35;  /* #708D23 Base Primary */
+    --primary-700-rgb:  86 108 30;
+    --primary-800-rgb:  66 83 28;
+    --primary-900-rgb:  52 66 25;
+    --primary-950-rgb:  28 36 13;
+    --primary-rgb:      112 141 35;
+
+    --bg-50-rgb:        253 250 245;
+    --bg-100-rgb:       250 246 237;
+    --bg-200-rgb:       249 245 235; /* #F9F5EB Base Background */
+    --bg-300-rgb:       239 230 210;
+    --bg-400-rgb:       226 210 178;
+    --bg-500-rgb:       203 182 138;
+    --bg-600-rgb:       172 151 106;
+    --bg-700-rgb:       138 119 80;
+    --bg-800-rgb:       102 86 56;
+    --bg-900-rgb:       68 56 36;
+    --bg-rgb:           249 245 235;
+
+    --text-dark-rgb:    40 53 16;
+    --text-body-rgb:    75 88 56;
+    --text-muted-rgb:   106 120 85;
+    --border-rgb:       234 224 203;
+
+    --color-primary:    #708D23;
+    --color-secondary:  #F9F5EB;
+    --color-background: #F9F5EB;
+  }
+
+  /* ── Theme 3: Sax Blue (#5BB8E8) & White (#FFFFFF) ── */
+  [data-theme="theme-3"] {
+    --primary-50-rgb:   240 250 255;
+    --primary-100-rgb:  219 241 253;
+    --primary-200-rgb:  186 228 249;
+    --primary-300-rgb:  145 211 242;
+    --primary-400-rgb:  100 192 235;
+    --primary-500-rgb:  91 184 232;  /* #5BB8E8 Base Primary */
+    --primary-600-rgb:  55 158 215;
+    --primary-700-rgb:  30 128 186;
+    --primary-800-rgb:  22 101 149;
+    --primary-900-rgb:  18 80 119;
+    --primary-950-rgb:  10 47 73;
+    --primary-rgb:      91 184 232;
+
+    --bg-50-rgb:        255 255 255;
+    --bg-100-rgb:       250 252 255;
+    --bg-200-rgb:       240 247 253; /* White/near-white Base Background */
+    --bg-300-rgb:       220 238 250;
+    --bg-400-rgb:       190 222 244;
+    --bg-500-rgb:       148 200 232;
+    --bg-600-rgb:       100 168 208;
+    --bg-700-rgb:       65 130 172;
+    --bg-800-rgb:       40 95 135;
+    --bg-900-rgb:       20 58 90;
+    --bg-rgb:           255 255 255;
+
+    --text-dark-rgb:    10 35 60;
+    --text-body-rgb:    35 75 110;
+    --text-muted-rgb:   80 120 155;
+    --border-rgb:       190 222 244;
+
+    --color-primary:    #5BB8E8;
+    --color-secondary:  #FFFFFF;
+    --color-background: #FFFFFF;
+  }
+
+
+  /* ── Theme 4: Lime (#8DC63F) & White (#FFFFFF) ── */
+  [data-theme="theme-4"] {
+    --primary-50-rgb:   244 251 232;
+    --primary-100-rgb:  232 246 207;
+    --primary-200-rgb:  210 237 168;
+    --primary-300-rgb:  183 223 122;
+    --primary-400-rgb:  154 206 76;
+    --primary-500-rgb:  141 198 63;  /* #8DC63F Base Primary */
+    --primary-600-rgb:  109 160 38;
+    --primary-700-rgb:  82 122 27;
+    --primary-800-rgb:  60 90 20;
+    --primary-900-rgb:  44 66 15;
+    --primary-950-rgb:  22 34 7;
+    --primary-rgb:      141 198 63;
+
+    --bg-50-rgb:        255 255 255;
+    --bg-100-rgb:       250 254 245;
+    --bg-200-rgb:       240 250 230; /* White/near-white Base Background */
+    --bg-300-rgb:       220 240 200;
+    --bg-400-rgb:       190 224 160;
+    --bg-500-rgb:       155 200 118;
+    --bg-600-rgb:       110 160 76;
+    --bg-700-rgb:       75 120 48;
+    --bg-800-rgb:       48 82 28;
+    --bg-900-rgb:       28 50 15;
+    --bg-rgb:           255 255 255;
+
+    --text-dark-rgb:    24 42 8;
+    --text-body-rgb:    55 90 30;
+    --text-muted-rgb:   95 130 65;
+    --border-rgb:       195 228 150;
+
+    --color-primary:    #8DC63F;
+    --color-secondary:  #FFFFFF;
+    --color-background: #FFFFFF;
+  }
+
+  /* ── Theme 5: Pizazz (#FF8F00) & Pearl Lusta (#FDF9E0) ── */
+  [data-theme="theme-5"] {
+    --primary-50-rgb:   255 247 230;
+    --primary-100-rgb:  255 235 190;
+    --primary-200-rgb:  255 215 140;
+    --primary-300-rgb:  255 188 80;
+    --primary-400-rgb:  255 163 30;
+    --primary-500-rgb:  255 143 0;   /* #FF8F00 Base Primary */
+    --primary-600-rgb:  230 110 0;
+    --primary-700-rgb:  184 82 0;
+    --primary-800-rgb:  140 60 0;
+    --primary-900-rgb:  110 45 0;
+    --primary-950-rgb:  60 22 0;
+    --primary-rgb:      255 143 0;
+
+    --bg-50-rgb:        255 255 250;
+    --bg-100-rgb:       254 252 238;
+    --bg-200-rgb:       253 249 224; /* #FDF9E0 Pearl Lusta */
+    --bg-300-rgb:       250 240 190;
+    --bg-400-rgb:       245 225 150;
+    --bg-500-rgb:       235 204 100;
+    --bg-600-rgb:       210 175 60;
+    --bg-700-rgb:       165 135 35;
+    --bg-800-rgb:       120 96 20;
+    --bg-900-rgb:       78 62 12;
+    --bg-rgb:           253 249 224;
+
+    --text-dark-rgb:    60 30 0;
+    --text-body-rgb:    110 60 10;
+    --text-muted-rgb:   160 100 40;
+    --border-rgb:       240 210 140;
+
+    --color-primary:    #FF8F00;
+    --color-secondary:  #FDF9E0;
+    --color-background: #FDF9E0;
+  }
+
+  /* ── Theme 6: Lavender (#9B72CF) & White (#FFFFFF) ── */
+  [data-theme="theme-6"] {
+    --primary-50-rgb:   246 241 255;
+    --primary-100-rgb:  236 225 254;
+    --primary-200-rgb:  218 200 252;
+    --primary-300-rgb:  195 165 246;
+    --primary-400-rgb:  170 130 238;
+    --primary-500-rgb:  155 114 207; /* #9B72CF Base Primary */
+    --primary-600-rgb:  128 86 180;
+    --primary-700-rgb:  100 62 148;
+    --primary-800-rgb:  76 45 118;
+    --primary-900-rgb:  57 33 92;
+    --primary-950-rgb:  30 15 55;
+    --primary-rgb:      155 114 207;
+
+    --bg-50-rgb:        255 255 255;
+    --bg-100-rgb:       252 250 255;
+    --bg-200-rgb:       245 240 255; /* White/near-white Base Background */
+    --bg-300-rgb:       232 222 252;
+    --bg-400-rgb:       212 196 246;
+    --bg-500-rgb:       185 162 235;
+    --bg-600-rgb:       150 120 210;
+    --bg-700-rgb:       110 82 172;
+    --bg-800-rgb:       74 52 130;
+    --bg-900-rgb:       48 30 90;
+    --bg-rgb:           255 255 255;
+
+    --text-dark-rgb:    30 15 55;
+    --text-body-rgb:    75 45 120;
+    --text-muted-rgb:   120 90 165;
+    --border-rgb:       210 190 245;
+
+    --color-primary:    #9B72CF;
+    --color-secondary:  #FFFFFF;
+    --color-background: #FFFFFF;
   }
 
   ::selection {
-    background-color: #DC7000; /* Autumn */
-    color: #FFFFFF;
+    background-color: rgb(var(--primary-600-rgb));
+    color: rgb(var(--bg-200-rgb));
   }
 
   body {
-    @apply bg-[#DFDFD4] text-[#1B1E1C] antialiased;
-    /* Vaporous Beige base, Almost Black text */
+    background-color: rgb(var(--bg-rgb));
+    color: rgb(var(--text-dark-rgb));
+    transition: background-color 0.2s ease, color 0.2s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }

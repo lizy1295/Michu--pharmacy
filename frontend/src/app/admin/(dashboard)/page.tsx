@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { getDashboardStats, getTopProducts, DashboardStats, TopProduct } from '@/lib/api/admin';
 import { getOrders, updateOrderStatus, Order } from '@/lib/api/orders';
@@ -49,7 +49,7 @@ export default function AdminDashboardPage() {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
-  const fetchData = async (isManual = false) => {
+  const fetchData = useCallback(async (isManual = false) => {
     if (isManual) setRefreshing(true);
     try {
       const [statsData, products, ordersRes] = await Promise.all([
@@ -69,7 +69,7 @@ export default function AdminDashboardPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     try {
@@ -86,7 +86,7 @@ export default function AdminDashboardPage() {
       // ignore
     }
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const formatCurrency = (val?: number) => {
     return new Intl.NumberFormat('en-ET', { style: 'currency', currency: 'ETB', minimumFractionDigits: 0 }).format(val || 0);

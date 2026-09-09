@@ -3,32 +3,35 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { getOrderById, updateOrderStatus, Order } from '@/lib/api/orders';
-import { getPaymentByOrderId, PaymentDetails } from '@/lib/api/payments';
+import { getPaymentByOrderId, getReceiptByOrderId, PaymentDetails, ReceiptDetails } from '@/lib/api/payments';
 
 export default function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const [order, setOrder] = useState<Order | null>(null);
   const [payment, setPayment] = useState<PaymentDetails | null>(null);
+  const [receipt, setReceipt] = useState<ReceiptDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const fetchDetails = async () => {
-    try {
-      setLoading(true);
-      const orderData = await getOrderById(Number(resolvedParams.id));
-      setOrder(orderData);
-
-      const paymentData = await getPaymentByOrderId(orderData.id);
-      setPayment(paymentData);
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Failed to load order details');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchDetails = async () => {
+      try {
+        setLoading(true);
+        const orderData = await getOrderById(Number(resolvedParams.id));
+        setOrder(orderData);
+
+        const paymentData = await getPaymentByOrderId(orderData.id);
+        setPayment(paymentData);
+
+        const receiptData = await getReceiptByOrderId(orderData.id);
+        setReceipt(receiptData);
+      } catch (err: any) {
+        setErrorMessage(err?.message || 'Failed to load order details');
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchDetails();
   }, [resolvedParams.id]);
 
@@ -222,7 +225,43 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                   <span className="font-mono text-emerald-600">{Number(order.total).toFixed(2)} ETB</span>
                 </div>
               </dl>
+
+              {order.paymentStatus === 'paid' && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-start gap-2">
+                  <span className="text-base">✅</span>
+                  <div>
+                    <strong className="block font-bold">Auto-Approved by Chapa Gateway</strong>
+                    <span className="text-[11px] text-emerald-700">Payment was cryptographically verified. No manual approval required.</span>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Phase 4: Generated Digital Receipt */}
+            {receipt && (
+              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-3 text-xs">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h2 className="text-base font-bold text-slate-900">Official Digital Receipt</h2>
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px] uppercase">
+                    ISSUED
+                  </span>
+                </div>
+                <dl className="space-y-2">
+                  <div>
+                    <dt className="text-slate-400 font-bold uppercase text-[10px]">Receipt Number</dt>
+                    <dd className="font-mono font-extrabold text-emerald-700">{receipt.receiptNumber}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate-400 font-bold uppercase text-[10px]">Date Issued</dt>
+                    <dd className="font-mono text-slate-700">{new Date(receipt.issuedAt).toLocaleString()}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate-400 font-bold uppercase text-[10px]">Total Received</dt>
+                    <dd className="font-mono font-extrabold text-slate-900">{Number(receipt.total).toFixed(2)} {receipt.currency}</dd>
+                  </div>
+                </dl>
+              </div>
+            )}
 
             {/* Order Timeline */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-3 text-xs">

@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsString,
   MinLength,
+  Length,
 } from 'class-validator';
 import { SanitizeString } from '../../common/utils/sanitize.util';
 
@@ -58,3 +59,43 @@ export class RefreshTokenDto {
   @IsString()
   refreshToken!: string;
 }
+
+export class ForgotPasswordDto {
+  @ApiProperty({ example: 'customer@example.com' })
+  @IsEmail()
+  email!: string;
+
+  @ApiPropertyOptional({ example: '+251912345678', description: 'Optional phone number for SMS delivery' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+}
+
+export class VerifyOtpDto {
+  @ApiProperty({ example: 'customer@example.com' })
+  @IsEmail()
+  email!: string;
+
+  @ApiProperty({ example: '123456', minLength: 6, maxLength: 6, description: '6-digit OTP verification code' })
+  @IsString()
+  @Length(6, 6)
+  otp!: string;
+}
+
+export class ResetPasswordDto {
+  @ApiPropertyOptional({ description: 'Short-lived single-use reset token obtained after verifying OTP' })
+  @IsOptional()
+  @IsString()
+  resetToken?: string;
+
+  @ApiPropertyOptional({ description: 'Backward-compatible alias for resetToken' })
+  @IsOptional()
+  @IsString()
+  token?: string;
+
+  @ApiProperty({ minLength: 8, example: 'NewSecurePass123!' })
+  @IsString()
+  @MinLength(8)
+  newPassword!: string;
+}
+
