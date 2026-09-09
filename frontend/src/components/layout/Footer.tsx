@@ -195,8 +195,8 @@ export function Footer() {
                 <span className="text-radiate text-sm mt-0.5">✉️</span>
                 <div>
                   <p className="font-bold text-pearl">Email Inquiries:</p>
-                  <a href="mailto:support@michupharmacy.com" className="text-pearl-200/60 hover:text-gleam transition text-[11px]">
-                    support@michupharmacy.com
+                  <a href="mailto:mkoo7891@gmail.com" className="text-pearl-200/60 hover:text-gleam transition text-[11px]">
+                    mkoo7891@gmail.com
                   </a>
                 </div>
               </div>
@@ -208,28 +208,28 @@ export function Footer() {
                 Follow &amp; Connect With Us
               </p>
               <div className="flex flex-wrap items-center gap-2">
-                {/* Telegram */}
+                {/* Telegram — links to phone number contact */}
                 <a
-                  href="https://t.me/michupharmacy"
+                  href="https://t.me/+251904040364"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 rounded-xl bg-moss-950/60 border border-herb-700/50 hover:border-gleam hover:bg-gleam/10 hover:text-gleam flex items-center justify-center text-pearl-200/60 transition"
                   aria-label="Telegram"
-                  title="Michu Pharmacy on Telegram"
+                  title="Chat with Michu Pharmacy on Telegram"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
                   </svg>
                 </a>
 
-                {/* Facebook */}
+                {/* Facebook — milla phar */}
                 <a
-                  href="https://facebook.com/michupharmacy"
+                  href="https://www.facebook.com/search/top?q=milla%20phar"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 rounded-xl bg-moss-950/60 border border-herb-700/50 hover:border-gleam hover:bg-gleam/10 hover:text-gleam flex items-center justify-center text-pearl-200/60 transition"
                   aria-label="Facebook"
-                  title="Michu Pharmacy on Facebook"
+                  title="Michu Pharmacy (milla phar) on Facebook"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -250,14 +250,14 @@ export function Footer() {
                   </svg>
                 </a>
 
-                {/* LinkedIn */}
+                {/* LinkedIn — Million Negasa */}
                 <a
-                  href="https://linkedin.com/company/michupharmacy"
+                  href="https://www.linkedin.com/search/results/people/?keywords=Million%20Negasa"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-8 h-8 rounded-xl bg-moss-950/60 border border-herb-700/50 hover:border-gleam hover:bg-gleam/10 hover:text-gleam flex items-center justify-center text-pearl-200/60 transition"
                   aria-label="LinkedIn"
-                  title="Michu Pharmacy on LinkedIn"
+                  title="Million Negasa on LinkedIn"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                     <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>

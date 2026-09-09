@@ -15,13 +15,21 @@ export class MailService {
     const pass = this.configService.get<string>('MAIL_PASS');
 
     if (host && user && pass) {
-      this.transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure: port === 465,
-        auth: { user, pass },
-      });
-      this.logger.log(`Mail transport configured → ${host}:${port}`);
+      if (host === 'smtp.gmail.com' || user.toLowerCase().endsWith('@gmail.com')) {
+        this.transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: { user, pass },
+        });
+        this.logger.log(`Gmail SMTP transport configured for ${user}`);
+      } else {
+        this.transporter = nodemailer.createTransport({
+          host,
+          port,
+          secure: port === 465,
+          auth: { user, pass },
+        });
+        this.logger.log(`Mail transport configured → ${host}:${port}`);
+      }
     } else {
       this.logger.warn(
         'MAIL_HOST / MAIL_USER / MAIL_PASS not configured. ' +
@@ -35,9 +43,10 @@ export class MailService {
    * Silently logs if transport is not configured (dev fallback).
    */
   async sendPasswordReset(to: string, resetUrl: string): Promise<void> {
+    const mailUser = this.configService.get<string>('MAIL_USER');
     const from =
-      this.configService.get<string>('MAIL_FROM') ??
-      '"Michu Pharmacy" <noreply@michupharmacy.com>';
+      this.configService.get<string>('MAIL_FROM') ||
+      (mailUser ? `"Michu Pharmacy" <${mailUser}>` : '"Michu Pharmacy" <noreply@michupharmacy.com>');
 
     const html = `
 <!DOCTYPE html>
@@ -132,9 +141,10 @@ export class MailService {
    * Silently logs OTP to console in dev mode if transporter is not configured.
    */
   async sendPasswordResetOtp(to: string, otp: string): Promise<void> {
+    const mailUser = this.configService.get<string>('MAIL_USER');
     const from =
-      this.configService.get<string>('MAIL_FROM') ??
-      '"Michu Pharmacy" <noreply@michupharmacy.com>';
+      this.configService.get<string>('MAIL_FROM') ||
+      (mailUser ? `"Michu Pharmacy" <${mailUser}>` : '"Michu Pharmacy" <noreply@michupharmacy.com>');
 
     const html = `
 <!DOCTYPE html>
