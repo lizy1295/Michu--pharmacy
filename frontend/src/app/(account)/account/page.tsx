@@ -276,6 +276,12 @@ export default function AccountPage() {
                 <dt className="text-xs font-bold text-gray-400 uppercase">{t('dashboard.registered_email')}</dt>
                 <dd className="font-semibold text-gray-700 mt-0.5">{user.email}</dd>
               </div>
+              {user.phone && (
+                <div>
+                  <dt className="text-xs font-bold text-gray-400 uppercase">{t('auth.phone_label')}</dt>
+                  <dd className="font-semibold text-gray-700 mt-0.5">{user.phone}</dd>
+                </div>
+              )}
             </dl>
 
             <button

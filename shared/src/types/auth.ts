@@ -12,6 +12,7 @@ export interface AuthUser {
   lastName: string;
   role: UserRole;
   branchId: string | null;
+  phone?: string | null;
 }
 
 export interface LoginRequest {

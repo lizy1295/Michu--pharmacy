@@ -19,7 +19,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
 
     const shared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging' | 'migrations' | 'migrationsRun'> = {
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: !isProduction,
       logging: !isProduction,
       migrations: [
         InitialSchema1725440000000,

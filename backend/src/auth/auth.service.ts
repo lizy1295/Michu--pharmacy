@@ -223,7 +223,7 @@ export class AuthService {
    * Generates a 6-digit numeric OTP, stores SHA-256 hash with 10-minute TTL,
    * dispatches via email/SMS, and returns an anti-enumeration safe response.
    */
-  async forgotPassword(email: string, phone?: string): Promise<{ message: string }> {
+  async forgotPassword(email?: string, phone?: string): Promise<{ message: string }> {
     const safeResponse = {
       message: 'If that account is registered, a 6-digit verification code has been sent.',
     };
@@ -278,9 +278,13 @@ export class AuthService {
    * Enforces 10-minute expiry and max 3 attempts rate-limiting.
    * If valid, generates a short-lived single-use resetToken.
    */
-  async verifyOtp(email: string, otp: string): Promise<{ resetToken: string; message: string }> {
+  async verifyOtp(email?: string, phone?: string, otp?: string): Promise<{ resetToken: string; message: string }> {
     const cleanEmail = email ? email.trim().toLowerCase() : '';
-    const user = await this.usersService.findByEmail(cleanEmail);
+    let user = cleanEmail ? await this.usersService.findByEmail(cleanEmail) : null;
+
+    if (!user && phone) {
+      user = await this.usersService.findByPhone(phone.trim());
+    }
 
     if (!user) {
       throw new BadRequestException('Invalid or expired verification code.');

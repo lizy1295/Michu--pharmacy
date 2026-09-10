@@ -61,9 +61,10 @@ export class RefreshTokenDto {
 }
 
 export class ForgotPasswordDto {
-  @ApiProperty({ example: 'customer@example.com' })
-  @IsEmail()
-  email!: string;
+  @ApiPropertyOptional({ example: 'customer@example.com' })
+  @IsOptional()
+  @IsString()
+  email?: string;
 
   @ApiPropertyOptional({ example: '+251912345678', description: 'Optional phone number for SMS delivery' })
   @IsOptional()
@@ -72,9 +73,15 @@ export class ForgotPasswordDto {
 }
 
 export class VerifyOtpDto {
-  @ApiProperty({ example: 'customer@example.com' })
-  @IsEmail()
-  email!: string;
+  @ApiPropertyOptional({ example: 'customer@example.com' })
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @ApiPropertyOptional({ example: '+251912345678', description: 'Optional phone number for SMS verification' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
 
   @ApiProperty({ example: '123456', minLength: 6, maxLength: 6, description: '6-digit OTP verification code' })
   @IsString()

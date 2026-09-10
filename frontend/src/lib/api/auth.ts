@@ -87,8 +87,8 @@ export async function getMe(): Promise<AuthUser> {
   return request<AuthUser>('/auth/me');
 }
 
-export async function forgotPassword(email: string, phone?: string): Promise<{ message: string }> {
-  // Always returns the same safe message — never throws on unknown email
+export async function forgotPassword(email?: string, phone?: string): Promise<{ message: string }> {
+  // Always returns the same safe message — never throws on unknown email/phone
   return request<{ message: string }>('/auth/forgot-password', {
     method: 'POST',
     body: JSON.stringify({ email, phone }),
@@ -96,12 +96,13 @@ export async function forgotPassword(email: string, phone?: string): Promise<{ m
 }
 
 export async function verifyOtp(
-  email: string,
-  otp: string,
+  email?: string,
+  otp?: string,
+  phone?: string,
 ): Promise<{ resetToken: string; message: string }> {
   return request<{ resetToken: string; message: string }>('/auth/verify-otp', {
     method: 'POST',
-    body: JSON.stringify({ email, otp }),
+    body: JSON.stringify({ email, phone, otp }),
   });
 }
 

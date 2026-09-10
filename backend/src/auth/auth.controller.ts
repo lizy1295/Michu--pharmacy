@@ -69,6 +69,7 @@ export class AuthController {
       lastName: user.lastName,
       role: user.role as any,
       branchId: user.branchId ?? null,
+      phone: user.phone ?? null,
     };
   }
 
@@ -83,7 +84,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify 6-digit OTP code and receive a short-lived single-use resetToken' })
   verifyOtp(@Body() dto: VerifyOtpDto): Promise<{ resetToken: string; message: string }> {
-    return this.authService.verifyOtp(dto.email, dto.otp);
+    return this.authService.verifyOtp(dto.email, dto.phone, dto.otp);
   }
 
   @Post('reset-password')

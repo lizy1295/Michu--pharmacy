@@ -47,10 +47,23 @@ export default async function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        {/* Anti-flash inline script for instant theme loading before hydration */}
+        {/* Anti-flash inline script for theme loading + Chrome Extension error handler */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('mph_theme')||'theme-1';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('mph_theme')||'theme-1';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+            if (typeof window !== 'undefined') {
+              window.addEventListener('error', function(e) {
+                if (e.filename && e.filename.includes('chrome-extension')) {
+                  e.stopImmediatePropagation();
+                }
+              }, true);
+              window.addEventListener('unhandledrejection', function(e) {
+                const reason = e.reason ? (e.reason.message || e.reason.stack || String(e.reason)) : '';
+                if (reason.includes('MetaMask') || reason.includes('chrome-extension')) {
+                  e.preventDefault();
+                }
+              });
+            }`,
           }}
         />
       </head>
