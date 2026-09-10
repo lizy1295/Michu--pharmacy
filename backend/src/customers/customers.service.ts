@@ -30,7 +30,7 @@ export class CustomersService {
     return {
       id: user.id,
       name: `${user.firstName} ${user.lastName}`.trim(),
-      email: user.email,
+      email: user.email ?? '',
       phone: user.phone ?? '',
       address: '',
       totalOrders: 0,

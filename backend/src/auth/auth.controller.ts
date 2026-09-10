@@ -64,7 +64,7 @@ export class AuthController {
 
     return {
       id: String(user.id),
-      email: user.email,
+      email: user.email ?? null,
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role as any,

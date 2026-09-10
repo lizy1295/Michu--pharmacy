@@ -42,12 +42,28 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
-    const existing = await this.usersService.findByEmail(dto.email);
-    if (existing) {
-      throw new ConflictException('Email already registered');
+    const email = dto.email?.trim() || undefined;
+    const phone = dto.phone?.trim() || undefined;
+
+    if (!email && !phone) {
+      throw new BadRequestException('Either email or phone number is required to register');
     }
 
-    const user = await this.usersService.createCustomer(dto);
+    if (email) {
+      const existing = await this.usersService.findByEmail(email);
+      if (existing) throw new ConflictException('Email already registered');
+    }
+
+    if (phone) {
+      const existing = await this.usersService.findByPhone(phone);
+      if (existing) throw new ConflictException('Phone number already registered');
+    }
+
+    const user = await this.usersService.createCustomer({
+      ...dto,
+      email,
+      phone,
+    });
     return this.buildAuthResponse(user);
   }
 
@@ -143,7 +159,7 @@ export class AuthService {
   private toJwtPayload(user: User): Omit<JwtPayload, 'type'> {
     return {
       sub: String(user.id),
-      email: user.email,
+      email: user.email ?? null,
       role: user.role as any,
       branchId: user.branchId ?? null,
     };
@@ -152,11 +168,12 @@ export class AuthService {
   private toAuthUser(user: User): AuthUser {
     return {
       id: String(user.id),
-      email: user.email,
+      email: user.email ?? null,
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role as any,
       branchId: user.branchId ?? null,
+      phone: user.phone ?? null,
     };
   }
 
@@ -264,7 +281,7 @@ export class AuthService {
     // Dispatch OTP via notification service (email + SMS ready)
     void this.notificationService.sendOtp(
       {
-        email: user.email,
+        email: user.email ?? undefined,
         phone: user.phone ?? phone,
       },
       rawOtp,

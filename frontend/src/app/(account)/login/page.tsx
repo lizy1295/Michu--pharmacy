@@ -7,9 +7,29 @@ import { useLanguage } from '@/context/LanguageContext';
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
+  // Login channel: which field the user fills in for login
+  const [loginChannel, setLoginChannel] = useState<'EMAIL' | 'PHONE'>('EMAIL');
+  // Register channel: which field the user fills in for registration
+  const [registerChannel, setRegisterChannel] = useState<'EMAIL' | 'PHONE'>('EMAIL');
+  // Controlled input values — completely separate so no cross-fill happens
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPhone, setLoginPhone] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPhone, setRegPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
+
+  function switchMode(toRegister: boolean) {
+    setIsRegister(toRegister);
+    setError(null);
+    setLoginChannel('EMAIL');
+    setRegisterChannel('EMAIL');
+    setLoginEmail('');
+    setLoginPhone('');
+    setRegEmail('');
+    setRegPhone('');
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -17,20 +37,23 @@ export default function LoginPage() {
     setLoading(true);
 
     const form = new FormData(e.currentTarget);
-    const email = form.get('email') as string;
     const password = form.get('password') as string;
 
     try {
       if (isRegister) {
         await register({
-          email,
+          email: registerChannel === 'EMAIL' ? regEmail.trim() || undefined : undefined,
+          phone: registerChannel === 'PHONE' ? regPhone.trim() || undefined : undefined,
           password,
           firstName: form.get('firstName') as string,
           lastName: form.get('lastName') as string,
-          phone: (form.get('phone') as string)?.trim() || undefined,
         });
       } else {
-        await login({ email, password });
+        if (loginChannel === 'EMAIL') {
+          await login({ email: loginEmail.trim(), password });
+        } else {
+          await login({ phone: loginPhone.trim(), password });
+        }
       }
       window.location.href = '/account';
     } catch (err) {
@@ -78,9 +101,9 @@ export default function LoginPage() {
         <div className="w-full">
           <div className="bg-gray-50 border border-neutral-100 rounded-2xl p-6 md:p-8 flex flex-col items-center">
             
-            {/* Green styled Lock Icon Badge */}
+            {/* Icon Badge */}
             <div className="w-14 h-14 rounded-2xl bg-brand-50 border border-brand-100 text-brand-600 flex items-center justify-center shadow-sm mb-4">
-              <svg className="w-6.5 h-6.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-6.5 h-6.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
@@ -93,8 +116,11 @@ export default function LoginPage() {
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 w-full space-y-4">
+
+              {/* ── REGISTER FORM ── */}
               {isRegister && (
                 <>
+                  {/* First + Last Name */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="firstName" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">
@@ -124,43 +150,160 @@ export default function LoginPage() {
                     </div>
                   </div>
 
+                  {/* Channel Switcher: Email or Phone */}
                   <div>
-                    <label htmlFor="phone" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      {t('auth.phone_label')}
-                    </label>
-                    <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      required
-                      placeholder="0911234567 or +251911234567"
-                      className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none placeholder:text-gray-400 font-medium"
-                    />
-                    <p className="text-[10px] text-gray-400 mt-1">Required for SMS verification & password recovery</p>
+                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                      Register with
+                    </p>
+                    <div className="grid grid-cols-2 p-1 bg-neutral-100 rounded-2xl mb-3">
+                      <button
+                        type="button"
+                        onClick={() => { setRegisterChannel('EMAIL'); setError(null); }}
+                        className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
+                          registerChannel === 'EMAIL'
+                            ? 'bg-white text-brand-700 shadow-sm'
+                            : 'text-neutral-500 hover:text-neutral-800'
+                        }`}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Email
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setRegisterChannel('PHONE'); setError(null); }}
+                        className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
+                          registerChannel === 'PHONE'
+                            ? 'bg-white text-brand-700 shadow-sm'
+                            : 'text-neutral-500 hover:text-neutral-800'
+                        }`}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Phone (SMS)
+                      </button>
+                    </div>
+
+                    {/* Only one renders at a time — controlled state prevents cross-fill */}
+                    {registerChannel === 'EMAIL' ? (
+                      <div>
+                        <label htmlFor="reg-email" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                          {t('auth.email_label')}
+                        </label>
+                        <input
+                          id="reg-email"
+                          name="reg-email"
+                          type="email"
+                          required
+                          autoFocus
+                          autoComplete="off"
+                          value={regEmail}
+                          onChange={(e) => setRegEmail(e.target.value)}
+                          placeholder="you@example.com"
+                          className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none placeholder:text-gray-400"
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <label htmlFor="reg-phone" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                          {t('auth.phone_label')}
+                        </label>
+                        <input
+                          id="reg-phone"
+                          name="reg-phone"
+                          type="tel"
+                          required
+                          autoFocus
+                          autoComplete="off"
+                          value={regPhone}
+                          onChange={(e) => setRegPhone(e.target.value)}
+                          placeholder="0911234567 or +251911234567"
+                          className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none placeholder:text-gray-400"
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1">Ethiopian mobile number for SMS verification</p>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
 
-              <div>
-                <label htmlFor="email" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  {t('auth.email_label')}
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="e.g. 0911965779 or email@domain.com"
-                  className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none placeholder:text-gray-400 font-medium"
-                />
-              </div>
+              {/* ── LOGIN FORM: tab switcher for Email or Phone ── */}
+              {!isRegister && (
+                <div>
+                  <div className="grid grid-cols-2 p-1 bg-neutral-100 rounded-2xl mb-3">
+                    <button
+                      type="button"
+                      onClick={() => { setLoginChannel('EMAIL'); setLoginEmail(''); setLoginPhone(''); }}
+                      className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
+                        loginChannel === 'EMAIL'
+                          ? 'bg-white text-brand-700 shadow-sm'
+                          : 'text-neutral-500 hover:text-neutral-800'
+                      }`}
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      Email
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setLoginChannel('PHONE'); setLoginEmail(''); setLoginPhone(''); }}
+                      className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
+                        loginChannel === 'PHONE'
+                          ? 'bg-white text-brand-700 shadow-sm'
+                          : 'text-neutral-500 hover:text-neutral-800'
+                      }`}
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      Phone Number
+                    </button>
+                  </div>
 
+                  {loginChannel === 'EMAIL' ? (
+                    <div>
+                      <label htmlFor="login-email" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                        {t('auth.email_label')}
+                      </label>
+                      <input
+                        id="login-email"
+                        name="login-email"
+                        type="email"
+                        required
+                        autoFocus
+                        autoComplete="off"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none placeholder:text-gray-400"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label htmlFor="login-phone" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                        {t('auth.phone_label')}
+                      </label>
+                      <input
+                        id="login-phone"
+                        name="login-phone"
+                        type="tel"
+                        required
+                        autoFocus
+                        autoComplete="off"
+                        value={loginPhone}
+                        onChange={(e) => setLoginPhone(e.target.value)}
+                        placeholder="0911234567 or +251911234567"
+                        className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none placeholder:text-gray-400"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Password */}
               <div>
                 <label htmlFor="password" className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,7 +322,7 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Forgot password link — only shown in sign-in mode */}
+              {/* Forgot password — login only */}
               {!isRegister && (
                 <div className="text-right -mt-1">
                   <Link
@@ -226,7 +369,7 @@ export default function LoginPage() {
                 {isRegister ? t('auth.have_account') : t('auth.no_account')}{' '}
                 <button
                   type="button"
-                  onClick={() => setIsRegister(!isRegister)}
+                  onClick={() => switchMode(!isRegister)}
                   className="text-brand-600 hover:text-brand-800 font-bold hover:underline"
                 >
                   {isRegister ? t('auth.login_link') : t('auth.register_link')}

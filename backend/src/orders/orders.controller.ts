@@ -45,7 +45,7 @@ export class OrdersController {
     @Query('customerId') customerId?: string,
   ) {
     if (!isStaffRole(user.role)) {
-      return this.ordersService.findByCustomer(user.email, user.sub ? Number(user.sub) : undefined);
+      return this.ordersService.findByCustomer(user.email ?? undefined, user.sub ? Number(user.sub) : undefined);
     }
     return this.ordersService.findByCustomer(email, customerId ? Number(customerId) : undefined);
   }
@@ -59,7 +59,7 @@ export class OrdersController {
     if (!isStaffRole(user.role)) {
       const isOwner =
         (order.customerId && Number(order.customerId) === Number(user.sub)) ||
-        (order.customerEmail && order.customerEmail.toLowerCase() === user.email.toLowerCase());
+        (order.customerEmail && user.email && order.customerEmail.toLowerCase() === user.email.toLowerCase());
       if (!isOwner) {
         throw new ForbiddenException('You are not authorized to view this order.');
       }
@@ -75,7 +75,9 @@ export class OrdersController {
   create(@Body() dto: CreateOrderDto, @CurrentUser() user: JwtPayload) {
     if (user && !isStaffRole(user.role)) {
       dto.customerId = Number(user.sub);
-      dto.customerEmail = user.email;
+      if (user.email) {
+        dto.customerEmail = user.email;
+      }
     }
     return this.ordersService.create(dto);
   }

@@ -5,13 +5,16 @@ import {
   IsString,
   MinLength,
   Length,
+  ValidateIf,
 } from 'class-validator';
 import { SanitizeString } from '../../common/utils/sanitize.util';
 
 export class RegisterDto {
-  @ApiProperty({ example: 'customer@example.com' })
+  @ApiPropertyOptional({ example: 'customer@example.com' })
+  @IsOptional()
+  @ValidateIf((o) => typeof o.email === 'string' && o.email.trim().length > 0)
   @IsEmail()
-  email!: string;
+  email?: string;
 
   @ApiProperty({ minLength: 8, example: 'SecurePass123!' })
   @IsString()
@@ -32,6 +35,7 @@ export class RegisterDto {
 
   @ApiPropertyOptional({ example: '+251911000000' })
   @IsOptional()
+  @ValidateIf((o) => typeof o.phone === 'string' && o.phone.trim().length > 0)
   @IsString()
   @SanitizeString()
   phone?: string;
@@ -40,11 +44,13 @@ export class RegisterDto {
 export class LoginDto {
   @ApiPropertyOptional({ example: 'customer@example.com' })
   @IsOptional()
+  @ValidateIf((o) => typeof o.email === 'string' && o.email.trim().length > 0)
   @IsString()
   email?: string;
 
   @ApiPropertyOptional({ example: '0904040364' })
   @IsOptional()
+  @ValidateIf((o) => typeof o.phone === 'string' && o.phone.trim().length > 0)
   @IsString()
   phone?: string;
 
@@ -63,11 +69,13 @@ export class RefreshTokenDto {
 export class ForgotPasswordDto {
   @ApiPropertyOptional({ example: 'customer@example.com' })
   @IsOptional()
+  @ValidateIf((o) => typeof o.email === 'string' && o.email.trim().length > 0)
   @IsString()
   email?: string;
 
   @ApiPropertyOptional({ example: '+251912345678', description: 'Optional phone number for SMS delivery' })
   @IsOptional()
+  @ValidateIf((o) => typeof o.phone === 'string' && o.phone.trim().length > 0)
   @IsString()
   phone?: string;
 }

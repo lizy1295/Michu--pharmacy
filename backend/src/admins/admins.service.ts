@@ -61,7 +61,7 @@ export class AdminsService {
           // Map user to Admin model representation
           const mappedAdmin = new Admin();
           mappedAdmin.id = user.id;
-          mappedAdmin.email = user.email;
+          mappedAdmin.email = user.email ?? '';
           mappedAdmin.name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Admin';
           mappedAdmin.role = user.role;
           mappedAdmin.phone = user.phone ?? undefined;

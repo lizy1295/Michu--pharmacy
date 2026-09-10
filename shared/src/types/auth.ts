@@ -7,7 +7,7 @@ export interface AuthTokens {
 
 export interface AuthUser {
   id: string;
-  email: string;
+  email?: string | null;
   firstName: string;
   lastName: string;
   role: UserRole;
@@ -22,7 +22,7 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  email: string;
+  email?: string;
   password: string;
   firstName: string;
   lastName: string;

@@ -39,7 +39,7 @@ export class ReceiptsController {
     if (!isStaffRole(user.role)) {
       const isOwner =
         (receipt.order?.customerId && Number(receipt.order.customerId) === Number(user.sub)) ||
-        (receipt.customerEmail && receipt.customerEmail.toLowerCase() === user.email.toLowerCase());
+        (receipt.customerEmail && user.email && receipt.customerEmail.toLowerCase() === user.email.toLowerCase());
       if (!isOwner) {
         throw new ForbiddenException('You are not authorized to view this receipt.');
       }
@@ -65,7 +65,7 @@ export class ReceiptsController {
     if (!isStaffRole(user.role)) {
       const isOwner =
         (receipt.order?.customerId && Number(receipt.order.customerId) === Number(user.sub)) ||
-        (receipt.customerEmail && receipt.customerEmail.toLowerCase() === user.email.toLowerCase());
+        (receipt.customerEmail && user.email && receipt.customerEmail.toLowerCase() === user.email.toLowerCase());
       if (!isOwner) {
         throw new ForbiddenException('You are not authorized to view this receipt.');
       }
