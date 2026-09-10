@@ -17,12 +17,14 @@ export default function LoginPage() {
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
 
   function switchMode(toRegister: boolean) {
     setIsRegister(toRegister);
     setError(null);
+    setSuccessMessage(null);
     setLoginChannel('EMAIL');
     setRegisterChannel('EMAIL');
     setLoginEmail('');
@@ -34,28 +36,52 @@ export default function LoginPage() {
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setSuccessMessage(null);
     setLoading(true);
 
-    const form = new FormData(e.currentTarget);
+    const formEl = e.currentTarget;
+    const form = new FormData(formEl);
     const password = form.get('password') as string;
 
     try {
       if (isRegister) {
+        const channelUsed = registerChannel;
+        const registeredEmail = regEmail.trim();
+        const registeredPhone = regPhone.trim();
+
         await register({
-          email: registerChannel === 'EMAIL' ? regEmail.trim() || undefined : undefined,
-          phone: registerChannel === 'PHONE' ? regPhone.trim() || undefined : undefined,
+          email: channelUsed === 'EMAIL' ? registeredEmail || undefined : undefined,
+          phone: channelUsed === 'PHONE' ? registeredPhone || undefined : undefined,
           password,
           firstName: form.get('firstName') as string,
           lastName: form.get('lastName') as string,
         });
+
+        // Reset the form so password and names are cleared
+        formEl.reset();
+
+        // Switch to login page mode instead of directly logging in
+        setIsRegister(false);
+        if (channelUsed === 'EMAIL') {
+          setLoginChannel('EMAIL');
+          setLoginEmail(registeredEmail);
+          setLoginPhone('');
+        } else {
+          setLoginChannel('PHONE');
+          setLoginPhone(registeredPhone);
+          setLoginEmail('');
+        }
+        setRegEmail('');
+        setRegPhone('');
+        setSuccessMessage('Registration successful! Please enter your password to sign in.');
       } else {
         if (loginChannel === 'EMAIL') {
           await login({ email: loginEmail.trim(), password });
         } else {
           await login({ phone: loginPhone.trim(), password });
         }
+        window.location.href = '/account';
       }
-      window.location.href = '/account';
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth.error_generic'));
     } finally {
@@ -331,6 +357,15 @@ export default function LoginPage() {
                   >
                     Forgot password?
                   </Link>
+                </div>
+              )}
+
+              {successMessage && (
+                <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3.5 text-xs text-emerald-800 font-medium flex items-start gap-2 shadow-sm animate-fadeIn">
+                  <svg className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                  </svg>
+                  <span>{successMessage}</span>
                 </div>
               )}
 

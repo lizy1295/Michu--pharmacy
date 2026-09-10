@@ -54,7 +54,7 @@ export async function register(data: RegisterRequest): Promise<AuthResponse> {
     method: 'POST',
     body: JSON.stringify(data),
   });
-  setTokens(result.tokens.accessToken, result.tokens.refreshToken);
+  // Do not store tokens on registration so the user is required to sign in
   return result;
 }
 
