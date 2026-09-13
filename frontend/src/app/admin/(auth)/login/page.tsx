@@ -30,9 +30,10 @@ export default function AdminLoginPage() {
         throw new Error(data.message || 'Invalid email or password');
       }
 
-      localStorage.setItem('michu_access_token', data.accessToken);
-      localStorage.setItem('michu_refresh_token', data.refreshToken || '');
+      localStorage.setItem('admin_access_token', data.accessToken);
+      localStorage.setItem('admin_refresh_token', data.refreshToken || '');
       localStorage.setItem('admin_data', JSON.stringify(data.admin));
+      window.dispatchEvent(new Event('storage'));
       router.push('/admin');
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -66,8 +67,19 @@ export default function AdminLoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold">
-                {error}
+              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold space-y-2">
+                <p>{error}</p>
+                {error.toLowerCase().includes('customer') && (
+                  <div>
+                    <Link
+                      href="/login"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition"
+                    >
+                      <span>Go to Customer Sign In</span>
+                      <span>&rarr;</span>
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 

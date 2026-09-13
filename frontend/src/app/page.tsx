@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getProducts, Product, getImageUrl } from '@/lib/api/products';
 import {
   getDoctors,
@@ -355,7 +355,7 @@ export default function HomePage() {
   }, []);
 
   // Promotional service cards (Using Herb, Pearl, Gleam, Radiate, Moss palette)
-  const features = [
+  const features = useMemo(() => [
     {
       title: t('home.service_rx_title'),
       description: t('home.service_rx_desc'),
@@ -373,16 +373,16 @@ export default function HomePage() {
       btnColor: 'bg-moss-900 hover:bg-moss-800 text-gleam shadow-moss/30'
     },
     {
-      title: language === 'am' ? 'ßìêßîúßèò ßï¿ßëàßê¡ßèòßî½ßìì ßê¡ßè¡ßè¡ßëÑ ßèÑßèô ßê¢ßï╡ßê¿ßê╗' : 'Branch Pickup & Fast Delivery',
+      title: language === 'am' ? 'ቅርንጫፍ መውሰድ እና ፈጣን ማድረስ' : 'Branch Pickup & Fast Delivery',
       description: language === 'am'
-        ? 'ßëáßèáßï▓ßê╡ ßèáßëáßëú ßèÑßèô ßëáßè¡ßêìßêÄßë╜ ßëáßêÜßîêßèÖ 7 ßëàßê¡ßèòßî½ßìÄßë╗ßë╜ßèò ßëáßï░ßêàßèòßèÉßë▒ ßï¿ßë░ßê¿ßîïßîêßîá ßêÿßï╡ßèâßèÆßë╡ ßëáßëÇßêïßêë ßï¡ßê¿ßè¿ßëíßìó'
+        ? 'በአዲስ አበባ እና በክልሎች ባሉ 7 ቅርንጫፎቻችን በደህንነት የተረጋገጡ መድሃኒቶችን በግንባር ይውሰዱ ወይም በቀዝቃዛ ሰንሰለት እንዲደርስዎ ያድርጉ።'
         : 'Pick up verified medications at any of our 7 physical branches or request safe cold-chain delivery.',
       link: '/branches',
-      buttonText: language === 'am' ? 'ßëàßê¡ßèòßî½ßìÄßë╜ßèò ßï¡ßêÿßêìßè¿ßë▒' : 'Explore Branches',
+      buttonText: language === 'am' ? 'ቅርንጫፎችን ይመልከቱ' : 'Explore Branches',
       color: 'border-radiate-200 hover:border-radiate-300 bg-radiate-50/70 shadow-xs',
       btnColor: 'bg-radiate hover:bg-radiate-600 text-white shadow-radiate/30'
     }
-  ];
+  ], [t, language]);
 
   // Curated Most Trusted Products list
   const mostTrustedProducts = useMemo(() => {
@@ -452,7 +452,7 @@ export default function HomePage() {
     return list;
   }, [liveProducts]);
 
-  const featuredProducts = [
+  const featuredProducts = useMemo(() => [
     {
       id: 'prod-exedexe',
       name: '(Exedexe) Dextromethorphan syrup 120ml',
@@ -485,9 +485,9 @@ export default function HomePage() {
       imageType: 'cosmetic' as const,
       desc: 'Enamel-safe whitening toothpaste for deep stain removal'
     }
-  ];
+  ], []);
 
-  const renderProductIllustration = (type: string) => {
+  const renderProductIllustration = useCallback((type: string) => {
     switch (type) {
       case 'syrup':
         return (
@@ -522,7 +522,7 @@ export default function HomePage() {
           </div>
         );
     }
-  };
+  }, []);
 
   return (
     <div className="flex flex-col bg-white">
@@ -554,12 +554,20 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-7xl px-4 py-20 md:py-28 flex flex-col items-center text-center z-10 w-full">
           {/* Trust Badges */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
-            <span className="inline-flex items-center gap-1.5 bg-herb-500/25 text-gleam border border-herb-400/50 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-sm">
-              {t('home.hero_badge1')}
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+            <span className="inline-flex items-center gap-2 bg-emerald-950/70 hover:bg-emerald-900/70 text-emerald-200 border border-emerald-400/50 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-lg shadow-black/30 transition">
+              <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span>{t('home.hero_badge1').replace(/[🇪🇹✅]/g, '').trim()}</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 bg-pearl-100/15 text-pearl border border-pearl-200/30 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-md shadow-sm">
-              {t('home.hero_badge2')}
+            <span className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/20 text-white border border-white/30 rounded-full px-4 py-1.5 text-xs font-bold tracking-wide backdrop-blur-md shadow-lg shadow-black/30 transition">
+              <span className="w-4 h-4 rounded-full bg-emerald-500/30 border border-emerald-400 flex items-center justify-center shrink-0">
+                <svg className="w-2.5 h-2.5 text-emerald-300" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </span>
+              <span>{t('home.hero_badge2').replace(/[✅]/g, '').trim()}</span>
             </span>
           </div>
 

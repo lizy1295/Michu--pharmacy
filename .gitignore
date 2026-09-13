@@ -39,3 +39,6 @@ backend/data/
 # Misc
 .turbo/
 *.tsbuildinfo
+
+backend/uploads/payments/
+uploads/payments/

@@ -118,25 +118,55 @@ export class PaymentsService {
     );
     const callbackUrl = `${apiBase}/payments/webhook/${dto.paymentMethod}`;
 
-    // ── 7. Call Chapa API ───────────────────────────────────────────────────
-    //    Chapa is the unified gateway. It routes to telebirr, CBE Birr, Awash
-    //    based on the payment_method field.
-    //    The TelebirrService / CbeService below remain available for direct
-    //    integration if ever needed (they are NOT called by this endpoint).
-    const chapaResult = await this.chapaService.initializeTransaction({
-      txRef: paymentNumber,
-      amount,
-      email: order.customerEmail,
-      firstName: order.customerName.split(' ')[0] ?? order.customerName,
-      lastName: order.customerName.split(' ').slice(1).join(' ') || order.customerName,
-      method: dto.paymentMethod as any,
-      title: `Order ${order.orderNumber} — Michu Pharmacy`,
-      returnUrl,
-      callbackUrl,
-    });
+    // ── 7. Call Payment Provider (Telebirr or CBE Birr direct) ─────────────
+    let initResult: {
+      success: boolean;
+      checkoutUrl?: string;
+      providerReference?: string;
+      providerTransactionId?: string;
+      rawResponse?: any;
+      message?: string;
+    };
+
+    if (dto.paymentMethod === PaymentProviderMethod.TELEBIRR) {
+      initResult = await this.telebirrService.initiatePayment({
+        paymentNumber,
+        amount,
+        title: `Order ${order.orderNumber} — Michu Pharmacy`,
+        notifyUrl: callbackUrl,
+        returnUrl,
+      });
+    } else if (dto.paymentMethod === PaymentProviderMethod.CBE) {
+      initResult = await this.cbeService.initiatePayment({
+        paymentNumber,
+        amount,
+        title: `Order ${order.orderNumber} — Michu Pharmacy`,
+        notifyUrl: callbackUrl,
+        returnUrl,
+      });
+    } else {
+      // Optional Chapa fallback if another method was requested
+      const chapaRes = await this.chapaService.initializeTransaction({
+        txRef: paymentNumber,
+        amount,
+        email: order.customerEmail || 'customer@michu.et',
+        firstName: order.customerName.split(' ')[0] ?? order.customerName,
+        lastName: order.customerName.split(' ').slice(1).join(' ') || order.customerName,
+        method: dto.paymentMethod as any,
+        title: `Order ${order.orderNumber} — Michu Pharmacy`,
+        returnUrl,
+        callbackUrl,
+      });
+      initResult = {
+        success: chapaRes.success,
+        checkoutUrl: chapaRes.checkoutUrl,
+        providerReference: chapaRes.chapaReference,
+        rawResponse: chapaRes.rawResponse,
+        message: chapaRes.message,
+      };
+    }
 
     // ── 8. Persist payment record ───────────────────────────────────────────
-    //    Even on Chapa failure we save a PENDING/FAILED record so we can audit.
     const payment = this.paymentsRepo.create({
       paymentNumber,
       orderId: order.id,
@@ -144,25 +174,25 @@ export class PaymentsService {
       paymentMethod: dto.paymentMethod,
       amount,
       currency: 'ETB',
-      status: chapaResult.success
+      status: initResult.success
         ? PaymentRecordStatus.PAYMENT_INITIATED
-        : PaymentRecordStatus.PENDING, // stays PENDING on failure — NOT PAID
-      providerReference: chapaResult.chapaReference,
-      checkoutUrl: chapaResult.checkoutUrl,
-      errorMessage: chapaResult.success ? undefined : chapaResult.message,
-      rawPayload: (chapaResult.rawResponse ?? {}) as any,
+        : PaymentRecordStatus.PENDING,
+      providerReference: initResult.providerReference,
+      providerTransactionId: initResult.providerTransactionId,
+      checkoutUrl: initResult.checkoutUrl,
+      errorMessage: initResult.success ? undefined : initResult.message,
+      rawPayload: (initResult.rawResponse ?? {}) as any,
     });
 
     const savedPayment = await this.paymentsRepo.save(payment);
 
-    // ── 9. Handle Chapa failure ─────────────────────────────────────────────
-    //    Order payment status stays as-is. Order is NOT marked PAID.
-    if (!chapaResult.success) {
+    // ── 9. Handle provider failure ──────────────────────────────────────────
+    if (!initResult.success) {
       this.logger.error(
-        `[Chapa] Failed to initialize payment for order ${order.orderNumber} — ${chapaResult.message ?? 'unknown error'}`,
+        `[${dto.paymentMethod}] Failed to initialize payment for order ${order.orderNumber} — ${initResult.message ?? 'unknown error'}`,
       );
       throw new BadRequestException(
-        'Payment gateway initialization failed. Please try again in a moment.',
+        initResult.message || 'Payment gateway initialization failed. Please try again in a moment.',
       );
     }
 
@@ -225,10 +255,17 @@ export class PaymentsService {
       message?: string;
     };
 
-    // If payment was initiated through Chapa, verify against Chapa API
-    const isChapaPayment = payment.paymentNumber.startsWith('PAY-') || payment.providerReference?.startsWith('PAY-');
-
-    if (isChapaPayment) {
+    if (payment.paymentMethod === PaymentProviderMethod.TELEBIRR) {
+      verificationResult = await this.telebirrService.verifyPayment(
+        payment.paymentNumber,
+        payment.providerReference,
+      );
+    } else if (payment.paymentMethod === PaymentProviderMethod.CBE) {
+      verificationResult = await this.cbeService.verifyPayment(
+        payment.paymentNumber,
+        payment.providerReference,
+      );
+    } else {
       const chapaRes = await this.chapaService.verifyTransaction(payment.paymentNumber);
       const isSuccess = chapaRes.success && (chapaRes.status === 'success' || chapaRes.status === 'paid');
       const isAmountValid = chapaRes.amount != null && Math.abs(Number(chapaRes.amount) - Number(payment.amount)) < 0.01;
@@ -241,16 +278,6 @@ export class PaymentsService {
         status: isSuccess ? 'PAID' : (chapaRes.status ?? 'FAILED'),
         message: chapaRes.message,
       };
-    } else if (payment.paymentMethod === PaymentProviderMethod.TELEBIRR) {
-      verificationResult = await this.telebirrService.verifyPayment(
-        payment.paymentNumber,
-        payment.providerReference,
-      );
-    } else {
-      verificationResult = await this.cbeService.verifyPayment(
-        payment.paymentNumber,
-        payment.providerReference,
-      );
     }
 
     if (!verificationResult.success) {
@@ -600,5 +627,204 @@ export class PaymentsService {
     await this.verifyPayment(payment.id);
 
     return { received: true, message: 'Webhook callback processed successfully' };
+  }
+
+  /**
+   * Customer submits proof of payment (Transaction ID and/or Receipt screenshot)
+   */
+  async submitPaymentProof(data: {
+    orderId: number;
+    paymentMethod: string;
+    transactionId?: string;
+    proofImage?: string;
+    userId: number;
+  }): Promise<{
+    paymentId: number;
+    paymentNumber: string;
+    orderNumber: string;
+    transactionId?: string;
+    proofImage?: string;
+    status: string;
+  }> {
+    const order = await this.ordersRepo.findOne({ where: { id: data.orderId } });
+    if (!order) {
+      throw new NotFoundException(`Order ${data.orderId} not found`);
+    }
+
+    if (Number(order.customerId) !== Number(data.userId)) {
+      throw new ForbiddenException('You are not authorized to submit payment proof for this order.');
+    }
+
+    if (!data.transactionId && !data.proofImage) {
+      throw new BadRequestException('Please either upload a receipt screenshot or enter your Transaction ID.');
+    }
+
+    order.paymentMethod = data.paymentMethod;
+    if (data.transactionId) {
+      order.transactionId = data.transactionId;
+    }
+    if (data.proofImage) {
+      order.proofImage = data.proofImage;
+    }
+    order.paymentStatus = PaymentStatus.PAYMENT_INITIATED;
+    await this.ordersRepo.save(order);
+
+    let payment = await this.paymentsRepo.findOne({ where: { orderId: order.id } });
+    if (!payment) {
+      payment = this.paymentsRepo.create({
+        paymentNumber: `PAY-${Date.now()}-${order.id}`,
+        orderId: order.id,
+        userId: data.userId,
+        paymentMethod: data.paymentMethod as any,
+        amount: Number(order.total),
+        currency: 'ETB',
+        status: PaymentRecordStatus.PAYMENT_INITIATED,
+        providerTransactionId: data.transactionId || undefined,
+        proofImage: data.proofImage || undefined,
+      });
+    } else {
+      payment.paymentMethod = data.paymentMethod as any;
+      if (data.transactionId) {
+        payment.providerTransactionId = data.transactionId;
+      }
+      if (data.proofImage) {
+        payment.proofImage = data.proofImage;
+      }
+      payment.status = PaymentRecordStatus.PAYMENT_INITIATED;
+    }
+    const saved = await this.paymentsRepo.save(payment);
+
+    this.logger.log(
+      `[Proof Submitted] Order ${order.orderNumber} - Method: ${data.paymentMethod}, TxnID: ${data.transactionId || 'Image Attached'}`,
+    );
+
+    return {
+      paymentId: saved.id,
+      paymentNumber: saved.paymentNumber,
+      orderNumber: order.orderNumber,
+      transactionId: data.transactionId,
+      proofImage: data.proofImage,
+      status: saved.status,
+    };
+  }
+
+  /**
+   * Admin verifies and approves payment proof after checking bank/telebirr account statement
+   */
+  async adminApprovePayment(orderId: number): Promise<{
+    success: boolean;
+    payment: Payment;
+    receipt: any;
+    message: string;
+  }> {
+    const order = await this.ordersRepo.findOne({ where: { id: orderId } });
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    let payment = await this.paymentsRepo.findOne({ where: { orderId: order.id } });
+    if (!payment) {
+      payment = this.paymentsRepo.create({
+        paymentNumber: `PAY-${Date.now()}-${order.id}`,
+        orderId: order.id,
+        userId: order.customerId,
+        paymentMethod: (order.paymentMethod || 'telebirr') as any,
+        amount: Number(order.total),
+        currency: 'ETB',
+        status: PaymentRecordStatus.PAYMENT_INITIATED,
+        providerTransactionId: order.transactionId || undefined,
+        proofImage: order.proofImage || undefined,
+      });
+      payment = await this.paymentsRepo.save(payment);
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const lockedPayment = await queryRunner.manager.findOne(Payment, {
+        where: { id: payment.id },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!lockedPayment) {
+        throw new NotFoundException('Payment not found');
+      }
+
+      lockedPayment.status = PaymentRecordStatus.PAID;
+      lockedPayment.paidAt = new Date();
+      if (order.transactionId) {
+        lockedPayment.providerTransactionId = order.transactionId;
+      }
+      if (order.proofImage) {
+        lockedPayment.proofImage = order.proofImage;
+      }
+      await queryRunner.manager.save(lockedPayment);
+
+      order.paymentStatus = PaymentStatus.PAID;
+      if (order.status === OrderStatus.PENDING) {
+        order.status = OrderStatus.APPROVED;
+        order.approvedAt = new Date();
+      }
+      await queryRunner.manager.save(order);
+
+      // Deduct inventory stock safely
+      if (Array.isArray(order.items)) {
+        for (const item of order.items) {
+          const productId = Number(item.id || item.productId);
+          const qty = Number(item.quantity || 1);
+          if (productId && qty > 0) {
+            const product = await queryRunner.manager.findOne(Product, {
+              where: { id: productId },
+            });
+            if (product) {
+              product.stock = Math.max(0, Number(product.stock) - qty);
+              await queryRunner.manager.save(product);
+            }
+          }
+        }
+      }
+
+      // Generate official digital receipt
+      const receipt = await this.receiptsService.createReceipt(order, lockedPayment, queryRunner.manager);
+
+      await queryRunner.commitTransaction();
+      this.logger.log(`[Admin Approved] Order ${order.orderNumber} approved and marked PAID.`);
+
+      return {
+        success: true,
+        payment: lockedPayment,
+        receipt,
+        message: 'Payment verified and approved successfully by admin.',
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * Admin rejects payment proof
+   */
+  async adminRejectPayment(orderId: number, reason?: string): Promise<{ success: boolean; message: string }> {
+    const order = await this.ordersRepo.findOne({ where: { id: orderId } });
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    order.paymentStatus = PaymentStatus.FAILED;
+    await this.ordersRepo.save(order);
+
+    const payment = await this.paymentsRepo.findOne({ where: { orderId: order.id } });
+    if (payment) {
+      payment.status = PaymentRecordStatus.FAILED;
+      payment.errorMessage = reason || 'Payment proof rejected by admin.';
+      await this.paymentsRepo.save(payment);
+    }
+
+    return { success: true, message: 'Payment rejected.' };
   }
 }

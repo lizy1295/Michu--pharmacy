@@ -11,7 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan, IsNull } from 'typeorm';
 import { createHash, randomBytes, randomInt } from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { AuthResponse, AuthUser } from '@michu/shared';
+import { AuthResponse, AuthUser, isStaffRole } from '@michu/shared';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
@@ -93,6 +93,12 @@ export class AuthService {
 
     if (!user.isActive) {
       throw new UnauthorizedException('Account is inactive');
+    }
+
+    if (isStaffRole(user.role)) {
+      throw new UnauthorizedException(
+        'Admin accounts must sign in via the Admin Portal at /admin/login',
+      );
     }
 
     return this.buildAuthResponse(user);

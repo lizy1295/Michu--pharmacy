@@ -15,6 +15,7 @@ import { PaymentProviderMethod } from './entities/payment.entity';
 
 describe('PaymentsService - Phase 2', () => {
   let service: PaymentsService;
+  let telebirrService: TelebirrService;
   let ordersRepo: any;
   let paymentsRepo: any;
   let chapaService: any;
@@ -41,7 +42,18 @@ describe('PaymentsService - Phase 2', () => {
         { provide: getRepositoryToken(Payment), useValue: paymentsRepo },
         { provide: getRepositoryToken(Order), useValue: ordersRepo },
         { provide: getRepositoryToken(Product), useValue: {} },
-        { provide: TelebirrService, useValue: {} },
+        {
+          provide: TelebirrService,
+          useValue: {
+            initiatePayment: jest.fn().mockResolvedValue({
+              success: true,
+              checkoutUrl: 'https://checkout.chapa.co/checkout/payment/PAY-123',
+              providerReference: 'PAY-123',
+            }),
+            verifyPayment: jest.fn().mockResolvedValue({ success: true, paid: true }),
+            validateWebhookSignature: jest.fn().mockReturnValue(true),
+          },
+        },
         { provide: CbeService, useValue: {} },
         { provide: ChapaService, useValue: chapaService },
         { provide: ReceiptsService, useValue: { createReceipt: jest.fn(), findByOrderId: jest.fn() } },
@@ -60,6 +72,7 @@ describe('PaymentsService - Phase 2', () => {
     }).compile();
 
     service = module.get<PaymentsService>(PaymentsService);
+    telebirrService = module.get<TelebirrService>(TelebirrService);
   });
 
   it('1. valid authenticated order: initializes Chapa and returns payment details', async () => {
@@ -143,11 +156,6 @@ describe('PaymentsService - Phase 2', () => {
     };
 
     ordersRepo.findOne.mockResolvedValue(mockOrder);
-    chapaService.initializeTransaction.mockResolvedValue({
-      success: true,
-      checkoutUrl: 'https://checkout.chapa.co/checkout/payment/PAY-REAL',
-      chapaReference: 'PAY-REAL',
-    });
 
     // Even if frontend somehow passed amount: 1 in raw object
     const dtoWithFakeAmount = {
@@ -159,7 +167,8 @@ describe('PaymentsService - Phase 2', () => {
     const result = await service.initiatePayment(dtoWithFakeAmount, 42);
 
     expect(result.amount).toBe(500); // Must be 500 from DB, NOT 1
-    expect(chapaService.initializeTransaction).toHaveBeenCalledWith(
+    // Telebirr path is called — verify it receives the DB amount, not the fake frontend amount
+    expect(jest.mocked(telebirrService.initiatePayment)).toHaveBeenCalledWith(
       expect.objectContaining({
         amount: 500,
       }),
@@ -210,7 +219,7 @@ describe('PaymentsService - Phase 2', () => {
     expect(chapaService.initializeTransaction).not.toHaveBeenCalled();
   });
 
-  it('7. Chapa failure does not mark order PAID', async () => {
+  it('7. Gateway failure does not mark order PAID', async () => {
     const mockOrder: Partial<Order> = {
       id: 6,
       orderNumber: 'ORD-006',
@@ -223,7 +232,8 @@ describe('PaymentsService - Phase 2', () => {
     };
 
     ordersRepo.findOne.mockResolvedValue(mockOrder);
-    chapaService.initializeTransaction.mockResolvedValue({
+    // Override TelebirrService for this test to simulate gateway failure
+    jest.mocked(telebirrService.initiatePayment).mockResolvedValueOnce({
       success: false,
       message: 'Gateway network error',
     });

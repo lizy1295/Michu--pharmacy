@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Background Disc for Universal Visibility (Light & Dark Browser Tabs) -->
+  <circle cx="256" cy="256" r="248" fill="#ffffff" stroke="#e2e8f0" stroke-width="6"/>
+
+  <g id="pharmacy-emblem" fill="#0f172a">
+    <!-- Left Leaf -->
+    <path d="M 205 185 C 150 145 110 80 135 38 C 175 30 215 105 205 185 Z"/>
+    
+    <!-- Right Leaf -->
+    <path d="M 220 185 C 205 115 220 50 268 32 C 298 70 275 145 220 185 Z"/>
+
+    <!-- Pestle -->
+    <g>
+      <!-- Pestle Shaft -->
+      <path d="M 276 185 L 362 82 C 367 76 376 76 381 81 L 387 87 C 392 92 392 101 386 106 L 300 200 Z"/>
+      <!-- Pestle Rounded Handle Knob -->
+      <circle cx="390" cy="86" r="24"/>
+    </g>
+
+    <!-- Mortar Top Rim -->
+    <rect x="132" y="190" width="248" height="26" rx="13"/>
+
+    <!-- Mortar Bowl Body -->
+    <path d="M 140 216 C 140 336 372 336 372 216 Z"/>
+
+    <!-- Mortar Foot / Pedestal Base -->
+    <path d="M 202 328 H 310 L 320 348 C 320 351 317 354 314 354 H 198 C 195 354 192 351 192 348 Z"/>
+
+    <!-- Cutout Medical Cross inside Mortar Bowl (White) -->
+    <g fill="#ffffff">
+      <rect x="238" y="236" width="36" height="72" rx="4"/>
+      <rect x="220" y="254" width="72" height="36" rx="4"/>
+    </g>
+
+    <!-- "PHARMACY" Bold Brand Text -->
+    <text x="256" y="420" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="900" font-size="52" text-anchor="middle" letter-spacing="4">PHARMACY</text>
+
+    <!-- Bottom Accent Line and Medical Cross -->
+    <line x1="84" y1="452" x2="228" y2="452" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/>
+    <path d="M 256 440 V 464 M 244 452 H 268" stroke="#0f172a" stroke-width="8" stroke-linecap="round"/>
+    <line x1="284" y1="452" x2="428" y2="452" stroke="#0f172a" stroke-width="7" stroke-linecap="round"/>
+  </g>
+</svg>

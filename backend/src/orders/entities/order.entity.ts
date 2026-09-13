@@ -64,6 +64,12 @@ export class Order {
   @Column({ name: 'payment_method', type: 'varchar', length: 50, nullable: true })
   paymentMethod?: string;
 
+  @Column({ name: 'proof_image', type: 'text', nullable: true })
+  proofImage?: string | null;
+
+  @Column({ name: 'transaction_id', type: 'varchar', length: 100, nullable: true })
+  transactionId?: string | null;
+
   @Column({ name: 'notes', type: 'text', nullable: true })
   notes?: string;
 

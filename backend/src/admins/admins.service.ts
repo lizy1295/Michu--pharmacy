@@ -55,9 +55,14 @@ export class AdminsService {
     // 2. Check in users table for staff / admin users
     try {
       const user = await this.usersService.findByEmail(normalizedEmail, true);
-      if (user && user.isActive && isStaffRole(user.role)) {
+      if (user && user.isActive) {
         const isPasswordValid = await this.usersService.validatePassword(user, password);
         if (isPasswordValid) {
+          if (!isStaffRole(user.role)) {
+            throw new BadRequestException(
+              'Customer accounts cannot sign in to the Admin Portal. Please use the Customer Login at /login',
+            );
+          }
           // Map user to Admin model representation
           const mappedAdmin = new Admin();
           mappedAdmin.id = user.id;
@@ -73,7 +78,8 @@ export class AdminsService {
           return mappedAdmin;
         }
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof BadRequestException) throw err;
       // User lookup failed
     }
 

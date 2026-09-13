@@ -8,13 +8,25 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { PaymentsService, InitiatePaymentDto } from './payments.service';
 import { PaymentProviderMethod } from './entities/payment.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+
+const PAYMENT_PROOF_DIR = './uploads/payments';
+if (!existsSync(PAYMENT_PROOF_DIR)) {
+  mkdirSync(PAYMENT_PROOF_DIR, { recursive: true });
+}
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -123,6 +135,87 @@ export class PaymentsController {
     @Headers() headers: any,
   ) {
     return this.paymentsService.handleWebhook(provider, body, headers);
+  }
+
+  /**
+   * Upload customer receipt screenshot or payment proof
+   */
+  @Post('upload-proof')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload customer payment receipt screenshot' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: PAYMENT_PROOF_DIR,
+        filename: (_req, file, cb) => {
+          const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+          const ext = extname(file.originalname);
+          cb(null, `proof-${uniqueSuffix}${ext}`);
+        },
+      }),
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB
+      },
+    }),
+  )
+  uploadPaymentProof(@UploadedFile() file: any) {
+    if (!file) {
+      throw new BadRequestException('No payment proof file was uploaded.');
+    }
+
+    return {
+      message: 'Payment proof uploaded successfully',
+      url: `/uploads/payments/${file.filename}`,
+      filename: file.filename,
+    };
+  }
+
+  /**
+   * Submit payment proof (Transaction ID + receipt screenshot)
+   */
+  @Post('submit-proof')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Submit payment transaction ID and receipt screenshot for approval' })
+  submitProof(
+    @Body()
+    dto: {
+      orderId: number;
+      paymentMethod: string;
+      transactionId?: string;
+      proofImage?: string;
+    },
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const userId = Number(user.sub);
+    return this.paymentsService.submitPaymentProof({
+      ...dto,
+      userId,
+    });
+  }
+
+  /**
+   * Admin approves verified payment and issues digital receipt
+   */
+  @Post('order/:orderId/admin-approve')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Admin approve payment after checking statement' })
+  adminApprove(@Param('orderId') orderId: string) {
+    return this.paymentsService.adminApprovePayment(Number(orderId));
+  }
+
+  /**
+   * Admin rejects payment proof
+   */
+  @Post('order/:orderId/admin-reject')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Admin reject payment proof' })
+  adminReject(@Param('orderId') orderId: string, @Body() body: { reason?: string }) {
+    return this.paymentsService.adminRejectPayment(Number(orderId), body?.reason);
   }
 }
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import type { AuthUser } from '@michu/shared';
+import { type AuthUser, isStaffRole } from '@/lib/shared';
 import { getMe } from '@/lib/api/auth';
 import { clearTokens, getAccessToken } from '@/lib/auth/tokens';
 import { getOrdersByCustomer, Order } from '@/lib/api/orders';
@@ -11,22 +11,68 @@ import { useLanguage, LANGUAGES, Language } from '@/context/LanguageContext';
 
 export default function AccountPage() {
   const { language, setLanguage, t } = useLanguage();
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isAdminAccount, setIsAdminAccount] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('michu_user');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (isStaffRole(parsed.role)) {
+            // Immediately purge any leaked staff data from customer storefront!
+            localStorage.removeItem('michu_user');
+            localStorage.removeItem('michu_access_token');
+            localStorage.removeItem('michu_refresh_token');
+            return null;
+          }
+          return parsed;
+        }
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('michu_access_token');
+      const cached = localStorage.getItem('michu_user');
+      // If token exists and we already have cached customer user data, don't block render
+      if (token && cached) return false;
+      if (!token) return false;
+    }
+    return true;
+  });
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [activeTab, setActiveTab] = useState<'orders' | 'rx' | 'language'>('orders');
 
   useEffect(() => {
-    const token = getAccessToken();
+    const token = localStorage.getItem('michu_access_token');
     if (!token) {
       setLoading(false);
+      setUser(null);
       return;
     }
 
     getMe()
       .then((userData) => {
+        if (userData && isStaffRole(userData.role)) {
+          // If staff account, purge from storefront and flag
+          clearTokens();
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('michu_user');
+            window.dispatchEvent(new Event('auth-change'));
+          }
+          setUser(null);
+          setIsAdminAccount(true);
+          return;
+        }
+
         setUser(userData);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('michu_user', JSON.stringify(userData));
+        }
         if (userData?.email) {
           setLoadingOrders(true);
           getOrdersByCustomer({ email: userData.email })
@@ -35,13 +81,25 @@ export default function AccountPage() {
             .finally(() => setLoadingOrders(false));
         }
       })
-      .catch(() => clearTokens())
+      .catch(() => {
+        clearTokens();
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('michu_user');
+          window.dispatchEvent(new Event('auth-change'));
+        }
+        setUser(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   function handleLogout() {
     clearTokens();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('michu_user');
+      window.dispatchEvent(new Event('auth-change'));
+    }
     setUser(null);
+    setOrders([]);
   }
 
   if (loading) {
@@ -123,6 +181,38 @@ export default function AccountPage() {
       </div>
     </div>
   );
+
+  // Admin Account Detected Screen (prevents admin from using customer page)
+  if (isAdminAccount) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-20 text-center space-y-6 animate-in fade-in duration-200">
+        <div className="w-16 h-16 rounded-3xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto text-2xl font-bold shadow-xs">
+          🛡️
+        </div>
+        <div>
+          <h2 className="text-2xl font-black text-slate-900">Administrator Portal Account</h2>
+          <p className="text-sm text-slate-600 max-w-md mx-auto mt-2 leading-relaxed">
+            This account belongs to an <strong>Administrator / Staff member</strong>. Staff accounts cannot place customer orders on the storefront and must use the dedicated Admin Portal.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <Link
+            href="/admin/login"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs transition shadow-md"
+          >
+            Access Admin Management Console &rarr;
+          </Link>
+          <Link
+            href="/login"
+            onClick={handleLogout}
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs transition"
+          >
+            Sign in with Customer Account
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Guest Logged-out view
   if (!user) {

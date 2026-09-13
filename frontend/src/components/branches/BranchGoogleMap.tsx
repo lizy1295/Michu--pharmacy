@@ -296,7 +296,7 @@ export default function BranchGoogleMap({
 
             {/* Simulated Regional Geographic Backdrop */}
             <div className="absolute inset-0 pointer-events-none opacity-40">
-              <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <svg className="w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
                     <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#CBD0E4" strokeWidth="0.75" strokeDasharray="3 3"/>
@@ -304,8 +304,8 @@ export default function BranchGoogleMap({
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
                 {/* Connecting routes between Addis Ababa and regional hubs */}
-                <path d="M 32% 42% Q 40% 55% 48% 68%" fill="none" stroke="#474C80" strokeWidth="2.5" strokeDasharray="4 4" opacity="0.6"/>
-                <path d="M 32% 42% Q 60% 32% 82% 26%" fill="none" stroke="#7A83B8" strokeWidth="2" strokeDasharray="4 4" opacity="0.5"/>
+                <path d="M 320 252 Q 400 330 480 408" fill="none" stroke="#474C80" strokeWidth="2.5" strokeDasharray="4 4" opacity="0.6"/>
+                <path d="M 320 252 Q 600 192 820 156" fill="none" stroke="#7A83B8" strokeWidth="2" strokeDasharray="4 4" opacity="0.5"/>
               </svg>
             </div>
 

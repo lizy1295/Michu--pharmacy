@@ -7,6 +7,8 @@ import { createOrder, getOrderById, Order } from '@/lib/api/orders';
 import {
   initiatePayment,
   verifyPayment,
+  uploadPaymentProof,
+  submitPaymentProof,
   getPaymentByOrderId,
   getReceiptByOrderId,
   InitiatePaymentResult,
@@ -41,6 +43,15 @@ export default function CartPage() {
   const [verifiedPayment, setVerifiedPayment] = useState<PaymentDetails | null>(null);
   const [receipt, setReceipt] = useState<ReceiptDetails | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<'CART' | 'PAYMENT_PENDING' | 'SUCCESS'>('CART');
+
+  // Manual Proof Submission State
+  const [txnIdInput, setTxnIdInput] = useState('');
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofPreviewUrl, setProofPreviewUrl] = useState<string | null>(null);
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
+  const [proofSubmitted, setProofSubmitted] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
 
   // Check for return from Chapa: /cart?orderId=...&paymentNumber=...
   useEffect(() => {
@@ -89,7 +100,8 @@ export default function CartPage() {
         .then((user) => {
           if (user) {
             setCustomerName(`${user.firstName} ${user.lastName}`);
-            setCustomerEmail(user.email);
+            if (user.email) setCustomerEmail(user.email);
+            if (user.phone) setCustomerPhone(user.phone);
           }
         })
         .catch(() => {});
@@ -144,13 +156,7 @@ export default function CartPage() {
       });
 
       setPaymentResult(payRes);
-
-      // If Chapa checkout URL is returned, redirect customer immediately
-      if (payRes.checkoutUrl) {
-        window.location.href = payRes.checkoutUrl;
-        return;
-      }
-
+      // Stay on page in PAYMENT_PENDING state with USSD / mobile app instructions and verify button
       setCheckoutStep('PAYMENT_PENDING');
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to initiate checkout. Please check network connection.');
@@ -158,6 +164,127 @@ export default function CartPage() {
       setIsSubmitting(false);
     }
   };
+
+  const getMediaUrl = (path?: string | null) => {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1').replace(/\/api\/v1\/?$/, '');
+    return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+  };
+
+  const handleCopy = (text: string, field: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Please select a valid image file (PNG, JPG, JPEG, WEBP).');
+      return;
+    }
+    setProofFile(file);
+    const preview = URL.createObjectURL(file);
+    setProofPreviewUrl(preview);
+  };
+
+  const handleProofSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createdOrder) return;
+
+    const cleanTxnId = txnIdInput.trim();
+    if (!proofFile && !cleanTxnId && !createdOrder.proofImage) {
+      setErrorMessage('Please upload a screenshot of your receipt or enter the Transaction ID.');
+      return;
+    }
+
+    setIsUploadingProof(true);
+    setErrorMessage(null);
+
+    try {
+      let uploadedImageUrl: string | undefined = createdOrder.proofImage || undefined;
+      if (proofFile) {
+        const uploadRes = await uploadPaymentProof(proofFile);
+        uploadedImageUrl = uploadRes.url;
+      }
+
+      await submitPaymentProof({
+        orderId: createdOrder.id,
+        paymentMethod,
+        transactionId: cleanTxnId || undefined,
+        proofImage: uploadedImageUrl,
+      });
+
+      setProofSubmitted(true);
+      setCreatedOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              transactionId: cleanTxnId || prev.transactionId,
+              proofImage: uploadedImageUrl || prev.proofImage,
+              paymentStatus: 'payment_initiated',
+            }
+          : null,
+      );
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to submit payment proof. Please try again.');
+    } finally {
+      setIsUploadingProof(false);
+    }
+  };
+
+  const handleCheckApprovalStatus = async () => {
+    if (!createdOrder) return;
+    setVerifying(true);
+    setErrorMessage(null);
+    try {
+      const orderData = await getOrderById(createdOrder.id);
+      setCreatedOrder(orderData);
+      if (orderData.paymentStatus === 'paid') {
+        const rec = await getReceiptByOrderId(createdOrder.id);
+        if (rec) setReceipt(rec);
+        const payData = await getPaymentByOrderId(createdOrder.id);
+        if (payData) setVerifiedPayment(payData);
+        setCheckoutStep('SUCCESS');
+        clearCart();
+      } else if (orderData.paymentStatus === 'failed') {
+        setErrorMessage('Payment proof was rejected by admin. Please verify transaction details and resubmit.');
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to check payment status.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  // Poll for admin approval when proof is submitted
+  useEffect(() => {
+    if (checkoutStep !== 'PAYMENT_PENDING' || !createdOrder?.id) return;
+    if (!proofSubmitted && !createdOrder.transactionId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const orderData = await getOrderById(createdOrder.id);
+        if (orderData.paymentStatus === 'paid') {
+          const rec = await getReceiptByOrderId(createdOrder.id);
+          if (rec) setReceipt(rec);
+          setCreatedOrder(orderData);
+          const payData = await getPaymentByOrderId(createdOrder.id);
+          if (payData) setVerifiedPayment(payData);
+          setCheckoutStep('SUCCESS');
+          clearCart();
+        }
+      } catch {
+        // Polling background silence
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [checkoutStep, createdOrder?.id, proofSubmitted, createdOrder?.transactionId, clearCart]);
 
   const handleVerifyPayment = async () => {
     if (!paymentResult?.paymentId) return;
@@ -364,31 +491,42 @@ export default function CartPage() {
   // STEP 2: PAYMENT PENDING & VERIFICATION MODAL
   if (checkoutStep === 'PAYMENT_PENDING' && createdOrder && paymentResult) {
     const isTelebirr = paymentMethod === 'telebirr';
+    const merchantCode = isTelebirr ? '100200' : '998877';
+    const merchantCodeLabel = isTelebirr ? 'Telebirr Merchant Code' : 'CBE Till Number';
+    const displayProofImage = proofPreviewUrl || getMediaUrl(createdOrder.proofImage);
+    const hasSubmitted = proofSubmitted || Boolean(createdOrder.transactionId);
 
     return (
-      <div className="mx-auto max-w-2xl px-4 py-12">
-        <div className="bg-white border rounded-3xl p-8 md:p-10 shadow-xl space-y-6">
-          <div className="flex items-center justify-between border-b pb-4">
+      <div className="mx-auto max-w-2xl px-4 py-10">
+        <div className="bg-white border rounded-3xl p-6 sm:p-10 shadow-xl space-y-6">
+          
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-2">
             <div>
-              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                 isTelebirr ? 'bg-sky-100 text-sky-800' : 'bg-purple-100 text-purple-800'
               }`}>
-                {isTelebirr ? 'Telebirr Payment' : 'CBE Birr Payment'}
+                {isTelebirr ? 'Telebirr Manual Transfer' : 'CBE Birr Mobile Transfer'}
               </span>
-              <h1 className="text-2xl font-black text-slate-900 mt-2">{t('cart.payment_pending_title')}</h1>
+              <h1 className="text-2xl font-black text-slate-900 mt-2">
+                {hasSubmitted ? 'Payment Proof Submitted' : 'Complete Mobile Payment'}
+              </h1>
             </div>
-            <div className="text-right font-mono">
+            <div className="sm:text-right font-mono">
               <span className="text-xs text-slate-400 block">{t('cart.total_due')}</span>
-              <span className="text-lg font-black text-brand-600">{Number(createdOrder.total).toFixed(2)} ETB</span>
+              <span className="text-2xl font-black text-brand-600">{Number(createdOrder.total).toFixed(2)} ETB</span>
             </div>
           </div>
 
           {errorMessage && (
-            <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs flex items-center gap-2">
-              <svg className="w-5 h-5 shrink-0 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{errorMessage}</span>
+            <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 shrink-0 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{errorMessage}</span>
+              </div>
+              <button onClick={() => setErrorMessage(null)} className="text-rose-500 font-bold hover:text-rose-700">&times;</button>
             </div>
           )}
 
@@ -397,69 +535,287 @@ export default function CartPage() {
             isTelebirr ? 'bg-sky-50/70 border-sky-200' : 'bg-purple-50/70 border-purple-200'
           } space-y-4`}>
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white ${
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-white shadow-sm ${
                 isTelebirr ? 'bg-sky-600' : 'bg-purple-700'
               }`}>
                 {isTelebirr ? 'TB' : 'CBE'}
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 text-base">
-                  {isTelebirr ? 'Telebirr SuperApp / Web' : 'CBE Birr Mobile Gateway'}
+                  {isTelebirr ? 'Telebirr SuperApp / USSD *127#' : 'CBE Birr Mobile Gateway / *847#'}
                 </h3>
-                <p className="text-xs text-slate-500">{t('cart.order_ref')}: <strong className="font-mono">{createdOrder.orderNumber}</strong></p>
+                <p className="text-xs text-slate-500">Order Ref: <strong className="font-mono text-slate-800">{createdOrder.orderNumber}</strong></p>
               </div>
             </div>
 
-            <ol className="list-decimal list-inside text-xs text-slate-700 space-y-2 leading-relaxed">
-              <li>Click the checkout portal link below or open your {isTelebirr ? 'Telebirr' : 'CBE Birr'} mobile application.</li>
-              <li>Confirm the merchant payment request for <strong>{Number(createdOrder.total).toFixed(2)} ETB</strong>.</li>
-              <li>Enter your PIN to authorize the transaction safely.</li>
-              <li>Return here and click <strong>Verify Payment</strong> below to update your order status.</li>
-            </ol>
+            {/* Account Information Cards with Copy Buttons */}
+            <div className="bg-white/90 rounded-xl p-4 border border-slate-200/80 space-y-3 shadow-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 flex flex-col justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">{merchantCodeLabel}</span>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="font-mono font-black text-base text-slate-900">{merchantCode}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(merchantCode, 'merchant')}
+                      className="text-[10px] font-bold text-brand-600 hover:text-brand-800 bg-brand-50 px-2 py-0.5 rounded"
+                    >
+                      {copiedField === 'merchant' ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
 
-            {paymentResult.checkoutUrl && (
-              <div className="pt-2">
-                <a
-                  href={paymentResult.checkoutUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`inline-flex items-center justify-center w-full py-3 px-6 rounded-xl font-bold text-xs text-white shadow transition active:scale-95 ${
-                    isTelebirr ? 'bg-sky-600 hover:bg-sky-700' : 'bg-purple-700 hover:bg-purple-800'
-                  }`}
-                >
-                  <span>Open {isTelebirr ? 'Telebirr' : 'CBE Birr'} Pay Portal</span>
-                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 flex flex-col justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Order Reference</span>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="font-mono font-black text-sm text-brand-700 truncate mr-1">{createdOrder.orderNumber}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(createdOrder.orderNumber, 'ref')}
+                      className="text-[10px] font-bold text-brand-600 hover:text-brand-800 bg-brand-50 px-2 py-0.5 rounded shrink-0"
+                    >
+                      {copiedField === 'ref' ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 flex flex-col justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Amount to Transfer</span>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="font-mono font-black text-sm text-emerald-700">{Number(createdOrder.total).toFixed(2)} ETB</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(Number(createdOrder.total).toFixed(2), 'amount')}
+                      className="text-[10px] font-bold text-brand-600 hover:text-brand-800 bg-brand-50 px-2 py-0.5 rounded shrink-0"
+                    >
+                      {copiedField === 'amount' ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
+
               </div>
-            )}
+
+              <div className="text-xs text-slate-700 space-y-1 leading-relaxed pt-1 border-t border-slate-100">
+                <p className="font-bold text-slate-900">Payment Steps:</p>
+                <p>1. Open your <strong>{isTelebirr ? 'Telebirr App' : 'CBE Birr App'}</strong> or dial <strong className="font-mono text-brand-700">{isTelebirr ? '*127#' : '*847#'}</strong>.</p>
+                <p>2. Select <strong>Pay Merchant</strong> & enter code <strong className="font-mono">{merchantCode}</strong>.</p>
+                <p>3. Enter exact amount <strong>{Number(createdOrder.total).toFixed(2)} ETB</strong> and put order reference <strong className="font-mono">{createdOrder.orderNumber}</strong>.</p>
+                <p>4. Complete the transfer and copy the <strong>Transaction ID</strong> or take a <strong>Screenshot of the receipt</strong>.</p>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-3 pt-2">
-            <button
-              onClick={handleVerifyPayment}
-              disabled={verifying}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 text-sm transition shadow-md active:scale-95 disabled:opacity-50"
-            >
-              {verifying ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>{t('cart.verifying')}</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>{t('cart.verify_payment')}</span>
-                </>
-              )}
-            </button>
+          {/* Form OR Status Card based on hasSubmitted */}
+          {!hasSubmitted ? (
+            <form onSubmit={handleProofSubmit} className="bg-slate-50 border border-slate-200/90 rounded-2xl p-6 space-y-5">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900">
+                  Step 2: Submit Payment Receipt or Transaction Reference
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Upload a screenshot of your transfer receipt. Entering the Transaction ID is optional.
+                </p>
+              </div>
 
+              <div className="space-y-4">
+                {/* Screenshot Upload Dropzone (Primary) */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5 flex items-center justify-between">
+                    <span>Attach Receipt Screenshot</span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                      Recommended
+                    </span>
+                  </label>
+                  
+                  {!proofPreviewUrl ? (
+                    <label className="border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-white hover:bg-emerald-50/20 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition text-center group">
+                      <svg className="w-9 h-9 text-emerald-600 group-hover:scale-110 transition mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">
+                        Click or drag to upload receipt screenshot
+                      </span>
+                      <span className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, JPEG, WEBP (Max 10MB)</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  ) : (
+                    <div className="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={proofPreviewUrl}
+                          alt="Receipt Preview"
+                          className="w-14 h-14 object-cover rounded-lg border shrink-0 cursor-pointer hover:opacity-80"
+                          onClick={() => setPreviewModalOpen(true)}
+                        />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-800 truncate">{proofFile?.name || 'receipt-screenshot.png'}</p>
+                          <p className="text-[10px] text-slate-400">
+                            {proofFile ? `${(proofFile.size / 1024).toFixed(1)} KB` : 'Uploaded'}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setPreviewModalOpen(true)}
+                            className="text-[10px] text-brand-600 font-bold hover:underline"
+                          >
+                            Click to preview
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProofFile(null);
+                          setProofPreviewUrl(null);
+                        }}
+                        className="text-xs text-rose-600 hover:text-rose-800 font-bold px-2.5 py-1.5 rounded-lg bg-rose-50 border border-rose-100 shrink-0"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Optional Transaction ID Input */}
+                <div className="pt-2 border-t border-slate-200/70">
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Transaction ID / Reference Number <span className="text-slate-400 font-normal">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={txnIdInput}
+                    onChange={(e) => setTxnIdInput(e.target.value)}
+                    placeholder={isTelebirr ? 'e.g. TX2409... (optional if screenshot attached)' : 'e.g. FT2409... (optional if screenshot attached)'}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-mono focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition"
+                  />
+                  <span className="text-[11px] text-slate-400 mt-1 block">
+                    You do not need to fill this if you already uploaded your receipt screenshot.
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isUploadingProof}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 text-sm transition shadow-md active:scale-95 disabled:opacity-50"
+              >
+                {isUploadingProof ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Uploading & Submitting Proof...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Submit Payment Proof for Verification</span>
+                  </>
+                )}
+              </button>
+            </form>
+          ) : (
+            /* Proof Submitted Status Card */
+            <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-6 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex items-center justify-center">
+                    <span className="animate-ping absolute inline-flex h-4 w-4 rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-emerald-950">
+                      Payment Proof Submitted — Awaiting Admin Approval
+                    </h3>
+                    <p className="text-xs text-emerald-700 mt-0.5">
+                      Our finance team is verifying your transaction. Your official receipt will be generated automatically once approved.
+                    </p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 shrink-0">
+                  In Review
+                </span>
+              </div>
+
+              {/* Submitted Info Overview */}
+              <div className="bg-white rounded-xl p-4 border border-emerald-100 text-xs space-y-3">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <span className="font-bold text-slate-500">Submitted Transaction ID:</span>
+                  <span className="font-mono font-black text-brand-700 text-sm">
+                    {createdOrder.transactionId || txnIdInput}
+                  </span>
+                </div>
+
+                {displayProofImage && (
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-500">Attached Receipt Screenshot:</span>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewModalOpen(true)}
+                      className="flex items-center gap-1.5 text-brand-600 font-bold hover:underline"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={displayProofImage}
+                        alt="Receipt proof thumbnail"
+                        className="w-8 h-8 rounded object-cover border"
+                      />
+                      <span>View Screenshot</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleCheckApprovalStatus}
+                  disabled={verifying}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 text-xs transition shadow-sm active:scale-95 disabled:opacity-50"
+                >
+                  {verifying ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Checking Approval Status...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span>Check Approval Status Now</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setProofSubmitted(false)}
+                  className="px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition text-center"
+                >
+                  Edit or Re-upload
+                </button>
+              </div>
+
+              <p className="text-[11px] text-emerald-800/80 text-center">
+                ⏱️ Checking automatically every 4 seconds. No need to reload the page.
+              </p>
+            </div>
+          )}
+
+          <div className="border-t pt-3">
             <button
               onClick={() => setCheckoutStep('CART')}
               className="w-full text-center text-xs font-bold text-slate-400 hover:text-slate-600 transition py-1"
@@ -468,6 +824,41 @@ export default function CartPage() {
             </button>
           </div>
         </div>
+
+        {/* Modal for full receipt screenshot preview */}
+        {previewModalOpen && displayProofImage && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-xl w-full p-4 space-y-3 shadow-2xl relative">
+              <div className="flex items-center justify-between border-b pb-2">
+                <h4 className="text-sm font-bold text-slate-900">Submitted Receipt Screenshot</h4>
+                <button
+                  onClick={() => setPreviewModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-600"
+                >
+                  &times;
+                </button>
+              </div>
+              <div className="max-h-[75vh] overflow-auto rounded-xl flex items-center justify-center bg-slate-900 p-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={displayProofImage}
+                  alt="Receipt Full Preview"
+                  className="max-h-[70vh] object-contain rounded-lg shadow-lg"
+                />
+              </div>
+              <div className="flex justify-end">
+                <a
+                  href={displayProofImage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-brand-600 font-bold hover:underline"
+                >
+                  Open Original in New Tab &rarr;
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

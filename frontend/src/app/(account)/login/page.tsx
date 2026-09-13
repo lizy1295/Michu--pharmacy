@@ -2,10 +2,12 @@
 
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { login, register } from '@/lib/api/auth';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [isRegister, setIsRegister] = useState(false);
   // Login channel: which field the user fills in for login
   const [loginChannel, setLoginChannel] = useState<'EMAIL' | 'PHONE'>('EMAIL');
@@ -80,7 +82,7 @@ export default function LoginPage() {
         } else {
           await login({ phone: loginPhone.trim(), password });
         }
-        window.location.href = '/account';
+        router.push('/account');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth.error_generic'));
@@ -370,11 +372,24 @@ export default function LoginPage() {
               )}
 
               {error && (
-                <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-xs text-red-600 font-medium flex items-start gap-1.5">
-                  <svg className="w-4 h-4 shrink-0 mt-0.5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
-                  </svg>
-                  <span>{error}</span>
+                <div className="rounded-xl bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-700 font-medium space-y-2">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                    </svg>
+                    <span>{error}</span>
+                  </div>
+                  {(error.toLowerCase().includes('admin') || error.includes('/admin/login')) && (
+                    <div className="pt-1">
+                      <Link
+                        href="/admin/login"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition shadow-xs"
+                      >
+                        <span>Go to Admin Portal</span>
+                        <span>&rarr;</span>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
 

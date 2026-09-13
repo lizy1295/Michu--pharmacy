@@ -19,16 +19,25 @@ export function OfflineBanner() {
       window.addEventListener('online', handleOnline);
       window.addEventListener('offline', handleOffline);
 
-      // Register Service Worker for PWA & Offline Support
+      // Register Service Worker for PWA & Offline Support in production only
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker
-          .register('/sw.js')
-          .then((reg) => {
-            console.log('[PWA] Service Worker registered with scope:', reg.scope);
-          })
-          .catch((err) => {
-            console.warn('[PWA] Service Worker registration failed:', err);
-          });
+        if (process.env.NODE_ENV === 'production') {
+          navigator.serviceWorker
+            .register('/sw.js')
+            .then((reg) => {
+              console.log('[PWA] Service Worker registered with scope:', reg.scope);
+            })
+            .catch((err) => {
+              console.warn('[PWA] Service Worker registration failed:', err);
+            });
+        } else {
+          // In development, unregister any active service worker to prevent dev bundle & HMR cache lockup
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (const registration of registrations) {
+              registration.unregister();
+            }
+          }).catch(() => {});
+        }
       }
 
       return () => {

@@ -1,9 +1,10 @@
-import type {
-  AuthResponse,
-  AuthUser,
-  LoginRequest,
-  RegisterRequest,
-} from '@michu/shared';
+import {
+  type AuthResponse,
+  type AuthUser,
+  type LoginRequest,
+  type RegisterRequest,
+  isStaffRole,
+} from '@/lib/shared';
 import { getAccessToken, getRefreshToken, setTokens, clearTokens } from '../auth/tokens';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
@@ -45,7 +46,19 @@ export async function login(data: LoginRequest): Promise<AuthResponse> {
     method: 'POST',
     body: JSON.stringify(data),
   });
+  if (result.user && isStaffRole(result.user.role)) {
+    clearTokens();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('michu_user');
+      window.dispatchEvent(new Event('auth-change'));
+    }
+    throw new Error('Admin and staff accounts cannot sign in to the customer storefront. Please sign in via the Admin Portal at /admin/login.');
+  }
   setTokens(result.tokens.accessToken, result.tokens.refreshToken);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('michu_user', JSON.stringify(result.user));
+    window.dispatchEvent(new Event('auth-change'));
+  }
   return result;
 }
 
