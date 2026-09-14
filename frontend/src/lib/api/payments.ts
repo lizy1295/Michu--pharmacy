@@ -57,6 +57,7 @@ export interface PaymentDetails {
   providerReference?: string;
   status: 'PENDING' | 'PAYMENT_INITIATED' | 'PAID' | 'FAILED' | 'CANCELLED' | 'EXPIRED';
   checkoutUrl?: string;
+  proofImage?: string;
   errorMessage?: string;
   paidAt?: string;
   createdAt: string;
@@ -130,3 +131,69 @@ export async function getReceiptByOrderId(orderId: number): Promise<ReceiptDetai
   return request<ReceiptDetails>(`/receipts/order/${orderId}`).catch(() => null);
 }
 
+export async function uploadPaymentProof(file: File): Promise<{ message: string; url: string; filename: string }> {
+  const token = getAccessToken();
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const headers: HeadersInit = {};
+  if (token) {
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_URL}/payments/upload-proof`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const message = body.message ?? `Upload failed (${response.status})`;
+    throw new Error(Array.isArray(message) ? message.join(', ') : message);
+  }
+
+  return response.json();
+}
+
+export interface SubmitPaymentProofParams {
+  orderId: number;
+  paymentMethod: string;
+  transactionId?: string;
+  proofImage?: string;
+}
+
+export async function submitPaymentProof(params: SubmitPaymentProofParams) {
+  return request<{
+    paymentId: number;
+    paymentNumber: string;
+    orderNumber: string;
+    transactionId?: string;
+    proofImage?: string;
+    status: string;
+  }>('/payments/submit-proof', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
+export async function adminApprovePayment(orderId: number) {
+  return request<{
+    success: boolean;
+    payment: any;
+    receipt: any;
+    message: string;
+  }>(`/payments/order/${orderId}/admin-approve`, {
+    method: 'POST',
+  });
+}
+
+export async function adminRejectPayment(orderId: number, reason?: string) {
+  return request<{
+    success: boolean;
+    message: string;
+  }>(`/payments/order/${orderId}/admin-reject`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}

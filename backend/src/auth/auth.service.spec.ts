@@ -195,6 +195,15 @@ describe('AuthService', () => {
         authService.login({ email: 'test@example.com', password: 'wrong' }),
       ).rejects.toThrow(UnauthorizedException);
     });
+
+    it('should reject admin accounts on user login endpoint', async () => {
+      usersService.findByEmail.mockResolvedValue({ ...mockUser, role: UserRole.SUPERADMIN });
+      usersService.validatePassword.mockResolvedValue(true);
+
+      await expect(
+        authService.login({ email: 'admin@michupharmacy.com', password: 'password123' }),
+      ).rejects.toThrow('Admin accounts must sign in via the Admin Portal at /admin/login');
+    });
   });
 
   describe('forgotPassword (OTP generation & anti-enumeration)', () => {
@@ -234,7 +243,7 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(null);
 
       await expect(
-        authService.verifyOtp('unknown@example.com', '123456'),
+        authService.verifyOtp('unknown@example.com', undefined, '123456'),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -249,7 +258,7 @@ describe('AuthService', () => {
       });
 
       await expect(
-        authService.verifyOtp('test@example.com', validOtp),
+        authService.verifyOtp('test@example.com', undefined, validOtp),
       ).rejects.toThrow('expired');
     });
 
@@ -264,7 +273,7 @@ describe('AuthService', () => {
       });
 
       await expect(
-        authService.verifyOtp('test@example.com', '000000'),
+        authService.verifyOtp('test@example.com', undefined, '000000'),
       ).rejects.toThrow('2 attempt(s) remaining');
       expect(passwordResetTokenRepo.update).toHaveBeenCalledWith(1, { attempts: 1 });
     });
@@ -280,7 +289,7 @@ describe('AuthService', () => {
       });
 
       await expect(
-        authService.verifyOtp('test@example.com', '000000'),
+        authService.verifyOtp('test@example.com', undefined, '000000'),
       ).rejects.toThrow('Too many failed attempts');
       expect(passwordResetTokenRepo.update).toHaveBeenCalledWith(1, expect.objectContaining({ usedAt: expect.any(Date) }));
     });
@@ -295,7 +304,7 @@ describe('AuthService', () => {
         expiresAt: new Date(Date.now() + 600000),
       });
 
-      const res = await authService.verifyOtp('test@example.com', validOtp);
+      const res = await authService.verifyOtp('test@example.com', undefined, validOtp);
       expect(res.resetToken).toBeDefined();
       expect(res.resetToken.length).toBe(64); // 32 bytes hex
       expect(res.message).toContain('Code verified successfully');

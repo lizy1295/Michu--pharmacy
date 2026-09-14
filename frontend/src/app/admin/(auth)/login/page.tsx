@@ -7,10 +7,17 @@ import { useRouter } from 'next/navigation';
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  const handleAutoFill = () => {
+    setEmail('admin@michupharmacy.com');
+    setPassword('password123');
+    setError('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +28,7 @@ export default function AdminLoginPage() {
       const response = await fetch('/api/auth/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, rememberMe }),
+        body: JSON.stringify({ email: email.trim(), password, rememberMe }),
       });
 
       const data = await response.json();
@@ -30,16 +37,16 @@ export default function AdminLoginPage() {
         throw new Error(data.message || 'Invalid email or password');
       }
 
-      localStorage.setItem('michu_access_token', data.accessToken);
-      localStorage.setItem('michu_refresh_token', data.refreshToken || '');
+      localStorage.setItem('admin_access_token', data.accessToken);
+      localStorage.setItem('admin_refresh_token', data.refreshToken || '');
       localStorage.setItem('admin_data', JSON.stringify(data.admin));
+      window.dispatchEvent(new Event('storage'));
       router.push('/admin');
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
-
   };
 
   return (
@@ -50,8 +57,8 @@ export default function AdminLoginPage() {
 
       <div className="w-full max-w-md relative z-10">
         <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/80 border border-slate-200/80 p-8 sm:p-10">
-          <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2.5 mb-6 group">
+          <div className="text-center mb-6">
+            <Link href="/" className="inline-flex items-center gap-2.5 mb-5 group">
               <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-brand-700 flex items-center justify-center text-white font-extrabold text-base shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
                 MP
               </div>
@@ -62,12 +69,45 @@ export default function AdminLoginPage() {
             </Link>
             <h1 className="text-2xl font-extrabold text-slate-900">Admin Sign In</h1>
             <p className="text-sm text-slate-500 mt-1">Access your pharmacy management dashboard</p>
+
+            <div className="mt-3 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={handleAutoFill}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] font-bold transition shadow-2xs cursor-pointer"
+                title="Click to auto-fill working credentials"
+              >
+                <span>🔑 Auto-Fill: admin@michupharmacy.com</span>
+              </button>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold">
-                {error}
+              <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold space-y-2">
+                <p>{error}</p>
+                {error.toLowerCase().includes('customer') ? (
+                  <div>
+                    <Link
+                      href="/login"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition"
+                    >
+                      <span>Go to Customer Sign In</span>
+                      <span>&rarr;</span>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="pt-1.5 border-t border-rose-200/60 flex items-center justify-between">
+                    <span className="text-[11px] text-rose-600">Saved password incorrect?</span>
+                    <button
+                      type="button"
+                      onClick={handleAutoFill}
+                      className="underline font-bold text-emerald-800 hover:text-emerald-950 text-[11px] cursor-pointer"
+                    >
+                      Click here to reset &amp; auto-fill
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -84,15 +124,26 @@ export default function AdminLoginPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 placeholder:text-slate-400 transition"
-                placeholder="••••••••"
-              />
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-[11px] font-semibold text-slate-500 hover:text-emerald-700 cursor-pointer"
+                >
+                  {showPassword ? 'Hide password' : 'Show password'}
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 placeholder:text-slate-400 transition"
+                  placeholder="••••••••"
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-between text-xs font-semibold">

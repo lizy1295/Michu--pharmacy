@@ -199,8 +199,8 @@ const translations: Translations = {
     "home.featured_subtitle": "Top Selections",
     "home.featured_title": "Popular Medicines & Skincare Essentials",
     "home.featured_view_all": "View All Products →",
-    "home.hero_badge1": "🇪🇹 100% Quality & Certified Medicines • Certified Medications",
-    "home.hero_badge2": "✅ WHO-GMP Certified",
+    "home.hero_badge1": "100% Certified Ethiopian Medicines",
+    "home.hero_badge2": "WHO-GMP Certified",
     "home.hero_btn_rx": "Upload Prescription (Upload Rx)",
     "home.hero_btn_shop": "Shop Medications Now",
     "home.hero_desc": "Order prescription medicines, vitamins, and skincare products easily from your home; pay instantly with Telebirr, CBE Birr, and Awash Bank.",
@@ -254,7 +254,7 @@ const translations: Translations = {
     "nav.faq": "FAQ",
     "nav.home": "Home",
     "nav.my_account": "My Account",
-    "nav.payment": "💳 Telebirr & CBE",
+    "nav.payment": "Telebirr • CBE",
     "nav.search_placeholder": "Search medications & products...",
     "nav.services": "Services",
     "nav.shop": "Shop",
@@ -567,8 +567,8 @@ const translations: Translations = {
     "home.featured_subtitle": "ተፈላጊ ምርቶች",
     "home.featured_title": "ተፈላጊ የመድኃኒት እና የውበት ምርቶች",
     "home.featured_view_all": "ሁሉንም ይመልከቱ →",
-    "home.hero_badge1": "🇪🇹 100% ጥራት ያላቸው እና የተረጋገጡ መድኃኒቶች • Certified Medications",
-    "home.hero_badge2": "✅ WHO-GMP የተረጋገጠ",
+    "home.hero_badge1": "100% ጥራት ያላቸው እና የተረጋገጡ መድኃኒቶች",
+    "home.hero_badge2": "WHO-GMP የተረጋገጠ",
     "home.hero_btn_rx": "የሐኪም ማዘዣ ይላኩ (Upload Rx)",
     "home.hero_btn_shop": "መድኃኒቶችን ይዘዙ (Shop Now)",
     "home.hero_desc": "የሐኪም ማዘዣ መድኃኒቶችን፣ ቫይታሚኖችን እና የውበት መጠበቂያዎችን ከቤትዎ ሆነው ይዘዙ፤ በቴሌብር እና በሲቢኢ በፍጥነት ይክፈሉ።",
@@ -622,7 +622,7 @@ const translations: Translations = {
     "nav.faq": "በተደጋጋሚ የሚጠየቁ ጥያቄዎች",
     "nav.home": "ዋና ገጽ",
     "nav.my_account": "የእኔ አካውንት",
-    "nav.payment": "💳 ቴሌብር እና ሲቢኢ",
+    "nav.payment": "ቴሌብር • ሲቢኢ",
     "nav.search_placeholder": "መድሃኒቶችን እና ምርቶችን ይፈልጉ...",
     "nav.services": "አገልግሎቶች",
     "nav.shop": "ገበያ",
@@ -935,8 +935,8 @@ const translations: Translations = {
     "home.featured_subtitle": "ተመራጽቲ ፍርያት",
     "home.featured_title": "ተደለይቲ መድሃኒታትን ናይ ቆርበት መመላከዒታትን",
     "home.featured_view_all": "ኩሎም ርኣዩ →",
-    "home.hero_badge1": "🇪🇹 100% ጽሬቶም ዝተረጋገጹ መድሃኒታት • Certified Medications",
-    "home.hero_badge2": "✅ WHO-GMP ዝተረጋገጸ",
+    "home.hero_badge1": "100% ጽሬቶም ዝተረጋገጹ መድሃኒታት",
+    "home.hero_badge2": "WHO-GMP ዝተረጋገጸ",
     "home.hero_btn_rx": "ትእዛዝ ሓኪም ስደዱ (Upload Rx)",
     "home.hero_btn_shop": "መድሃኒታት ይዘዙ (ሕጂ ግዝኡ)",
     "home.hero_desc": "ናይ ሓኪም ትእዛዝ መድሃኒታት፣ ቫይታሚናትን ናይ ቆርበት መመላከዕታትን ካብ ገዛኹም ኩኑ እዘዙ፤ ብቴሌብርን ሲቢኢ ብርን ብቐሊሉ ክፈሉ።",
@@ -990,7 +990,7 @@ const translations: Translations = {
     "nav.faq": "ዝተደጋግሙ ሕቶታት",
     "nav.home": "ቀንዲ ገጽ",
     "nav.my_account": "ናተይ ኣካውንት",
-    "nav.payment": "💳 ቴሌብርን ሲቢኢን",
+    "nav.payment": "ቴሌብር • ሲቢኢ",
     "nav.search_placeholder": "መድሃኒታትን ፍርያትን ድለዩ...",
     "nav.services": "ኣገልግሎታት",
     "nav.shop": "ዕዳጋ",
@@ -1265,65 +1265,65 @@ const translations: Translations = {
     "health.consult_desc": "Hammamtaa fi miidhaa qorichaa irratti ogeessota keenya waliin viidiyoodhaan mari'adhaa.",
     "health.consult_doctor": "Ogeessa Faarmaasistii Filadhaa",
     "health.consult_reason": "Sababa Marii",
-    "health.consult_submit": "Marii Qabadhaa",
+    "health.consult_submit": "Marii Qabad",
     "health.consult_time": "Sa'aatii Filatame",
-    "health.consult_title": "Marii Faarmaasistii Qabadhaa",
+    "health.consult_title": "Marii Faarmaasistii",
     "health.drug_dosage": "Hammamtaa",
-    "health.drug_not_found": "Odeeffannoon qorichaa hin argamne. Mee ogeessa faarmaasistii mari'adhaa.",
-    "health.drug_placeholder": "Maqaa qorichaatiin barbaadaa (Fkn: Paaraasitaamool, Amooksisiliinii)...",
+    "health.drug_not_found": "Odeeffannoon hin argamne.",
+    "health.drug_placeholder": "Maqaa qorichaatiin barbaadaa...",
     "health.drug_search": "Barbaadi",
-    "health.drug_title": "Odeeffannoo Qorichaa Barbaaduu",
+    "health.drug_title": "Odeeffannoo Qorichaa",
     "health.drug_uses": "Faayidaa",
     "health.drug_warnings": "Akeekkachiisa",
-    "health.subtitle": "Ajaja qorichaa olkaa'aa, gorsa ogeessaa qabadhaa, ykn odeeffannoo qorichaa barbaadaa",
-    "health.tab_consult": "Marii Doktooraa Qabadhaa",
+    "health.subtitle": "Ajaja qorichaa olkaa'aa, gorsa ogeessaa qabadhaa.",
+    "health.tab_consult": "Marii Doktooraa",
     "health.tab_drug_info": "Odeeffannoo Qorichaa",
-    "health.tab_upload": "Ajaja Qorichaa Olkaa'aa",
+    "health.tab_upload": "Ajaja Qorichaa Olkaa",
     "health.title": "Tajaajila Fayyaa",
     "health.upload_branch": "Damee Itti Fudhattan",
-    "health.upload_btn": "Olkaa'uuf / Iskaanii Gochuuf Tuqaa",
-    "health.upload_desc": "Suuraa ajaja keessanii ergaa, ogeessonni keenya daqiiqaa 15 keessatti qoricha keessan qopheessu.",
+    "health.upload_btn": "Olkaa'uuf Tuqaa",
+    "health.upload_desc": "Suuraa ajaja keessanii ergaa.",
     "health.upload_name": "Maqaa Keessan Guutuu",
-    "health.upload_notes": "Yaada Dabalataa (Filannoo)",
-    "health.upload_phone": "Lakkoofsa Bilbila Keessanii",
-    "health.upload_submit": "Ajaja Galchaa",
-    "health.upload_title": "Ajaja Qorichaa Keessan Ergaa",
-    "home.brands_subtitle": "Oomishtoota Qorichaa Beekamoo",
-    "home.brands_title": "Biraandoota Qorichaa fi Faarmasii Beekamoo (Brands)",
-    "home.brands_view_all": "Oomishtoota Hunda Ilaalaa →",
+    "health.upload_notes": "Yaada Dabalataa",
+    "health.upload_phone": "Lakkoofsa Bilbila",
+    "health.upload_submit": "Ajaja Galcha",
+    "health.upload_title": "Ajaja Qorichaa Erga",
+    "home.brands_subtitle": "Oomishtoota Qorichaa",
+    "home.brands_title": "Biraandoota Qorichaa",
+    "home.brands_view_all": "Hunda Ilaalaa →",
     "home.cat_cosmetic": "Kunuunsa Miidhaginaa",
     "home.cat_medical_devices": "Meeshaalee Yaalaa",
     "home.cat_medicine": "Qorichoota",
     "home.cat_personal_care": "Qulqullina Dhuunfaa",
-    "home.cat_supplement": "Vaayitaaminii fi Dabalata",
-    "home.categories_subtitle": "Qorichoota, vaayitaaminii fi meeshaalee yaalaa salphaatti argadhaa",
-    "home.categories_title": "Gosa Oomishaatiin Bitaa (Shop By Categories)",
+    "home.cat_supplement": "Vaayitaaminii",
+    "home.categories_subtitle": "Salphaatti argadhaa",
+    "home.categories_title": "Gosa Oomishaatiin Bita",
     "home.category_products_suffix": "+ Oomishaalee",
     "home.featured_price": "Gatii",
     "home.featured_subtitle": "Filatamoowwan",
-    "home.featured_title": "Qorichootaa fi Oomishaalee Miidhaginaa Barbaadaman",
+    "home.featured_title": "Oomishaalee Barbaadaman",
     "home.featured_view_all": "Hunda Ilaalaa →",
-    "home.hero_badge1": "🇪🇹 Qorichoota Qulqullina Qabanii fi Mirkanaa'an 100%",
-    "home.hero_badge2": "✅ WHO-GMP Mirkanaa'e",
-    "home.hero_btn_rx": "Ajaja Hakiimii Fe'aa (Upload Rx)",
-    "home.hero_btn_shop": "Qorichoota Bitaa (Amma Bitaa)",
-    "home.hero_desc": "Qorichoota ajaja hakiimii, vaayitaaminii fi qoricha gogaa mana keessan taa'aa ajajaa; Telebirr fi CBE Birr dhaan battalatti kaffalaa.",
-    "home.hero_title1": "Fayyaan Keessan Dursa Keenya!",
-    "home.hero_title2": "Tajaajila Faarmasii Dijitaalaa Ammayyaa",
-    "home.hero_trust1": "🚀 Finfinnee fi Dameewwan Naannootti Qaqqabinsa Saffisaa",
-    "home.hero_trust2": "🔒 Faarmasii 100% Nageenyi Eegamee fi Hayyama Qabu",
-    "home.hero_trust3": "💳 Kaffaltii Telebirr fi CBE tiin Deeggarame",
+    "home.hero_badge1": "100% Mirkanaa'an",
+    "home.hero_badge2": "WHO-GMP",
+    "home.hero_btn_rx": "Ajaja Hakiimii (Upload Rx)",
+    "home.hero_btn_shop": "Qorichoota Bita",
+    "home.hero_desc": "Qorichoota, vaayitaaminii fi qoricha gogaa mana keessan taa'aa ajajaa.",
+    "home.hero_title1": "Fayyaan Keessan Dursa!",
+    "home.hero_title2": "Tajaajila Faarmasii Dijitaalaa",
+    "home.hero_trust1": "🚀 Qaqqabinsa Saffisaa",
+    "home.hero_trust2": "🔒 Faarmasii Nageenyi Eegamee",
+    "home.hero_trust3": "💳 Kaffaltii Telebirr fi CBE",
     "home.payment_awash_code": "Hawaash Birr: *901#",
-    "home.payment_awash_desc": "Moobaayil Baankiingii Hawaash fi Intarneet Baankiingiin kaffaltii saffisaa.",
-    "home.payment_awash_title": "Baankii Hawaash (Awash Bank)",
-    "home.payment_badge": "Kaffaltii Saffisaa fi Nageenya Qabu",
-    "home.payment_cash_branches": "Finfinnee fi Naannootti Dameewwan 8",
-    "home.payment_cash_desc": "Qoricha damee dhihoo irraa yeroo fudhattan callaadhaan kaffalaa.",
-    "home.payment_cash_title": "Callaadhaan Fudhannarratti (Cash on Pickup)",
+    "home.payment_awash_desc": "Moobaayil Baankiingii Hawaash.",
+    "home.payment_awash_title": "Baankii Hawaash",
+    "home.payment_badge": "Kaffaltii Saffisaa",
+    "home.payment_cash_branches": "Dameewwan 8",
+    "home.payment_cash_desc": "Callaadhaan kaffalaa.",
+    "home.payment_cash_title": "Callaadhaan Fudhannarratti",
     "home.payment_cbe_code": "Koodii CBE: *847#",
-    "home.payment_cbe_desc": "Moobaayil Baankiingii CBE yookiin *847# dhaan kallattiin dabarsaa.",
-    "home.payment_cbe_title": "CBE Birr (Baankii Daldala Itoophiyaa)",
-    "home.payment_subtitle": "Telebirr, CBE Birr, Baankii Hawaash, yookiin damee irraa callaadhaan kaffaluun qoricha keessan battalatti fudhadhaa.",
+    "home.payment_cbe_desc": "Moobaayil Baankiingii CBE.",
+    "home.payment_cbe_title": "CBE Birr",
+    "home.payment_subtitle": "Telebirr fi CBE Birr dhaan kaffalaa.",
     "home.payment_telebirr_code": "Koodii Gabaabaa: *127#",
     "home.payment_telebirr_desc": "SupperApp Telebirr yookiin USSD *127# dhaan battalatti kaffalaa.",
     "home.payment_telebirr_title": "Telebirr (ቴሌብር)",
@@ -1358,7 +1358,7 @@ const translations: Translations = {
     "nav.faq": "Gaaffiilee Yeroo Baay'ee Gaafataman",
     "nav.home": "Fuula Duraa",
     "nav.my_account": "Akkaawuntii koo",
-    "nav.payment": "💳 Telebirr fi CBE",
+    "nav.payment": "Telebirr • CBE",
     "nav.search_placeholder": "Qorichaa fi oomisha barbaadi...",
     "nav.services": "Tajaajiloota",
     "nav.shop": "Bitaa",
@@ -2247,7 +2247,7 @@ const defaultLangOption = LANGUAGES[0];
 const LanguageContext = createContext<LanguageContextProps>({
   language: 'en',
   setLanguage: () => {},
-  t: (key) => key,
+  t: (key) => translations['en']?.[key] || key,
   languagesList: LANGUAGES,
   currentLanguageOption: defaultLangOption,
 });
@@ -2266,23 +2266,31 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setLanguage = (lang: Language) => {
+  const setLanguage = React.useCallback((lang: Language) => {
     setLanguageState(lang);
     try {
       localStorage.setItem('michu-lang', lang);
     } catch {
       // Ignore storage errors
     }
-  };
+  }, []);
 
-  const t = (key: string): string => {
+  const t = React.useCallback((key: string): string => {
     return translations[language]?.[key] || translations['en'][key] || key;
-  };
+  }, [language]);
 
-  const currentLanguageOption = LANGUAGES.find(l => l.code === language) || defaultLangOption;
+  const currentLanguageOption = React.useMemo(
+    () => LANGUAGES.find(l => l.code === language) || defaultLangOption,
+    [language]
+  );
+
+  const contextValue = React.useMemo(
+    () => ({ language, setLanguage, t, languagesList: LANGUAGES, currentLanguageOption }),
+    [language, setLanguage, t, currentLanguageOption]
+  );
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, languagesList: LANGUAGES, currentLanguageOption }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );

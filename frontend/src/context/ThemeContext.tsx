@@ -86,7 +86,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setMounted(true);
   }, []);
 
-  const setTheme = (newTheme: ThemeId) => {
+  const setTheme = React.useCallback((newTheme: ThemeId) => {
     setThemeState(newTheme);
     try {
       localStorage.setItem('mph_theme', newTheme);
@@ -94,12 +94,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       console.warn('Could not save theme preference:', e);
     }
     document.documentElement.setAttribute('data-theme', newTheme);
-  };
+  }, []);
 
-  const currentThemeMeta = THEMES.find((t) => t.id === theme) || THEMES[0];
+  const currentThemeMeta = React.useMemo(
+    () => THEMES.find((t) => t.id === theme) || THEMES[0],
+    [theme]
+  );
+
+  const contextValue = React.useMemo(
+    () => ({ theme, setTheme, themes: THEMES, currentThemeMeta }),
+    [theme, setTheme, currentThemeMeta]
+  );
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, themes: THEMES, currentThemeMeta }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );

@@ -5,6 +5,16 @@ export const metadata: Metadata = {
   title: 'Michu Admin – Pharmacy Operations Dashboard',
   description: 'Internal admin portal for Michu Pharmacy management.',
   robots: { index: false, follow: false },
+  icons: {
+    icon: [
+      { url: '/admin-favicon.svg', type: 'image/svg+xml' },
+      { url: '/admin-icon.png', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/admin-icon.png', type: 'image/png' },
+    ],
+    shortcut: '/admin-favicon.svg',
+  },
 };
 
 /**

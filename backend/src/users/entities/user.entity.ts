@@ -45,8 +45,9 @@ export class User {
     name: 'email',
     type: 'varchar',
     length: 255,
+    nullable: true,
   })
-  email!: string;
+  email?: string | null;
 
   @Column({
     name: 'password_hash',

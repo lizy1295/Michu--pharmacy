@@ -43,7 +43,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('michu_wishlist', JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
-  const addToWishlist = (product: Omit<WishlistItem, 'quantity'>) => {
+  const addToWishlist = React.useCallback((product: Omit<WishlistItem, 'quantity'>) => {
     setWishlistItems((prev) => {
       const exists = prev.find((item) => item.id === product.id);
       if (exists) {
@@ -51,33 +51,36 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, product as WishlistItem];
     });
-  };
+  }, []);
 
-  const removeFromWishlist = (id: string) => {
+  const removeFromWishlist = React.useCallback((id: string) => {
     setWishlistItems((prev) => prev.filter((item) => item.id !== id));
-  };
+  }, []);
 
-  const isInWishlist = (id: string) => {
+  const isInWishlist = React.useCallback((id: string) => {
     return wishlistItems.some((item) => item.id === id);
-  };
+  }, [wishlistItems]);
 
-  const clearWishlist = () => {
+  const clearWishlist = React.useCallback(() => {
     setWishlistItems([]);
-  };
+  }, []);
 
-  const wishlistCount = wishlistItems.length;
+  const wishlistCount = React.useMemo(() => wishlistItems.length, [wishlistItems]);
+
+  const contextValue = React.useMemo(
+    () => ({
+      wishlistItems,
+      addToWishlist,
+      removeFromWishlist,
+      isInWishlist,
+      clearWishlist,
+      wishlistCount,
+    }),
+    [wishlistItems, addToWishlist, removeFromWishlist, isInWishlist, clearWishlist, wishlistCount]
+  );
 
   return (
-    <WishlistContext.Provider
-      value={{
-        wishlistItems,
-        addToWishlist,
-        removeFromWishlist,
-        isInWishlist,
-        clearWishlist,
-        wishlistCount,
-      }}
-    >
+    <WishlistContext.Provider value={contextValue}>
       {children}
     </WishlistContext.Provider>
   );

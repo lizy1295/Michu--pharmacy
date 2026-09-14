@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
+import { isStaffRole } from '@/lib/shared';
+
 /* ─── Sidebar nav items ──────────────────────────────────── */
 const NAV_ITEMS = [
   { name: 'Dashboard',          href: '/admin',                  icon: 'dashboard'      },
@@ -117,26 +119,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     const loadAdmin = () => {
       try {
+        const adminToken = localStorage.getItem('admin_access_token');
         const storedAdmin = localStorage.getItem('admin_data');
-        if (storedAdmin) {
-          const parsed = JSON.parse(storedAdmin);
-          setCurrentAdmin(parsed);
+
+        if (!adminToken || !storedAdmin) {
+          router.replace('/admin/login');
           return;
         }
 
-        const storedUser = localStorage.getItem('michu_user');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          setCurrentAdmin({
-            id: parsedUser.id,
-            name: `${parsedUser.firstName || ''} ${parsedUser.lastName || ''}`.trim() || parsedUser.name || 'Admin',
-            email: parsedUser.email,
-            role: parsedUser.role || 'super_admin',
-            avatar: parsedUser.profileImage,
-          });
+        const parsed = JSON.parse(storedAdmin);
+        if (isStaffRole(parsed.role)) {
+          setCurrentAdmin(parsed);
+        } else {
+          router.replace('/admin/login');
         }
       } catch (err) {
         console.error('Failed to parse admin user from localStorage:', err);
+        router.replace('/admin/login');
       }
     };
 
@@ -166,8 +165,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('michu_access_token');
-    localStorage.removeItem('michu_refresh_token');
+    localStorage.removeItem('admin_access_token');
+    localStorage.removeItem('admin_refresh_token');
     localStorage.removeItem('admin_data');
     router.push('/admin/login');
   };
@@ -175,6 +174,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isSuperAdmin = (currentAdmin.role || '').toLowerCase().includes('super');
   const initials = getInitials(currentAdmin.name, currentAdmin.email);
   const formattedRole = formatRoleName(currentAdmin.role);
+
+  // If on admin login page, do not render sidebar or top navigation bar
+  if (pathname === '/admin/login' || pathname?.startsWith('/admin/login')) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
@@ -228,38 +232,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <CollapseIcon collapsed={collapsed} />
           </button>
-        </div>
-
-        {/* Dynamic Super Admin Account Card in Sidebar */}
-        <div className="p-2.5 border-b border-slate-100">
-          {!collapsed ? (
-            <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center gap-2.5">
-              <div className={`w-8 h-8 rounded-lg ${isSuperAdmin ? 'bg-gradient-to-tr from-emerald-600 to-teal-600' : 'bg-slate-700'} text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs`}>
-                {initials}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <p className="text-xs font-bold text-slate-900 truncate">{currentAdmin.name || 'Admin User'}</p>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Active session" />
-                </div>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded-md ${
-                    isSuperAdmin ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
-                  }`}>
-                    {formattedRole}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div
-              className={`w-9 h-9 mx-auto rounded-xl ${isSuperAdmin ? 'bg-emerald-600' : 'bg-slate-700'} text-white flex items-center justify-center font-bold text-xs shadow-xs cursor-pointer`}
-              title={`${currentAdmin.name || 'Admin'} (${formattedRole})`}
-              onClick={() => router.push('/admin/admins')}
-            >
-              {initials}
-            </div>
-          )}
         </div>
 
         {/* Navigation Items */}

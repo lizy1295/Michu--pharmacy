@@ -1,10 +1,34 @@
-/**
- * @deprecated — No longer used.
- * Storefront shell logic has been moved to the root app/layout.tsx
- * which uses Next.js middleware (src/middleware.ts) to read the x-pathname
- * header server-side and conditionally renders Header/Footer only for
- * non-admin routes.
- */
+'use client';
+
+import React from 'react';
+import { usePathname } from 'next/navigation';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { CartProvider } from '@/context/CartContext';
+import { WishlistProvider } from '@/context/WishlistContext';
+import { LanguageProvider } from '@/context/LanguageContext';
+import { AiAssistant } from '@/components/ai/AiAssistant';
+import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
+
 export function StorefrontShell({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith('/admin');
+
+  if (isAdmin) {
+    return <>{children}</>;
+  }
+
+  return (
+    <LanguageProvider>
+      <CartProvider>
+        <WishlistProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <AiAssistant />
+          <ThemeSwitcher />
+        </WishlistProvider>
+      </CartProvider>
+    </LanguageProvider>
+  );
 }

@@ -75,7 +75,18 @@ describe('Payments & Verification Phase 3 & 4 (14 Scenarios)', () => {
         { provide: getRepositoryToken(Order), useValue: ordersRepo },
         { provide: getRepositoryToken(Product), useValue: {} },
         { provide: getRepositoryToken(Receipt), useValue: receiptsRepo },
-        { provide: TelebirrService, useValue: {} },
+        {
+          provide: TelebirrService,
+          useValue: {
+            initiatePayment: jest.fn().mockResolvedValue({
+              success: true,
+              checkoutUrl: 'https://checkout.chapa.co/checkout/payment/PAY-100',
+              providerReference: 'PAY-100',
+            }),
+            verifyPayment: jest.fn().mockResolvedValue({ success: true, paid: true }),
+            validateWebhookSignature: jest.fn().mockReturnValue(true),
+          },
+        },
         { provide: CbeService, useValue: {} },
         {
           provide: ConfigService,

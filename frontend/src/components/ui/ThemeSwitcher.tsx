@@ -10,18 +10,30 @@ export function ThemeSwitcher() {
   return (
     <aside
       aria-label="Theme Preview Switcher"
-      className="fixed bottom-5 right-5 z-[9999] font-sans select-none"
+      className="fixed bottom-6 left-6 z-[9999] font-sans select-none"
     >
       {/* Collapsed Toggle Pill */}
       {!isOpen && (
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-neutral-900/90 hover:bg-black text-white text-xs font-bold shadow-2xl backdrop-blur-md border border-white/20 transition-all hover:scale-105 active:scale-95 group"
-          title="Open Color Palette Switcher"
+          className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-full bg-slate-900/90 hover:bg-black text-white text-xs font-bold shadow-xl hover:shadow-2xl backdrop-blur-md border border-white/20 transition-all hover:scale-105 active:scale-95 group"
+          title="Open Color Theme Switcher"
         >
-          <span className="flex h-3 w-3 rounded-full border border-white/40 shadow-sm" style={{ backgroundColor: THEMES.find(t => t.id === theme)?.primary || '#474C80' }} />
-          <span className="tracking-wide">Theme Switcher</span>
+          <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-400 via-rose-400 to-indigo-400 flex items-center justify-center p-0.5 shadow-xs group-hover:rotate-12 transition-transform">
+            <svg className="w-3.5 h-3.5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+              <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+              <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+              <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+            </svg>
+          </div>
+          <span className="tracking-wide">Theme</span>
+          <span
+            className="flex h-3 w-3 rounded-full border border-white/40 shadow-sm"
+            style={{ backgroundColor: THEMES.find(t => t.id === theme)?.primary || '#474C80' }}
+          />
           <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20 text-white/90 uppercase tracking-widest font-mono">
             {`T${theme.replace('theme-', '')}`}
           </span>

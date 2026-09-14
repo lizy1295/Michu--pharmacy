@@ -240,3 +240,11 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* Suppress Next.js development error toast overlay */
+nextjs-portal,
+[data-nextjs-toast],
+[data-nextjs-toast-wrapper] {
+  display: none !important;
+}
+

@@ -11,7 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan, IsNull } from 'typeorm';
 import { createHash, randomBytes, randomInt } from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { AuthResponse, AuthUser } from '@michu/shared';
+import { AuthResponse, AuthUser, isStaffRole } from '@michu/shared';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
@@ -42,12 +42,28 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
-    const existing = await this.usersService.findByEmail(dto.email);
-    if (existing) {
-      throw new ConflictException('Email already registered');
+    const email = dto.email?.trim() || undefined;
+    const phone = dto.phone?.trim() || undefined;
+
+    if (!email && !phone) {
+      throw new BadRequestException('Either email or phone number is required to register');
     }
 
-    const user = await this.usersService.createCustomer(dto);
+    if (email) {
+      const existing = await this.usersService.findByEmail(email);
+      if (existing) throw new ConflictException('Email already registered');
+    }
+
+    if (phone) {
+      const existing = await this.usersService.findByPhone(phone);
+      if (existing) throw new ConflictException('Phone number already registered');
+    }
+
+    const user = await this.usersService.createCustomer({
+      ...dto,
+      email,
+      phone,
+    });
     return this.buildAuthResponse(user);
   }
 
@@ -77,6 +93,12 @@ export class AuthService {
 
     if (!user.isActive) {
       throw new UnauthorizedException('Account is inactive');
+    }
+
+    if (isStaffRole(user.role)) {
+      throw new UnauthorizedException(
+        'Admin accounts must sign in via the Admin Portal at /admin/login',
+      );
     }
 
     return this.buildAuthResponse(user);
@@ -143,7 +165,7 @@ export class AuthService {
   private toJwtPayload(user: User): Omit<JwtPayload, 'type'> {
     return {
       sub: String(user.id),
-      email: user.email,
+      email: user.email ?? null,
       role: user.role as any,
       branchId: user.branchId ?? null,
     };
@@ -152,11 +174,12 @@ export class AuthService {
   private toAuthUser(user: User): AuthUser {
     return {
       id: String(user.id),
-      email: user.email,
+      email: user.email ?? null,
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role as any,
       branchId: user.branchId ?? null,
+      phone: user.phone ?? null,
     };
   }
 
@@ -223,7 +246,7 @@ export class AuthService {
    * Generates a 6-digit numeric OTP, stores SHA-256 hash with 10-minute TTL,
    * dispatches via email/SMS, and returns an anti-enumeration safe response.
    */
-  async forgotPassword(email: string, phone?: string): Promise<{ message: string }> {
+  async forgotPassword(email?: string, phone?: string): Promise<{ message: string }> {
     const safeResponse = {
       message: 'If that account is registered, a 6-digit verification code has been sent.',
     };
@@ -264,7 +287,7 @@ export class AuthService {
     // Dispatch OTP via notification service (email + SMS ready)
     void this.notificationService.sendOtp(
       {
-        email: user.email,
+        email: user.email ?? undefined,
         phone: user.phone ?? phone,
       },
       rawOtp,
@@ -278,9 +301,13 @@ export class AuthService {
    * Enforces 10-minute expiry and max 3 attempts rate-limiting.
    * If valid, generates a short-lived single-use resetToken.
    */
-  async verifyOtp(email: string, otp: string): Promise<{ resetToken: string; message: string }> {
+  async verifyOtp(email?: string, phone?: string, otp?: string): Promise<{ resetToken: string; message: string }> {
     const cleanEmail = email ? email.trim().toLowerCase() : '';
-    const user = await this.usersService.findByEmail(cleanEmail);
+    let user = cleanEmail ? await this.usersService.findByEmail(cleanEmail) : null;
+
+    if (!user && phone) {
+      user = await this.usersService.findByPhone(phone.trim());
+    }
 
     if (!user) {
       throw new BadRequestException('Invalid or expired verification code.');

@@ -234,7 +234,7 @@ export class DashboardService {
       return {
         id: u.id,
         name: `${u.firstName} ${u.lastName}`.trim(),
-        email: u.email,
+        email: u.email ?? '',
         orders: agg.count,
         spent: Number(agg.spent.toFixed(2)),
         joinedAt: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : '',

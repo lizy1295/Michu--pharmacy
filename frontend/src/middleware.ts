@@ -5,10 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
  * This allows server-side layouts to conditionally render components
  * based on the route (e.g., hide the storefront Header/Footer in /admin).
  */
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
-  response.headers.set('x-pathname', request.nextUrl.pathname);
-  return response;
+export function middleware(_request: NextRequest) {
+  return NextResponse.next();
 }
 
 export const config = {

@@ -5,16 +5,21 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { forgotPassword, verifyOtp, resetPassword } from '@/lib/api/auth';
 
-type Step = 'EMAIL' | 'OTP' | 'PASSWORD' | 'SUCCESS';
+type Step = 'REQUEST' | 'OTP' | 'PASSWORD' | 'SUCCESS';
+type Channel = 'EMAIL' | 'PHONE';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
 
+  // Channel state (Email or Phone/SMS)
+  const [channel, setChannel] = useState<Channel>('EMAIL');
+
   // Step state
-  const [step, setStep] = useState<Step>('EMAIL');
+  const [step, setStep] = useState<Step>('REQUEST');
 
   // Form data
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -62,14 +67,19 @@ export default function ForgotPasswordPage() {
   // ─── Step 1: Request OTP ───
   async function handleSendOtp(e: FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (channel === 'EMAIL' && !email.trim()) return;
+    if (channel === 'PHONE' && !phone.trim()) return;
 
     setError(null);
     setInfoMessage(null);
     setLoading(true);
 
     try {
-      await forgotPassword(email.trim());
+      if (channel === 'EMAIL') {
+        await forgotPassword(email.trim(), undefined);
+      } else {
+        await forgotPassword(undefined, phone.trim());
+      }
       setStep('OTP');
       setOtpExpiresIn(600); // 10 min
       setResendCooldown(60); // 60s cooldown for resend
@@ -91,8 +101,12 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      await forgotPassword(email.trim());
-      setInfoMessage('A new verification code has been sent.');
+      if (channel === 'EMAIL') {
+        await forgotPassword(email.trim(), undefined);
+      } else {
+        await forgotPassword(undefined, phone.trim());
+      }
+      setInfoMessage(`A new verification code has been sent via ${channel === 'EMAIL' ? 'email' : 'SMS'}.`);
       setResendCooldown(60);
       setOtpExpiresIn(600);
       setOtpDigits(['', '', '', '', '', '']);
@@ -106,7 +120,6 @@ export default function ForgotPasswordPage() {
 
   // ─── OTP Input Handlers ───
   function handleOtpChange(index: number, val: string) {
-    // Only accept numeric digit
     const cleaned = val.replace(/\D/g, '');
     if (!cleaned) {
       const next = [...otpDigits];
@@ -115,12 +128,11 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    const digit = cleaned.slice(-1); // Take last entered digit
+    const digit = cleaned.slice(-1);
     const next = [...otpDigits];
     next[index] = digit;
     setOtpDigits(next);
 
-    // Auto-focus next input
     if (index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -166,7 +178,9 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await verifyOtp(email.trim(), rawOtp);
+      const res = channel === 'EMAIL'
+        ? await verifyOtp(email.trim(), rawOtp, undefined)
+        : await verifyOtp(undefined, rawOtp, phone.trim());
       setResetToken(res.resetToken);
       setStep('PASSWORD');
     } catch (err) {
@@ -194,7 +208,7 @@ export default function ForgotPasswordPage() {
 
     if (!resetToken) {
       setError('Your recovery session has expired. Please start over.');
-      setStep('EMAIL');
+      setStep('REQUEST');
       return;
     }
 
@@ -203,7 +217,6 @@ export default function ForgotPasswordPage() {
     try {
       await resetPassword(resetToken, newPassword);
       setStep('SUCCESS');
-      // Auto-redirect to login after 3 seconds
       setTimeout(() => {
         router.push('/login');
       }, 3000);
@@ -221,11 +234,18 @@ export default function ForgotPasswordPage() {
         {/* Step Header Badge / Brand Icon */}
         <div className="flex justify-center mb-6">
           <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 flex items-center justify-center shadow-sm">
-            {step === 'EMAIL' && (
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+            {step === 'REQUEST' && (
+              channel === 'EMAIL' ? (
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              ) : (
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"
+                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              )
             )}
             {step === 'OTP' && (
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,7 +271,7 @@ export default function ForgotPasswordPage() {
         {step !== 'SUCCESS' && (
           <div className="flex items-center justify-center gap-2 mb-6">
             <div className={`h-1.5 rounded-full transition-all duration-300 ${
-              step === 'EMAIL' ? 'w-8 bg-emerald-600' : 'w-2 bg-emerald-200'
+              step === 'REQUEST' ? 'w-8 bg-emerald-600' : 'w-2 bg-emerald-200'
             }`} />
             <div className={`h-1.5 rounded-full transition-all duration-300 ${
               step === 'OTP' ? 'w-8 bg-emerald-600' : step === 'PASSWORD' ? 'w-2 bg-emerald-200' : 'w-2 bg-neutral-200'
@@ -263,14 +283,48 @@ export default function ForgotPasswordPage() {
         )}
 
         {/* ───────────────────────────────────────────────────────────── */}
-        {/* STEP 1: ENTER EMAIL                                           */}
+        {/* STEP 1: CHOOSE CHANNEL & ENTER EMAIL / PHONE                  */}
         {/* ───────────────────────────────────────────────────────────── */}
-        {step === 'EMAIL' && (
+        {step === 'REQUEST' && (
           <>
             <h1 className="text-2xl font-extrabold text-neutral-900 text-center">Reset Password</h1>
-            <p className="text-sm text-neutral-500 text-center mt-2 mb-6 leading-relaxed">
-              Enter the email address associated with your Michu Pharmacy account and we&apos;ll send you a 6-digit verification code.
+            <p className="text-sm text-neutral-500 text-center mt-2 mb-5 leading-relaxed">
+              Choose how you want to receive your 6-digit verification code.
             </p>
+
+            {/* Channel Segmented Control Tabs */}
+            <div className="grid grid-cols-2 p-1 bg-neutral-100 rounded-2xl mb-6">
+              <button
+                type="button"
+                onClick={() => { setChannel('EMAIL'); setError(null); }}
+                className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 ${
+                  channel === 'EMAIL'
+                    ? 'bg-white text-emerald-700 shadow-sm'
+                    : 'text-neutral-500 hover:text-neutral-800'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Via Email
+              </button>
+              <button
+                type="button"
+                onClick={() => { setChannel('PHONE'); setError(null); }}
+                className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 ${
+                  channel === 'PHONE'
+                    ? 'bg-white text-emerald-700 shadow-sm'
+                    : 'text-neutral-500 hover:text-neutral-800'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                Via Phone (SMS)
+              </button>
+            </div>
 
             {error && (
               <div className="mb-4 rounded-xl bg-red-50 border border-red-100 p-3.5 text-xs text-red-600 font-medium flex items-start gap-2">
@@ -282,28 +336,52 @@ export default function ForgotPasswordPage() {
             )}
 
             <form onSubmit={handleSendOtp} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-1.5"
-                >
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  autoFocus
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="block w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none transition"
-                />
-              </div>
+              {channel === 'EMAIL' ? (
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-1.5"
+                  >
+                    Email Address
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    autoFocus
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="block w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none transition"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-1.5"
+                  >
+                    Phone Number (Ethiopia)
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    required
+                    autoFocus
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="0911234567 or +251911234567"
+                    className="block w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 focus:outline-none transition"
+                  />
+                  <p className="text-[10px] text-neutral-400 mt-1">
+                    Enter your mobile number associated with your account
+                  </p>
+                </div>
+              )}
 
               <button
                 type="submit"
-                disabled={loading || !email.trim()}
+                disabled={loading || (channel === 'EMAIL' ? !email.trim() : !phone.trim())}
                 className="w-full flex items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 text-sm active:scale-[0.98] transition disabled:opacity-50 disabled:pointer-events-none shadow-md shadow-emerald-100 mt-2"
               >
                 {loading ? (
@@ -315,7 +393,7 @@ export default function ForgotPasswordPage() {
                     Sending Code…
                   </span>
                 ) : (
-                  'Send Verification Code'
+                  `Send Verification Code via ${channel === 'EMAIL' ? 'Email' : 'SMS'}`
                 )}
               </button>
             </form>
@@ -329,19 +407,20 @@ export default function ForgotPasswordPage() {
           <>
             <h1 className="text-2xl font-extrabold text-neutral-900 text-center">Enter Verification Code</h1>
             <p className="text-sm text-neutral-500 text-center mt-2 mb-2 leading-relaxed">
-              We sent a 6-digit code to <strong className="text-neutral-800">{email}</strong>
+              We sent a 6-digit code via {channel === 'EMAIL' ? 'email' : 'SMS'} to{' '}
+              <strong className="text-neutral-800">{channel === 'EMAIL' ? email : phone}</strong>
             </p>
             <div className="text-center mb-6">
               <button
                 type="button"
                 onClick={() => {
-                  setStep('EMAIL');
+                  setStep('REQUEST');
                   setError(null);
                   setInfoMessage(null);
                 }}
                 className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold underline"
               >
-                Change email
+                Change {channel === 'EMAIL' ? 'email' : 'phone number'}
               </button>
             </div>
 

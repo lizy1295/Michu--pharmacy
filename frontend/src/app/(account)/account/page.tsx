@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import type { AuthUser } from '@michu/shared';
+import { type AuthUser, isStaffRole } from '@/lib/shared';
 import { getMe } from '@/lib/api/auth';
 import { clearTokens, getAccessToken } from '@/lib/auth/tokens';
 import { getOrdersByCustomer, Order } from '@/lib/api/orders';
@@ -11,22 +11,62 @@ import { useLanguage, LANGUAGES, Language } from '@/context/LanguageContext';
 
 export default function AccountPage() {
   const { language, setLanguage, t } = useLanguage();
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('michu_user');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (isStaffRole(parsed.role)) {
+            localStorage.removeItem('michu_user');
+            return null;
+          }
+          return parsed;
+        }
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('michu_access_token');
+      const cached = localStorage.getItem('michu_user');
+      // If token exists and we already have cached customer user data, don't block render
+      if (token && cached) return false;
+      if (!token) return false;
+    }
+    return true;
+  });
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [activeTab, setActiveTab] = useState<'orders' | 'rx' | 'language'>('orders');
 
   useEffect(() => {
-    const token = getAccessToken();
+    const token = localStorage.getItem('michu_access_token');
     if (!token) {
       setLoading(false);
+      setUser(null);
       return;
     }
 
     getMe()
       .then((userData) => {
+        if (userData && isStaffRole(userData.role)) {
+          clearTokens();
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('michu_user');
+            window.dispatchEvent(new Event('auth-change'));
+          }
+          setUser(null);
+          return;
+        }
+
         setUser(userData);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('michu_user', JSON.stringify(userData));
+        }
         if (userData?.email) {
           setLoadingOrders(true);
           getOrdersByCustomer({ email: userData.email })
@@ -35,13 +75,26 @@ export default function AccountPage() {
             .finally(() => setLoadingOrders(false));
         }
       })
-      .catch(() => clearTokens())
+      .catch(() => {
+        clearTokens();
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('michu_user');
+          window.dispatchEvent(new Event('auth-change'));
+        }
+        setUser(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
+
   function handleLogout() {
     clearTokens();
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('michu_user');
+      window.dispatchEvent(new Event('auth-change'));
+    }
     setUser(null);
+    setOrders([]);
   }
 
   if (loading) {
@@ -123,6 +176,7 @@ export default function AccountPage() {
       </div>
     </div>
   );
+
 
   // Guest Logged-out view
   if (!user) {
@@ -276,6 +330,12 @@ export default function AccountPage() {
                 <dt className="text-xs font-bold text-gray-400 uppercase">{t('dashboard.registered_email')}</dt>
                 <dd className="font-semibold text-gray-700 mt-0.5">{user.email}</dd>
               </div>
+              {user.phone && (
+                <div>
+                  <dt className="text-xs font-bold text-gray-400 uppercase">{t('auth.phone_label')}</dt>
+                  <dd className="font-semibold text-gray-700 mt-0.5">{user.phone}</dd>
+                </div>
+              )}
             </dl>
 
             <button

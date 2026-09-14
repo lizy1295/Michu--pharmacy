@@ -49,7 +49,7 @@ export class UsersService {
     const passwordHash = await bcrypt.hash(dto.password, this.saltRounds);
 
     const user = this.usersRepository.create({
-      email: dto.email.toLowerCase(),
+      email: dto.email ? dto.email.toLowerCase() : null,
       passwordHash,
       firstName: dto.firstName,
       lastName: dto.lastName,

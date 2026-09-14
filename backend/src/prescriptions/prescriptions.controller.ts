@@ -19,7 +19,7 @@ import { PrescriptionsService, CreatePrescriptionDto, UpdatePrescriptionStatusDt
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { UserRole } from '@michu/shared';
+import { UserRole, STAFF_ROLES } from '@michu/shared';
 
 const PRESCRIPTION_UPLOAD_PATH = './uploads/prescriptions';
 const ALLOWED_MIME_TYPES = [
@@ -80,7 +80,7 @@ export class PrescriptionsController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST, UserRole.DOCTOR)
+  @Roles(...STAFF_ROLES)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all prescriptions' })
   findAll() {
@@ -89,7 +89,7 @@ export class PrescriptionsController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST, UserRole.DOCTOR)
+  @Roles(...STAFF_ROLES)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get prescription by ID' })
   findOne(@Param('id') id: string) {
@@ -106,7 +106,7 @@ export class PrescriptionsController {
 
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPERADMIN, UserRole.BRANCH_ADMIN, UserRole.PHARMACIST, UserRole.DOCTOR)
+  @Roles(...STAFF_ROLES)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update prescription status' })
   updateStatus(@Param('id') id: string, @Body() dto: UpdatePrescriptionStatusDto) {

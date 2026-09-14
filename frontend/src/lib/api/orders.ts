@@ -1,4 +1,5 @@
 import { getAccessToken } from '../auth/tokens';
+import { apiFetch } from '../auth/apiClient';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
@@ -21,7 +22,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     const message = body.message ?? `Request failed (${response.status})`;
-    throw new Error(Array.isArray(message) ? message.join(', ') : message);
+    const err = new Error(Array.isArray(message) ? message.join(', ') : message) as Error & { status?: number };
+    err.status = response.status;
+    throw err;
   }
 
   return response.json();
@@ -65,6 +68,8 @@ export interface Order {
   status: 'pending' | 'approved' | 'shipped' | 'completed' | 'cancelled';
   paymentStatus: 'pending' | 'payment_initiated' | 'paid' | 'failed' | 'cancelled' | 'refunded';
   paymentMethod?: string;
+  transactionId?: string | null;
+  proofImage?: string | null;
   notes?: string;
   approvedAt?: string;
   shippedAt?: string;
@@ -100,11 +105,12 @@ export async function getOrders(params?: {
   if (params?.limit) query.set('limit', String(params.limit));
 
   const qs = query.toString();
-  return request<OrderListResponse>(`/orders${qs ? `?${qs}` : ''}`);
+  // Uses apiFetch (auto token-refresh on 401) for admin-only endpoint
+  return apiFetch<OrderListResponse>(`/orders${qs ? `?${qs}` : ''}`);
 }
 
 export async function getOrderById(id: number): Promise<Order> {
-  return request<Order>(`/orders/${id}`);
+  return apiFetch<Order>(`/orders/${id}`);
 }
 
 export async function getOrdersByCustomer(params: {
@@ -116,14 +122,14 @@ export async function getOrdersByCustomer(params: {
   if (params.customerId) query.set('customerId', String(params.customerId));
 
   const qs = query.toString();
-  return request<Order[]>(`/orders/customer${qs ? `?${qs}` : ''}`);
+  return apiFetch<Order[]>(`/orders/customer${qs ? `?${qs}` : ''}`);
 }
 
 export async function updateOrderStatus(
   id: number,
   status: 'pending' | 'approved' | 'shipped' | 'completed' | 'cancelled',
 ): Promise<Order> {
-  return request<Order>(`/orders/${id}/status`, {
+  return apiFetch<Order>(`/orders/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status }),
   });

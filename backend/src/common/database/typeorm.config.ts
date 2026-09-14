@@ -8,6 +8,7 @@ import { AddUserIdToPayments1757000000000 } from '../../migrations/1757000000000
 import { CreateReceiptsTable1757100000000 } from '../../migrations/1757100000000-CreateReceiptsTable';
 import { CreatePasswordResetTokens1757200000000 } from '../../migrations/1757200000000-CreatePasswordResetTokens';
 import { UpgradePasswordResetToOtp1757300000000 } from '../../migrations/1757300000000-UpgradePasswordResetToOtp';
+import { MakeEmailNullable1725550000000 } from '../../migrations/1725550000000-MakeEmailNullable';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -19,7 +20,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
 
     const shared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging' | 'migrations' | 'migrationsRun'> = {
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: !isProduction,
       logging: !isProduction,
       migrations: [
         InitialSchema1725440000000,
@@ -28,6 +29,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         CreateReceiptsTable1757100000000,
         CreatePasswordResetTokens1757200000000,
         UpgradePasswordResetToOtp1757300000000,
+        MakeEmailNullable1725550000000,
       ],
       migrationsRun: true,
     };

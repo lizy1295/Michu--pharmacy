@@ -78,6 +78,9 @@ export class Payment {
   @Column({ name: 'checkout_url', type: 'text', nullable: true })
   checkoutUrl?: string;
 
+  @Column({ name: 'proof_image', type: 'text', nullable: true })
+  proofImage?: string | null;
+
   @Column({ name: 'error_message', type: 'text', nullable: true })
   errorMessage?: string;
 

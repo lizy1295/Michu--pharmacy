@@ -36,9 +36,19 @@ export function Header() {
     fetchFilters();
   }, []);
 
-  // Check login status on mount
+  // Check customer login status on mount & on auth changes
   useEffect(() => {
-    setIsLoggedIn(!!getAccessToken());
+    const checkAuth = () => {
+      const customerToken = localStorage.getItem('michu_access_token');
+      setIsLoggedIn(!!customerToken);
+    };
+    checkAuth();
+    window.addEventListener('storage', checkAuth);
+    window.addEventListener('auth-change', checkAuth);
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('auth-change', checkAuth);
+    };
   }, []);
 
   // Sync search input with URL query param if any
@@ -155,7 +165,11 @@ export function Header() {
                 <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-pearl p-2 shadow-xl ring-1 ring-moss-900/10 z-50 animate-in fade-in slide-in-from-top-1 border border-herb-200">
                   <div className="px-3 py-1.5 text-[10px] font-extrabold text-herb-600 uppercase tracking-wider border-b border-herb-100 mb-1 flex items-center justify-between">
                     <span>6 Languages</span>
-                    <Link href="/account" onClick={() => setOpenDropdown(null)} className="text-herb-600 hover:text-moss-900 hover:underline">
+                    <Link
+                      href="/account"
+                      onClick={() => setOpenDropdown(null)}
+                      className="text-herb-600 hover:text-moss-900 hover:underline"
+                    >
                       Dashboard
                     </Link>
                   </div>
@@ -183,47 +197,75 @@ export function Header() {
               )}
             </div>
 
-            {isLoggedIn ? (
-              <Link
-                href="/account"
-                className="hidden md:flex items-center gap-1.5 rounded-full bg-pearl-200 hover:bg-pearl-300 px-4 py-2 text-sm font-semibold text-moss-900 transition border border-herb-200"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                {t('nav.my_account')}
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="hidden md:flex rounded-full bg-moss-900 px-5 py-2 text-sm font-bold text-pearl hover:bg-moss-800 transition shadow-sm"
-              >
-                {t('nav.sign_in')}
-              </Link>
-            )}
-
-            {/* Fast Payment Quick Access Button */}
+            {/* 1. Fast Payment Quick Access Button (Left of Cart) */}
             <Link
               href="/cart"
-              className="hidden lg:flex items-center gap-1.5 rounded-full bg-gleam/20 hover:bg-gleam/40 border border-gleam/60 px-3.5 py-1.5 text-xs font-black text-moss-900 transition shadow-2xs"
+              className="hidden lg:flex items-center gap-2 rounded-full bg-emerald-50/90 hover:bg-emerald-100 text-emerald-950 border border-emerald-200/90 px-3.5 py-1.5 text-xs font-black transition shadow-2xs group"
+              title="Telebirr & CBE Direct Payments Accepted"
             >
-              <span>💳</span>
-              <span>{t('nav.payment')}</span>
+              <svg className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="2" y="5" width="20" height="14" rx="3" strokeWidth="1.8" />
+                <path strokeLinecap="round" strokeWidth="1.8" d="M2 10h20" />
+                <circle cx="7" cy="15" r="1.5" fill="currentColor" />
+              </svg>
+              <span className="tracking-tight">{t('nav.payment').replace(/[💳]/g, '').trim()}</span>
             </Link>
 
-            {/* Cart Icon */}
+            {/* 2. Cart Icon (Left of Profile) */}
             <Link
               href="/cart"
-              className="relative p-2.5 rounded-full bg-pearl-200 hover:bg-pearl-300 text-moss-900 transition border border-herb-200"
+              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-pearl-200 hover:bg-pearl-300 text-moss-900 transition border border-herb-200 flex items-center justify-center group"
               aria-label="View Cart"
+              title="View Cart"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              <svg
+                className="w-5 h-5 text-moss-900 group-hover:text-herb-600 transition shrink-0"
+                width="20"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                />
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5.5 w-5.5 items-center justify-center rounded-full bg-radiate text-[10px] font-bold text-pearl ring-2 ring-pearl px-1">
+                <span className="absolute -top-1 -right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-radiate text-[10px] font-black text-white ring-2 ring-pearl px-1">
                   {cartCount}
                 </span>
+              )}
+            </Link>
+
+            {/* 3. Profile Icon (At Most Right — Icon only, no words. Clicking opens My Account or Sign In) */}
+            <Link
+              href={isLoggedIn ? "/account" : "/login"}
+              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-pearl-200 hover:bg-pearl-300 text-moss-900 transition border border-herb-200 flex items-center justify-center group"
+              title={isLoggedIn ? t('nav.my_account') : t('nav.sign_in')}
+              aria-label={isLoggedIn ? t('nav.my_account') : t('nav.sign_in')}
+            >
+              <svg
+                className="w-5 h-5 text-moss-900 group-hover:text-herb-600 transition shrink-0"
+                width="20"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              {isLoggedIn && (
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
               )}
             </Link>
 
