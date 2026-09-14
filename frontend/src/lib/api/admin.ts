@@ -1,4 +1,4 @@
-import { getAccessToken } from '../auth/tokens';
+import { getAccessToken, getAdminAccessToken, clearAdminTokens } from '../auth/tokens';
 import { clearProductsCache } from './products';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
@@ -18,7 +18,7 @@ async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const token = getAccessToken();
+  const token = getAdminAccessToken() || getAccessToken();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(options.headers ?? {}),
@@ -36,6 +36,10 @@ async function request<T>(
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     const message = body.message ?? `Request failed (${response.status})`;
+    if (response.status === 401 && typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !window.location.pathname.includes('/admin/login')) {
+      clearAdminTokens();
+      window.location.href = '/admin/login';
+    }
     throw new Error(Array.isArray(message) ? message.join(', ') : message);
   }
 

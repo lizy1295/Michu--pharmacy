@@ -16,6 +16,7 @@ export function Header() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<'categories' | 'brands' | 'services' | 'lang' | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
@@ -40,7 +41,9 @@ export function Header() {
   useEffect(() => {
     const checkAuth = () => {
       const customerToken = localStorage.getItem('michu_access_token');
+      const adminToken = localStorage.getItem('admin_access_token');
       setIsLoggedIn(!!customerToken);
+      setIsAdmin(!!adminToken && !customerToken);
     };
     checkAuth();
     window.addEventListener('storage', checkAuth);
@@ -165,8 +168,12 @@ export function Header() {
                 <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-pearl p-2 shadow-xl ring-1 ring-moss-900/10 z-50 animate-in fade-in slide-in-from-top-1 border border-herb-200">
                   <div className="px-3 py-1.5 text-[10px] font-extrabold text-herb-600 uppercase tracking-wider border-b border-herb-100 mb-1 flex items-center justify-between">
                     <span>6 Languages</span>
-                    <Link href="/account" onClick={() => setOpenDropdown(null)} className="text-herb-600 hover:text-moss-900 hover:underline">
-                      Dashboard
+                    <Link
+                      href={isAdmin ? "/admin" : "/account"}
+                      onClick={() => setOpenDropdown(null)}
+                      className="text-herb-600 hover:text-moss-900 hover:underline"
+                    >
+                      {isAdmin ? 'Admin Dashboard' : 'Dashboard'}
                     </Link>
                   </div>
                   {LANGUAGES.map((l) => (
@@ -237,30 +244,36 @@ export function Header() {
               )}
             </Link>
 
-            {/* 3. Profile Icon (At Most Right — Icon only, no words. Clicking opens My Account) */}
+            {/* 3. Profile Icon (At Most Right — Icon only, no words. Clicking opens My Account or Admin Portal) */}
             <Link
-              href={isLoggedIn ? "/account" : "/login"}
+              href={isAdmin ? "/admin" : (isLoggedIn ? "/account" : "/login")}
               className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-pearl-200 hover:bg-pearl-300 text-moss-900 transition border border-herb-200 flex items-center justify-center group"
-              title={isLoggedIn ? t('nav.my_account') : t('nav.sign_in')}
-              aria-label={isLoggedIn ? t('nav.my_account') : t('nav.sign_in')}
+              title={isAdmin ? 'Admin Management Console' : (isLoggedIn ? t('nav.my_account') : t('nav.sign_in'))}
+              aria-label={isAdmin ? 'Admin Management Console' : (isLoggedIn ? t('nav.my_account') : t('nav.sign_in'))}
             >
-              <svg
-                className="w-5 h-5 text-moss-900 group-hover:text-herb-600 transition shrink-0"
-                width="20"
-                height="20"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-              {isLoggedIn && (
+              {isAdmin ? (
+                <span className="text-xs font-black text-emerald-800 bg-emerald-100 rounded-full w-6 h-6 flex items-center justify-center border border-emerald-300 shadow-2xs">
+                  🛡️
+                </span>
+              ) : (
+                <svg
+                  className="w-5 h-5 text-moss-900 group-hover:text-herb-600 transition shrink-0"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              )}
+              {(isLoggedIn || isAdmin) && (
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
               )}
             </Link>
@@ -477,7 +490,12 @@ export function Header() {
 
               <div className="border-t border-herb-200 my-3"></div>
 
-              {isLoggedIn ? (
+              {isAdmin ? (
+                <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 transition" onClick={() => setMobileMenuOpen(false)}>
+                  <span>🛡️</span>
+                  <span>Admin Management Console</span>
+                </Link>
+              ) : isLoggedIn ? (
                 <Link href="/account" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-herb-700 hover:bg-herb-50 transition" onClick={() => setMobileMenuOpen(false)}>
                   <svg className="w-5 h-5 text-herb-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                   {t('nav.my_account')}

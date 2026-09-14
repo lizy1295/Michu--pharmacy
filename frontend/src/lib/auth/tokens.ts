@@ -9,7 +9,7 @@ export function getAccessToken(): string | null {
   if (window.location.pathname.startsWith('/admin')) {
     return localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
   }
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  return localStorage.getItem(ACCESS_TOKEN_KEY) || localStorage.getItem(ADMIN_ACCESS_TOKEN_KEY);
 }
 
 export function getAdminAccessToken(): string | null {
@@ -23,7 +23,7 @@ export function getRefreshToken(): string | null {
     const adminRefresh = localStorage.getItem(ADMIN_REFRESH_TOKEN_KEY);
     if (adminRefresh) return adminRefresh;
   }
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
+  return localStorage.getItem(REFRESH_TOKEN_KEY) || localStorage.getItem(ADMIN_REFRESH_TOKEN_KEY);
 }
 
 export function setTokens(accessToken: string, refreshToken: string): void {
