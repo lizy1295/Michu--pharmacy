@@ -11,23 +11,6 @@ import { useLanguage, LANGUAGES, Language } from '@/context/LanguageContext';
 
 export default function AccountPage() {
   const { language, setLanguage, t } = useLanguage();
-  const [isAdminAccount, setIsAdminAccount] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return !!localStorage.getItem('admin_access_token');
-    }
-    return false;
-  });
-  const [adminUser, setAdminUser] = useState<any>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('admin_data');
-        if (stored) return JSON.parse(stored);
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  });
   const [user, setUser] = useState<AuthUser | null>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -35,10 +18,7 @@ export default function AccountPage() {
         if (cached) {
           const parsed = JSON.parse(cached);
           if (isStaffRole(parsed.role)) {
-            // Immediately purge any leaked staff data from customer storefront!
             localStorage.removeItem('michu_user');
-            localStorage.removeItem('michu_access_token');
-            localStorage.removeItem('michu_refresh_token');
             return null;
           }
           return parsed;
@@ -51,8 +31,6 @@ export default function AccountPage() {
   });
   const [loading, setLoading] = useState(() => {
     if (typeof window !== 'undefined') {
-      const adminToken = localStorage.getItem('admin_access_token');
-      if (adminToken) return false;
       const token = localStorage.getItem('michu_access_token');
       const cached = localStorage.getItem('michu_user');
       // If token exists and we already have cached customer user data, don't block render
@@ -66,15 +44,6 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState<'orders' | 'rx' | 'language'>('orders');
 
   useEffect(() => {
-    const adminToken = localStorage.getItem('admin_access_token');
-    if (adminToken) {
-      setIsAdminAccount(true);
-      try {
-        const stored = localStorage.getItem('admin_data');
-        if (stored) setAdminUser(JSON.parse(stored));
-      } catch {}
-    }
-
     const token = localStorage.getItem('michu_access_token');
     if (!token) {
       setLoading(false);
@@ -85,14 +54,12 @@ export default function AccountPage() {
     getMe()
       .then((userData) => {
         if (userData && isStaffRole(userData.role)) {
-          // If staff account, purge from storefront and flag
           clearTokens();
           if (typeof window !== 'undefined') {
             localStorage.removeItem('michu_user');
             window.dispatchEvent(new Event('auth-change'));
           }
           setUser(null);
-          setIsAdminAccount(true);
           return;
         }
 
@@ -118,6 +85,7 @@ export default function AccountPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
 
   function handleLogout() {
     clearTokens();
@@ -209,51 +177,6 @@ export default function AccountPage() {
     </div>
   );
 
-  // Admin Account Detected Screen (prevents admin from using customer page)
-  if (isAdminAccount) {
-    const adminName = adminUser?.name || 'Administrator';
-    const adminRole = adminUser?.role ? String(adminUser.role).toUpperCase() : 'STAFF';
-    const adminEmail = adminUser?.email || '';
-
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-20 text-center space-y-6 animate-in fade-in duration-200">
-        <div className="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto text-2xl font-bold shadow-xs">
-          🛡️
-        </div>
-        <div>
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
-            {adminRole}
-          </span>
-          <h2 className="text-2xl font-black text-slate-900 mt-3">Administrator Account Active</h2>
-          <p className="text-sm text-slate-600 max-w-md mx-auto mt-2 leading-relaxed">
-            Signed in as <strong>{adminName}</strong>{adminEmail ? ` (${adminEmail})` : ''}. To verify customer prescriptions, review orders, and manage products or users, please use the Admin Management Console.
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <Link
-            href="/admin"
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-2"
-          >
-            <span>Access Admin Management Console</span>
-            <span>&rarr;</span>
-          </Link>
-          <Link
-            href="/admin/prescriptions"
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition"
-          >
-            Prescriptions Queue
-          </Link>
-          <Link
-            href="/login"
-            onClick={handleLogout}
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs transition"
-          >
-            Sign in with Customer Account
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   // Guest Logged-out view
   if (!user) {
