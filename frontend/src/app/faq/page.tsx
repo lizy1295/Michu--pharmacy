@@ -18,7 +18,7 @@ const FAQS = [
       },
       {
         q: 'What payment methods do you accept?',
-        a: 'We accept CBE Birr, Telebirr, Awash Birr, HelloCash, cash on delivery (for OTC items), and in-branch cash/card payments.',
+        a: 'We accept CBE Birr, Telebirr, cash on delivery (for OTC items), and in-branch cash/card payments.',
       },
       {
         q: 'How can I track my order?',

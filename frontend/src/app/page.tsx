@@ -290,21 +290,26 @@ export default function HomePage() {
   const [homeSelectedBranch, setHomeSelectedBranch] = useState<BranchLocation>(BRANCH_LOCATIONS[0]);
   const [activeVideoModal, setActiveVideoModal] = useState<Advertisement | null>(null);
 
-  const FEATURED_BRANDS = useMemo(() => [
-    { name: 'EPHARM', origin: language === 'am' ? 'ßï¿ßèóßë╡ßï«ßî╡ßï½ ßêÿßï╡ßèâßèÆßë╡ ßìïßëÑßê¬ßè½' : 'Ethiopian Pharm. Mfg.', badge: 'National Leader', icon: '≡ƒç¬≡ƒç╣', color: 'bg-emerald-50 border-emerald-200 text-emerald-800' },
-    { name: 'Cadila Pharmaceuticals', origin: language === 'am' ? 'ßè½ßï▓ßêï ßèóßë╡ßï«ßî╡ßï½' : 'Cadila Ethiopia', badge: 'Certified GMP', icon: '≡ƒÆè', color: 'bg-blue-50 border-blue-200 text-blue-800' },
-    { name: 'Julphar Pharmaceuticals', origin: language === 'am' ? 'ßîüßêìßìïßê¡ ßèóßë╡ßï«ßî╡ßï½' : 'Julphar Ethiopia', badge: 'Global Standard', icon: '≡ƒÅó', color: 'bg-indigo-50 border-indigo-200 text-indigo-800' },
-    { name: 'Addis Pharmaceuticals (APF)', origin: language === 'am' ? 'ßèñßìÆßèñßìì ßïôßï▓ßîìßê½ßë╡ / ßèáßï▓ßê╡' : 'APF Adigrat / Addis', badge: 'Trusted Generic', icon: '≡ƒ¢í∩╕Å', color: 'bg-amber-50 border-amber-200 text-amber-800' },
-    { name: 'Novartis', origin: language === 'am' ? 'ßê╡ßïèßïÿßê¡ßêïßèòßï╡' : 'Switzerland', badge: 'Premium Rx', icon: 'ΓÜò∩╕Å', color: 'bg-rose-50 border-rose-200 text-rose-800' },
-    { name: 'Sanofi', origin: language === 'am' ? 'ßìêßê¿ßèòßê│ßï¡' : 'France', badge: 'Specialty Care', icon: '≡ƒÆë', color: 'bg-purple-50 border-purple-200 text-purple-800' },
-    { name: 'GSK', origin: language === 'am' ? 'ßîìßêïßè¡ßê╢ ßê╡ßêÜßï¥ ßè¡ßêïßï¡ßèò ßï⌐ßè¼' : 'GlaxoSmithKline UK', badge: 'Vaccines & OTC', icon: '≡ƒö¼', color: 'bg-orange-50 border-orange-200 text-orange-800' },
-    { name: 'Pfizer', origin: language === 'am' ? 'ßèáßê£ßê¬ßè½' : 'USA', badge: 'Therapeutics', icon: '≡ƒº¬', color: 'bg-sky-50 border-sky-200 text-sky-800' },
-    { name: 'AstraZeneca', origin: language === 'am' ? 'ßï⌐ßè¼ / ßê╡ßïèßï╡ßèò' : 'UK / Sweden', badge: 'Cardio & Resp.', icon: '≡ƒ½Ç', color: 'bg-teal-50 border-teal-200 text-teal-800' },
-    { name: 'Denk Pharma', origin: language === 'am' ? 'ßîÇßê¡ßêÿßèò' : 'Germany', badge: 'German Quality', icon: '≡ƒç⌐≡ƒç¬', color: 'bg-slate-50 border-slate-200 text-slate-800' },
-    { name: 'DKT Ethiopia', origin: language === 'am' ? 'ßï¿ßëñßë░ßê░ßëÑ ßîñßèô' : 'Family Health', badge: 'Reproductive Care', icon: '≡ƒ⌐║', color: 'bg-pink-50 border-pink-200 text-pink-800' },
-    { name: 'CeraVe & Skincare', origin: language === 'am' ? 'ßï¿ßëåßï│ ßêàßè¡ßê¥ßèô ßê¢ßïÿßïú' : 'Dermatologist Rx', badge: 'Skin Barrier', icon: 'Γ£¿', color: 'bg-cyan-50 border-cyan-200 text-cyan-800' },
-  ], [language]);
-
+  const FEATURED_BRANDS = [
+    { name: 'Pfizer',           country: 'USA',         color: '#0093C8', bg: '#E8F6FD', badge: '💊' },
+    { name: 'Bayer',            country: 'Germany',     color: '#10384F', bg: '#E8F2F7', badge: '🌿' },
+    { name: 'Johnson & Johnson',country: 'USA',         color: '#CC0000', bg: '#FFF0F0', badge: '❤️' },
+    { name: 'Roche',            country: 'Switzerland', color: '#009FE3', bg: '#E5F5FC', badge: '🔬' },
+    { name: 'Novartis',         country: 'Switzerland', color: '#E40026', bg: '#FFF0F2', badge: '⚕️' },
+    { name: 'AstraZeneca',      country: 'UK / Sweden', color: '#830051', bg: '#F5EAF2', badge: '🫁' },
+    { name: 'Abbott',           country: 'USA',         color: '#008DB9', bg: '#E5F4FA', badge: '🩺' },
+    { name: 'Sanofi',           country: 'France',      color: '#7A1FA2', bg: '#F3EAF8', badge: '🧬' },
+    { name: 'GSK',              country: 'UK',          color: '#F36633', bg: '#FEF3ED', badge: '🧪' },
+    { name: 'Merck',            country: 'Germany / USA',color:'#009F6B', bg: '#E5F5F0', badge: '🔭' },
+    { name: 'Cipla',            country: 'India',       color: '#E2001A', bg: '#FFF0F2', badge: '💉' },
+    { name: 'Sun Pharma',       country: 'India',       color: '#F7941D', bg: '#FEF5E8', badge: '☀️' },
+    { name: 'Sandoz',           country: 'Switzerland', color: '#0078BE', bg: '#E5EFF8', badge: '🏥' },
+    { name: 'Boehringer',       country: 'Germany',     color: '#1C3F94', bg: '#EAF0FB', badge: '🌊' },
+    { name: 'Eli Lilly',        country: 'USA',         color: '#D52B1E', bg: '#FFF0EF', badge: '🧫' },
+    { name: 'Novo Nordisk',     country: 'Denmark',     color: '#001965', bg: '#E5E8F5', badge: '⚡' },
+  ];
+  // Duplicate for seamless infinite scroll
+  const BRANDS_LOOP = [...FEATURED_BRANDS, ...FEATURED_BRANDS];
   // Load products, doctors, advertisements, and partners
   useEffect(() => {
     let isMounted = true;
@@ -1144,39 +1149,61 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 7. Common Pharmacy Brands Showcase */}
-      <section className="py-12 bg-gray-50 border-t border-b">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
+      {/* 7. Pharma Brands Marquee Slider */}
+      <section className="py-14 bg-white border-t border-b border-slate-100 overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
             <div>
-              <span className="text-brand-600 text-xs font-bold uppercase tracking-wider">{t('home.brands_subtitle')}</span>
+              <span className="text-herb-600 text-xs font-bold uppercase tracking-wider">Trusted Partners</span>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight mt-1">
-                {t('home.brands_title')}
+                {t('home.brands_title') || 'World-Class Pharma Brands'}
               </h2>
+              <p className="text-xs text-slate-500 mt-1">Authentic, EFDA-verified medications from globally trusted manufacturers.</p>
             </div>
             <Link
               href="/products"
-              className="text-xs font-bold text-brand-600 hover:text-brand-700 transition flex items-center gap-1"
+              className="text-xs font-bold text-herb-600 hover:text-herb-700 transition flex items-center gap-1 shrink-0"
             >
-              {t('home.brands_view_all')}
+              Browse All Products →
             </Link>
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {FEATURED_BRANDS.map((brand, idx) => (
+        {/* Marquee track — pure CSS, no JS, no layout shift */}
+        <div className="relative">
+          {/* Left fade */}
+          <div className="pointer-events-none absolute left-0 top-0 h-full w-24 z-10 bg-gradient-to-r from-white to-transparent" />
+          {/* Right fade */}
+          <div className="pointer-events-none absolute right-0 top-0 h-full w-24 z-10 bg-gradient-to-l from-white to-transparent" />
+
+          <style>{`
+            @keyframes mph-marquee {
+              0%   { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .mph-marquee-track {
+              display: flex;
+              width: max-content;
+              animation: mph-marquee 32s linear infinite;
+            }
+            .mph-marquee-track:hover {
+              animation-play-state: paused;
+            }
+          `}</style>
+
+          <div className="mph-marquee-track gap-4 px-4">
+            {BRANDS_LOOP.map((brand, idx) => (
               <button
                 key={idx}
                 onClick={() => router.push(`/products?brand=${encodeURIComponent(brand.name)}`)}
-                className={`p-4 rounded-2xl border text-left transition hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between ${brand.color}`}
+                style={{ backgroundColor: brand.bg, borderColor: brand.color + '33' }}
+                className="flex-shrink-0 flex items-center gap-3 px-5 py-3.5 rounded-2xl border-2 transition hover:scale-105 hover:shadow-lg group mx-1"
               >
-                <div>
-                  <div className="text-2xl mb-2">{brand.icon}</div>
-                  <h3 className="font-extrabold text-sm leading-snug">{brand.name}</h3>
-                  <p className="text-[10px] opacity-80 mt-0.5">{brand.origin}</p>
+                <span className="text-2xl">{brand.badge}</span>
+                <div className="text-left">
+                  <p style={{ color: brand.color }} className="font-extrabold text-sm leading-none whitespace-nowrap">{brand.name}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5 whitespace-nowrap">{brand.country}</p>
                 </div>
-                <span className="mt-3 inline-block text-[9px] font-bold uppercase tracking-wider bg-white/70 px-2 py-0.5 rounded-full border border-black/5 self-start">
-                  {brand.badge}
-                </span>
               </button>
             ))}
           </div>
@@ -1243,117 +1270,184 @@ export default function HomePage() {
       </section>
 
       {/* 9. Payment Options Section */}
-      <section className="py-16 bg-gradient-to-b from-pearl-50 via-white to-pearl-100/60 border-t border-b border-herb-200/80 text-slate-900">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-moss-900 text-gleam text-xs font-black uppercase tracking-wider mb-2.5 shadow-sm">
-              <span>≡ƒÆ│</span>
+      <section className="py-20 bg-gradient-to-b from-slate-50/80 via-white to-slate-50/50 border-t border-b border-slate-200/80 relative overflow-hidden">
+        {/* Decorative ambient background glows */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center max-w-3xl mx-auto mb-14">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-extrabold uppercase tracking-wider mb-3 shadow-2xs">
+              <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
               <span>{t('home.payment_badge')}</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-moss-900 tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
               {t('home.payment_title')}
             </h2>
-            <p className="text-xs sm:text-sm text-stone-600 mt-2 leading-relaxed">
+            <p className="text-sm sm:text-base text-slate-600 mt-3 leading-relaxed max-w-2xl mx-auto">
               {t('home.payment_subtitle')}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Telebirr */}
-            <div className="bg-white hover:bg-sky-50/40 border-2 border-sky-300/80 hover:border-sky-500 p-6 rounded-3xl flex flex-col justify-between shadow-xs hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center text-2xl shadow-inner">
-                    ≡ƒô▒
+          {/* 3 Payment Method Cards: Telebirr, CBE Birr, Cash on Pickup */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+            {/* 1. Telebirr */}
+            <div className="bg-white rounded-3xl border-2 border-sky-200 hover:border-sky-500 p-7 flex flex-col justify-between shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-sky-50 rounded-bl-full -z-0 opacity-60 group-hover:scale-110 transition-transform duration-300" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20">
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-sky-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
+                  <span className="px-3 py-1 rounded-full bg-sky-100 text-sky-700 text-[11px] font-extrabold tracking-wide uppercase border border-sky-200 shadow-2xs">
                     1-Click USSD
                   </span>
                 </div>
-                <h3 className="text-base font-black text-sky-950 group-hover:text-sky-700 transition">
+                <h3 className="text-xl font-black text-slate-900 group-hover:text-sky-600 transition">
                   {t('home.payment_telebirr_title')}
                 </h3>
-                <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 mt-2.5 leading-relaxed">
                   {t('home.payment_telebirr_desc')}
                 </p>
+
+                <div className="mt-5 space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-4">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-sky-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Instant checkout via Telebirr SuperApp & Web</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-sky-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Official Ethio Telecom verified payment route</span>
+                  </div>
+                </div>
               </div>
-              <div className="mt-5 pt-3.5 border-t border-sky-100 flex items-center justify-between bg-sky-50/90 text-sky-900 font-mono text-xs font-bold px-3.5 py-2 rounded-xl border border-sky-200/80">
-                <span>Code:</span>
-                <span className="text-sky-700 font-black">{t('home.payment_telebirr_code')}</span>
+
+              <div className="relative z-10 mt-6 pt-4 border-t border-sky-100 flex items-center justify-between bg-sky-50/80 text-sky-950 font-mono text-xs font-bold px-4 py-3 rounded-2xl border border-sky-200/80">
+                <span className="text-slate-500 font-sans font-medium text-xs">USSD Code:</span>
+                <span className="text-sky-700 font-black tracking-wide text-sm bg-white px-2.5 py-1 rounded-lg border border-sky-200 shadow-2xs">{t('home.payment_telebirr_code')}</span>
               </div>
             </div>
 
-            {/* CBE Birr */}
-            <div className="bg-white hover:bg-purple-50/40 border-2 border-purple-300/80 hover:border-purple-500 p-6 rounded-3xl flex flex-col justify-between shadow-xs hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-2xl shadow-inner">
-                    ≡ƒÅª
+            {/* 2. CBE Birr */}
+            <div className="bg-white rounded-3xl border-2 border-purple-200 hover:border-purple-600 p-7 flex flex-col justify-between shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-bl-full -z-0 opacity-60 group-hover:scale-110 transition-transform duration-300" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-700 to-purple-900 text-white flex items-center justify-center shadow-md shadow-purple-700/20">
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                    </svg>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
+                  <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-800 text-[11px] font-extrabold tracking-wide uppercase border border-purple-200 shadow-2xs">
                     CBE Gateway
                   </span>
                 </div>
-                <h3 className="text-base font-black text-purple-950 group-hover:text-purple-700 transition">
+                <h3 className="text-xl font-black text-slate-900 group-hover:text-purple-700 transition">
                   {t('home.payment_cbe_title')}
                 </h3>
-                <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 mt-2.5 leading-relaxed">
                   {t('home.payment_cbe_desc')}
                 </p>
+
+                <div className="mt-5 space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-4">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-purple-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Direct CBE Mobile Banking & *847# USSD</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-purple-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Instant automated receipt & payment confirmation</span>
+                  </div>
+                </div>
               </div>
-              <div className="mt-5 pt-3.5 border-t border-purple-100 flex items-center justify-between bg-purple-50/90 text-purple-900 font-mono text-xs font-bold px-3.5 py-2 rounded-xl border border-purple-200/80">
-                <span>Direct:</span>
-                <span className="text-purple-800 font-black">{t('home.payment_cbe_code')}</span>
+
+              <div className="relative z-10 mt-6 pt-4 border-t border-purple-100 flex items-center justify-between bg-purple-50/80 text-purple-950 font-mono text-xs font-bold px-4 py-3 rounded-2xl border border-purple-200/80">
+                <span className="text-slate-500 font-sans font-medium text-xs">Direct Dial:</span>
+                <span className="text-purple-800 font-black tracking-wide text-sm bg-white px-2.5 py-1 rounded-lg border border-purple-200 shadow-2xs">{t('home.payment_cbe_code')}</span>
               </div>
             </div>
 
-            {/* Awash Bank */}
-            <div className="bg-white hover:bg-blue-50/40 border-2 border-blue-300/80 hover:border-blue-500 p-6 rounded-3xl flex flex-col justify-between shadow-xs hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl shadow-inner">
-                    ≡ƒÆ│
+            {/* 3. Cash on Pickup / In-Branch */}
+            <div className="bg-white rounded-3xl border-2 border-emerald-200 hover:border-emerald-500 p-7 flex flex-col justify-between shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -z-0 opacity-60 group-hover:scale-110 transition-transform duration-300" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shadow-md shadow-emerald-600/20">
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
-                    Awash Pay
+                  <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-extrabold tracking-wide uppercase border border-emerald-200 shadow-2xs">
+                    In-Branch POS
                   </span>
                 </div>
-                <h3 className="text-base font-black text-blue-950 group-hover:text-blue-700 transition">
-                  {t('home.payment_awash_title')}
-                </h3>
-                <p className="text-xs text-stone-600 mt-2 leading-relaxed">
-                  {t('home.payment_awash_desc')}
-                </p>
-              </div>
-              <div className="mt-5 pt-3.5 border-t border-blue-100 flex items-center justify-between bg-blue-50/90 text-blue-900 font-mono text-xs font-bold px-3.5 py-2 rounded-xl border border-blue-200/80">
-                <span>Account:</span>
-                <span className="text-blue-800 font-black">{t('home.payment_awash_code')}</span>
-              </div>
-            </div>
-
-            {/* Cash on Pickup */}
-            <div className="bg-white hover:bg-emerald-50/40 border-2 border-emerald-300/80 hover:border-emerald-500 p-6 rounded-3xl flex flex-col justify-between shadow-xs hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl shadow-inner">
-                    ≡ƒÆ╡
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full bg-herb-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
-                    In-Branch
-                  </span>
-                </div>
-                <h3 className="text-base font-black text-moss-900 group-hover:text-herb-700 transition">
+                <h3 className="text-xl font-black text-slate-900 group-hover:text-emerald-700 transition">
                   {t('home.payment_cash_title')}
                 </h3>
-                <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 mt-2.5 leading-relaxed">
                   {t('home.payment_cash_desc')}
                 </p>
+
+                <div className="mt-5 space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-4">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Pharmacist consultation and medication review on collection</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Pay with Cash, debit card POS, or mobile transfer</span>
+                  </div>
+                </div>
               </div>
-              <div className="mt-5 pt-3.5 border-t border-emerald-100 flex items-center justify-between bg-emerald-50/90 text-emerald-950 text-xs font-bold px-3.5 py-2 rounded-xl border border-emerald-200/80">
-                <span>Locations:</span>
-                <span className="text-herb-700 font-black">{t('home.payment_cash_branches')}</span>
+
+              <div className="relative z-10 mt-6 pt-4 border-t border-emerald-100 flex items-center justify-between bg-emerald-50/80 text-emerald-950 font-mono text-xs font-bold px-4 py-3 rounded-2xl border border-emerald-200/80">
+                <span className="text-slate-500 font-sans font-medium text-xs">Branch Pickup:</span>
+                <span className="text-emerald-700 font-black tracking-wide text-xs bg-white px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">{t('home.payment_cash_branches')}</span>
               </div>
             </div>
+          </div>
+
+          {/* Security & Assurance Strip */}
+          <div className="mt-12 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-bold text-slate-800">
+                  Bank-Grade 256-bit SSL Encryption & EFDA Regulatory Compliance
+                </h4>
+                <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                  All transactions are encrypted and processed through certified National Bank of Ethiopia authorized channels.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/faq"
+              className="text-xs font-bold text-brand-600 hover:text-brand-700 transition flex items-center gap-1 shrink-0 px-3.5 py-2 rounded-xl bg-brand-50 hover:bg-brand-100 border border-brand-100"
+            >
+              <span>Payment FAQ & Support</span>
+              <span>&rarr;</span>
+            </Link>
           </div>
         </div>
       </section>
