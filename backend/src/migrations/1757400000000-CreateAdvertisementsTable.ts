@@ -1,36 +1,47 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
+/**
+ * This migration is intentionally idempotent.
+ * The `advertisements` table may have already been created by TypeORM's
+ * schema-synchronize (with snake_case column names). We use IF NOT EXISTS
+ * and DROP NOT NULL guards so the migration succeeds in both states.
+ */
 export class CreateAdvertisementsTable1757400000000 implements MigrationInterface {
   name = 'CreateAdvertisementsTable1757400000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // 1. Create the table if it doesn't exist yet (fresh environment)
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "advertisements" (
         "id"            SERIAL PRIMARY KEY,
-        "title"         VARCHAR(255)  NOT NULL,
+        "title"         VARCHAR(255)  NOT NULL DEFAULT '',
         "description"   TEXT,
-        "mediaType"     VARCHAR(10)   NOT NULL DEFAULT 'image',
-        "mediaUrl"      TEXT,
-        "thumbnailUrl"  TEXT,
-        "targetUrl"     TEXT,
-        "targetPage"    VARCHAR(100)  NOT NULL DEFAULT 'homepage',
-        "position"      VARCHAR(100)  NOT NULL DEFAULT 'disease_solution',
-        "displayOrder"  INTEGER       NOT NULL DEFAULT 0,
-        "startDate"     DATE,
-        "endDate"       DATE,
+        "media_type"    VARCHAR(20)   NOT NULL DEFAULT 'image',
+        "media_url"     TEXT,
+        "thumbnail_url" TEXT,
+        "target_url"    TEXT,
+        "target_page"   VARCHAR(100)  DEFAULT 'homepage',
+        "position"      VARCHAR(100)  DEFAULT 'disease_solution',
+        "display_order" INTEGER       NOT NULL DEFAULT 0,
+        "start_date"    DATE,
+        "end_date"      DATE,
         "status"        VARCHAR(20)   NOT NULL DEFAULT 'published',
-        "clicks"        INTEGER       NOT NULL DEFAULT 0,
-        "views"         INTEGER       NOT NULL DEFAULT 0,
-        "createdBy"     VARCHAR(255),
-        "createdAt"     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        "updatedAt"     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+        "created_by"    VARCHAR(255),
+        "created_at"    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+        "updated_at"    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
       )
     `);
 
-    /* ── Seed the 4 initial advertisements ────────────────────────────── */
+    // 2. Ensure nullable columns are actually nullable in case the table
+    //    was previously created by synchronize with NOT NULL constraints.
+    await queryRunner.query(`ALTER TABLE "advertisements" ALTER COLUMN "media_url"  DROP NOT NULL`).catch(() => {/* already nullable */});
+    await queryRunner.query(`ALTER TABLE "advertisements" ALTER COLUMN "start_date" DROP NOT NULL`).catch(() => {/* already nullable */});
+    await queryRunner.query(`ALTER TABLE "advertisements" ALTER COLUMN "end_date"   DROP NOT NULL`).catch(() => {/* already nullable */});
+
+    // 3. Seed the 4 initial advertisements (idempotent – ON CONFLICT DO NOTHING)
     await queryRunner.query(`
       INSERT INTO "advertisements"
-        ("title","description","mediaType","mediaUrl","thumbnailUrl","targetUrl","targetPage","position","displayOrder","startDate","endDate","status","createdBy")
+        ("title","description","media_type","media_url","thumbnail_url","target_url","target_page","position","display_order","start_date","end_date","status","created_by")
       VALUES
         (
           'Clinical Video Guide: Modern Respiratory & Asthma Management Protocol',

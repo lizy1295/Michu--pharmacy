@@ -9,6 +9,7 @@ import { CreateReceiptsTable1757100000000 } from '../../migrations/1757100000000
 import { CreatePasswordResetTokens1757200000000 } from '../../migrations/1757200000000-CreatePasswordResetTokens';
 import { UpgradePasswordResetToOtp1757300000000 } from '../../migrations/1757300000000-UpgradePasswordResetToOtp';
 import { MakeEmailNullable1725550000000 } from '../../migrations/1725550000000-MakeEmailNullable';
+import { CreateAdvertisementsTable1757400000000 } from '../../migrations/1757400000000-CreateAdvertisementsTable';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -30,6 +31,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         CreatePasswordResetTokens1757200000000,
         UpgradePasswordResetToOtp1757300000000,
         MakeEmailNullable1725550000000,
+        CreateAdvertisementsTable1757400000000,
       ],
       migrationsRun: true,
     };
