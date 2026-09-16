@@ -9,7 +9,6 @@ import { CreateReceiptsTable1757100000000 } from '../../migrations/1757100000000
 import { CreatePasswordResetTokens1757200000000 } from '../../migrations/1757200000000-CreatePasswordResetTokens';
 import { UpgradePasswordResetToOtp1757300000000 } from '../../migrations/1757300000000-UpgradePasswordResetToOtp';
 import { MakeEmailNullable1725550000000 } from '../../migrations/1725550000000-MakeEmailNullable';
-import { CreateAdvertisementsTable1757400000000 } from '../../migrations/1757400000000-CreateAdvertisementsTable';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -19,9 +18,10 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
     const dbType = this.configService.get<string>('DB_TYPE', 'sqlite');
     const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
 
-    const shared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging' | 'migrations' | 'migrationsRun'> = {
+    // PostgreSQL shared config — includes migrations (postgres-specific SQL)
+    const postgresShared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging' | 'migrations' | 'migrationsRun'> = {
       autoLoadEntities: true,
-      synchronize: !isProduction,
+      synchronize: false,
       logging: !isProduction,
       migrations: [
         InitialSchema1725440000000,
@@ -31,16 +31,24 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         CreatePasswordResetTokens1757200000000,
         UpgradePasswordResetToOtp1757300000000,
         MakeEmailNullable1725550000000,
-        CreateAdvertisementsTable1757400000000,
       ],
       migrationsRun: true,
+    };
+
+    // SQLite shared config — disable migrations (they use postgres SQL), use synchronize instead
+    const sqliteShared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging' | 'migrations' | 'migrationsRun'> = {
+      autoLoadEntities: true,
+      synchronize: true,
+      logging: !isProduction,
+      migrations: [],
+      migrationsRun: false,
     };
 
     if (dbType === 'postgres') {
       const databaseUrl = this.configService.get<string>('DATABASE_URL');
       const useSsl = this.configService.get<string>('DB_SSL') === 'true';
       return {
-        ...shared,
+        ...postgresShared,
         type: 'postgres',
         ...(databaseUrl
           ? { url: databaseUrl }
@@ -56,7 +64,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
     }
 
     return {
-      ...shared,
+      ...sqliteShared,
       type: 'better-sqlite3',
       database: this.configService.get<string>('SQLITE_PATH', './data/michu-dev.sqlite'),
     };

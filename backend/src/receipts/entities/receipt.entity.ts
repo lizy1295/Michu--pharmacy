@@ -51,7 +51,7 @@ export class Receipt {
   @Column({ name: 'customer_phone', type: 'varchar', length: 50, nullable: true })
   customerPhone?: string;
 
-  @Column({ name: 'items', type: 'jsonb' })
+  @Column({ name: 'items', type: 'simple-json' })
   items!: any[];
 
   @Column({ name: 'subtotal', type: 'decimal', precision: 10, scale: 2 })
@@ -66,7 +66,7 @@ export class Receipt {
   @Column({ name: 'total', type: 'decimal', precision: 10, scale: 2 })
   total!: number;
 
-  @Column({ name: 'issued_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ name: 'issued_at', type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   issuedAt!: Date;
 
   @CreateDateColumn({ name: 'created_at' })
@@ -75,3 +75,5 @@ export class Receipt {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }
+
+

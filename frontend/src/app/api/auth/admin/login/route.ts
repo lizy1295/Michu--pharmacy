@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // 1. Try admins auth endpoint
+      // Admin page strictly authenticates against the admins endpoint ONLY
       const backendRes = await fetch(`${BACKEND_API_URL}/admins/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -24,33 +24,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(data);
       }
 
-      // 2. Try general auth login endpoint
-      const authRes = await fetch(`${BACKEND_API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (authRes.ok) {
-        const authData = await authRes.json();
-        return NextResponse.json({
-          accessToken: authData.tokens.accessToken,
-          refreshToken: authData.tokens.refreshToken,
-          admin: {
-            id: authData.user.id,
-            email: authData.user.email,
-            name: `${authData.user.firstName || ''} ${authData.user.lastName || ''}`.trim() || 'Admin User',
-            role: authData.user.role,
-            phone: authData.user.phone || '',
-            lastLogin: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-          },
-        });
-      }
-
       const errorData = await backendRes.json().catch(() => ({}));
       return NextResponse.json(
-        { message: errorData.message || 'Invalid email or password' },
+        { message: errorData.message || 'Invalid admin credentials' },
         { status: backendRes.status || 401 }
       );
     } catch (backendError: any) {
@@ -63,4 +39,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: error.message || 'Login failed' }, { status: 500 });
   }
 }
-

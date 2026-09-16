@@ -84,10 +84,10 @@ export class Payment {
   @Column({ name: 'error_message', type: 'text', nullable: true })
   errorMessage?: string;
 
-  @Column({ name: 'raw_payload', type: 'jsonb', nullable: true })
+  @Column({ name: 'raw_payload', type: 'simple-json', nullable: true })
   rawPayload?: any;
 
-  @Column({ name: 'paid_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'paid_at', type: 'datetime', nullable: true })
   paidAt?: Date;
 
   @CreateDateColumn({ name: 'created_at' })
@@ -96,3 +96,5 @@ export class Payment {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }
+
+

@@ -40,7 +40,7 @@ export class Order {
   @Column({ name: 'shipping_address', type: 'text' })
   shippingAddress!: string;
 
-  @Column({ name: 'items', type: 'jsonb' })
+  @Column({ name: 'items', type: 'simple-json' })
   items!: any[];
 
   @Column({ name: 'subtotal', type: 'decimal', precision: 10, scale: 2 })
@@ -73,13 +73,13 @@ export class Order {
   @Column({ name: 'notes', type: 'text', nullable: true })
   notes?: string;
 
-  @Column({ name: 'approved_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'approved_at', type: 'datetime', nullable: true })
   approvedAt?: Date;
 
-  @Column({ name: 'shipped_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'shipped_at', type: 'datetime', nullable: true })
   shippedAt?: Date;
 
-  @Column({ name: 'completed_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'completed_at', type: 'datetime', nullable: true })
   completedAt?: Date;
 
   @CreateDateColumn({ name: 'created_at' })
@@ -88,3 +88,5 @@ export class Order {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }
+
+

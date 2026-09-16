@@ -35,17 +35,18 @@ export class PasswordResetToken {
   @Column({ name: 'reset_token_hash', type: 'varchar', length: 64, nullable: true })
   resetTokenHash?: string | null;
 
-  @Column({ name: 'expires_at', type: 'timestamp' })
+  @Column({ name: 'expires_at', type: 'datetime' })
   expiresAt!: Date;
 
   /** Set when the OTP code is successfully verified */
-  @Column({ name: 'verified_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'verified_at', type: 'datetime', nullable: true })
   verifiedAt?: Date | null;
 
   /** Set when the reset token is consumed to change the password */
-  @Column({ name: 'used_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'used_at', type: 'datetime', nullable: true })
   usedAt?: Date | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 }
+

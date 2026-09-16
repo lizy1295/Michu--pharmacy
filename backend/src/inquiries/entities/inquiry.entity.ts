@@ -31,7 +31,7 @@ export class Inquiry {
   @Column({ name: 'replied_by', type: 'varchar', length: 100, nullable: true })
   repliedBy?: string;
 
-  @Column({ name: 'replied_at', type: 'timestamp', nullable: true })
+  @Column({ name: 'replied_at', type: 'datetime', nullable: true })
   repliedAt?: Date;
 
   @CreateDateColumn({ name: 'created_at' })
@@ -40,3 +40,4 @@ export class Inquiry {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }
+

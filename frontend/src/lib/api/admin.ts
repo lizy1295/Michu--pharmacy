@@ -36,7 +36,7 @@ async function request<T>(
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     const message = body.message ?? `Request failed (${response.status})`;
-    if (response.status === 401 && typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !window.location.pathname.includes('/admin/login')) {
+    if ((response.status === 401 || response.status === 403) && typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && !window.location.pathname.includes('/admin/login')) {
       clearAdminTokens();
       window.location.href = '/admin/login';
     }

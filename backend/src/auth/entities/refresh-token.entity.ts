@@ -25,7 +25,7 @@ export class RefreshToken {
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   expiresAt!: Date;
 
   @Column({ type: 'boolean', default: false })
@@ -34,3 +34,4 @@ export class RefreshToken {
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 }
+

@@ -133,7 +133,7 @@ export class User {
 
   @Column({
     name: 'last_login',
-    type: 'timestamp',
+    type: 'datetime',
     nullable: true,
   })
   lastLogin?: Date | null;
@@ -148,3 +148,4 @@ export class User {
   })
   updatedAt!: Date;
 }
+
