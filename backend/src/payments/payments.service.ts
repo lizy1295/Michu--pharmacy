@@ -297,7 +297,6 @@ export class PaymentsService {
     try {
       const lockedPayment = await queryRunner.manager.findOne(Payment, {
         where: { id: paymentId },
-        lock: { mode: 'pessimistic_write' },
       });
 
       if (!lockedPayment) {
@@ -510,7 +509,6 @@ export class PaymentsService {
     try {
       const lockedPayment = await queryRunner.manager.findOne(Payment, {
         where: { id: payment.id },
-        lock: { mode: 'pessimistic_write' },
       });
 
       if (!lockedPayment) {
@@ -745,7 +743,6 @@ export class PaymentsService {
     try {
       const lockedPayment = await queryRunner.manager.findOne(Payment, {
         where: { id: payment.id },
-        lock: { mode: 'pessimistic_write' },
       });
 
       if (!lockedPayment) {

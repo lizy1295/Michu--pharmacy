@@ -50,11 +50,21 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
         const orderData = await getOrderById(Number(resolvedParams.id));
         setOrder(orderData);
 
-        const paymentData = await getPaymentByOrderId(orderData.id);
-        setPayment(paymentData);
+        try {
+          const paymentData = await getPaymentByOrderId(orderData.id);
+          setPayment(paymentData);
+        } catch {
+          // Payment record optional
+        }
 
-        const receiptData = await getReceiptByOrderId(orderData.id);
-        setReceipt(receiptData);
+        if (orderData.paymentStatus === 'paid') {
+          try {
+            const receiptData = await getReceiptByOrderId(orderData.id);
+            setReceipt(receiptData);
+          } catch {
+            // Receipt optional
+          }
+        }
       } catch (err: any) {
         setErrorMessage(err?.message || 'Failed to load order details');
       } finally {
