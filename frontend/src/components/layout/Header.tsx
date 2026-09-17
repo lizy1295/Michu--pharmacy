@@ -155,7 +155,7 @@ export function Header() {
                 aria-label="Language selector"
               >
                 <span>{currentLanguageOption.flag}</span>
-                <span className="hidden sm:inline uppercase text-[11px] tracking-wider">{currentLanguageOption.code}</span>
+                <span className="text-xs font-semibold">{currentLanguageOption.code === 'en' ? 'English' : currentLanguageOption.nativeName}</span>
                 <svg className="w-3 h-3 text-herb-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -164,7 +164,7 @@ export function Header() {
               {openDropdown === 'lang' && (
                 <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-pearl p-2 shadow-xl ring-1 ring-moss-900/10 z-50 animate-in fade-in slide-in-from-top-1 border border-herb-200">
                   <div className="px-3 py-1.5 text-[10px] font-extrabold text-herb-600 uppercase tracking-wider border-b border-herb-100 mb-1 flex items-center justify-between">
-                    <span>6 Languages</span>
+                    <span>4 Languages</span>
                     <Link
                       href="/account"
                       onClick={() => setOpenDropdown(null)}
@@ -211,7 +211,7 @@ export function Header() {
                     <path strokeLinecap="round" strokeWidth="1.8" d="M2 10h20" />
                     <circle cx="7" cy="15" r="1.5" fill="currentColor" />
                   </svg>
-                  <span className="tracking-tight">{t('nav.payment').replace(/[💳\s]/g, '').trim()}</span>
+                  <span className="tracking-tight">{t('nav.payment') || 'Telebirr • CBE'}</span>
                 </Link>
 
                 {/* 2. Cart Icon (Left of Profile) */}
