@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type Language = 'en' | 'am' | 'ti' | 'om' | 'af' | 'so';
+export type Language = 'en' | 'am' | 'om' | 'ti';
 
 export interface LanguageOption {
   code: Language;
@@ -15,10 +15,8 @@ export interface LanguageOption {
 export const LANGUAGES: LanguageOption[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧', greeting: 'Hello! How can we assist you today?' },
   { code: 'am', name: 'Amharic', nativeName: 'አማርኛ', flag: '🇪🇹', greeting: 'ሰላም! ዛሬ እንዴት ልንረዳዎት እንችላለን?' },
-  { code: 'ti', name: 'Tigrigna', nativeName: 'ትግርኛ', flag: '🇪🇹', greeting: 'ሰላም! ከመይ ጌርና ክንሕግዘኩም ንኽእል?' },
-  { code: 'om', name: 'Afaan Oromoo', nativeName: 'Afaan Oromoo', flag: '🇪🇹', greeting: 'Akkam! Har\'a akkamitti isin gargaaruu dandeenya?' },
-  { code: 'af', name: 'Afar', nativeName: 'Qafaraf', flag: '🇪🇹', greeting: 'Selam! Assaku mannalih sin catoona xiqna?' },
-  { code: 'so', name: 'Somali', nativeName: 'Soomaali', flag: '🇸🇴', greeting: 'Nabadeey! Sidee maanta kuu caawin karnaa?' },
+  { code: 'om', name: 'Afaan Oromoo', nativeName: 'Afaan Oromoo', flag: '🇪🇹', greeting: "Akkam! Har'a akkamitti isin gargaaruu dandeenya?" },
+  { code: 'ti', name: 'Tigrinya', nativeName: 'ትግርኛ', flag: '🇪🇹', greeting: 'ሰላም! ከመይ ጌርና ክንሕግዘኩም ንኽእል?' },
 ];
 
 type Translations = Record<Language, Record<string, string>>;
@@ -256,6 +254,7 @@ const translations: Translations = {
     "nav.faq": "FAQ",
     "nav.home": "Home",
     "nav.my_account": "My Account",
+    "nav.get_started": "Get Started",
     "nav.payment": "Telebirr • CBE",
     "nav.search_placeholder": "Search medications & products...",
     "nav.services": "Services",
@@ -1032,6 +1031,7 @@ const translations: Translations = {
     "nav.faq": "ዝተደጋግሙ ሕቶታት",
     "nav.home": "ቀንዲ ገጽ",
     "nav.my_account": "ናተይ ኣካውንት",
+    "nav.get_started": "ይጀምሩ",
     "nav.payment": "ቴሌብር • ሲቢኢ",
     "nav.search_placeholder": "መድሃኒታትን ፍርያትን ድለዩ...",
     "nav.services": "ኣገልግሎታት",
@@ -1531,6 +1531,7 @@ const translations: Translations = {
     "wishlist.move_to_cart": "Gara Gaariitti Dabalaa",
     "wishlist.remove": "Balleessaa",
     "wishlist.title": "Tarree Hawwii Koo",
+<<<<<<< HEAD
   },
   af: {
     "about.subtitle": "Itoophiyah qaxmeqe dijital fayyah cato kee farmasih laamata.",
@@ -2256,6 +2257,9 @@ const translations: Translations = {
     "wishlist.remove": "Ka Saar",
     "wishlist.title": "Liiskayga Rabitaanka",
   },
+=======
+  }
+>>>>>>> 985754b62f5b8a690287e659e543c2707ca2b4e0
 };
 
 interface LanguageContextProps {
