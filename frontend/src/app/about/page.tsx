@@ -9,39 +9,51 @@ const SERVICES = [
   {
     icon: '📦',
     title: 'Prescription Medications',
+    titleAm: 'የሐኪም ማዘዣ መድኃኒቶች',
     description: 'Wide range of prescription drugs available for in-branch collection after pharmacist verification.',
+    descriptionAm: 'በፋርማሲ ባለሙያ ከተረጋገጠ በኋላ በቅርንጫፍ በአካል የሚወሰዱ አስተማማኝ መድኃኒቶች።',
   },
   {
     icon: '💊',
     title: 'Over-the-Counter Products',
+    titleAm: 'የማዘዣ ወረቀት የማያስፈልጋቸው መድኃኒቶች',
     description: 'From pain relief to cold & flu, vitamins to first aid — shop without a prescription.',
+    descriptionAm: 'ለህመም ማስታገሻ፣ ጉንፋን፣ ቫይታሚን እና የመጀመሪያ ህክምና የሚሆኑ እቃዎች።',
   },
   {
     icon: '🩺',
     title: 'Clinical Consultations',
+    titleAm: 'ክሊኒካዊ የጤና ምክክር',
     description: 'Book video consultations with certified pharmacists for medication reviews and health advice.',
+    descriptionAm: 'ስለ መድኃኒት አወሳሰድ እና የጎንዮሽ ጉዳቶች ከክሊኒካል ፋርማሲስቶች ጋር በቀጥታ ይወያዩ።',
   },
   {
     icon: '🧾',
     title: 'Prescription Upload',
+    titleAm: 'የማዘዣ ወረቀት በፎቶ መላኪያ',
     description: 'Upload your prescription online and our pharmacists will prepare it for fast collection.',
+    descriptionAm: 'የታዘዘልዎትን ማዘዣ በፎቶ ይላኩ፤ ፈቃድ ያላቸው ፋርማሲስቶቻችን አዘጋጅተው ይጠብቁዎታል።',
   },
   {
     icon: '🚚',
     title: 'Home Delivery',
-    description: 'Free delivery on OTC products. Prescription items must be collected in-branch for safety.',
+    titleAm: 'ፈጣን የቤት ማድረስ',
+    description: 'Fast delivery on OTC products. Prescription items must be collected in-branch for safety.',
+    descriptionAm: 'የሐኪም ማዘዣ ለማይፈልጉ እቃዎች ፈጣን የቤት ማድረስ አገልግሎት።',
   },
   {
-    icon: '⭐',
-    title: 'Yene Loyalty Program',
-    description: 'Earn points on every purchase and redeem for exclusive discounts and health packages.',
+    icon: '❄️',
+    title: 'Cold-Chain Transport & Storage',
+    titleAm: 'የቀዝቃዛ ሰንሰለት የመድኃኒት አያያዝ',
+    description: 'Specialized refrigerated handling for insulin, vaccines, and biologics to guarantee full potency.',
+    descriptionAm: 'ለኢንሱሊን፣ ለክትባቶች እና ለስሱ መድኃኒቶች ጥራታቸው እንዳይቀንስ ጥብቅ የቀዝቃዛ ሰንሰለት አያያዝ።',
   },
 ];
 
 export default function AboutPage() {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [toast, setToast] = useState<string | null>(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,13 +139,19 @@ export default function AboutPage() {
 
       {/* Services Grid */}
       <div className="mb-12">
-        <h2 className="text-3xl font-extrabold text-neutral-900 tracking-tight mb-8 text-center">What We Offer</h2>
+        <h2 className="text-3xl font-extrabold text-neutral-900 tracking-tight mb-8 text-center">
+          {language === 'am' ? 'የምንሰጣቸው አገልግሎቶች' : 'What We Offer'}
+        </h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {SERVICES.map((service, idx) => (
             <div key={idx} className="bg-white border rounded-2xl p-6 shadow-sm hover:shadow-lg transition duration-200 group">
               <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">{service.icon}</div>
-              <h3 className="text-lg font-bold text-neutral-900 mb-2">{service.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{service.description}</p>
+              <h3 className="text-lg font-bold text-neutral-900 mb-2">
+                {language === 'am' && service.titleAm ? service.titleAm : service.title}
+              </h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                {language === 'am' && service.descriptionAm ? service.descriptionAm : service.description}
+              </p>
             </div>
           ))}
         </div>

@@ -71,7 +71,7 @@ export class Product {
   imageUrl?: string | null;
 
   @Column({
-    type: 'simple-json',
+    type: 'jsonb',
     nullable: true,
   })
   attributes?: object | null;

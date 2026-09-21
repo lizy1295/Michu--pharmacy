@@ -84,10 +84,10 @@ export class Payment {
   @Column({ name: 'error_message', type: 'text', nullable: true })
   errorMessage?: string;
 
-  @Column({ name: 'raw_payload', type: 'simple-json', nullable: true })
+  @Column({ name: 'raw_payload', type: 'jsonb', nullable: true })
   rawPayload?: any;
 
-  @Column({ name: 'paid_at', type: 'datetime', nullable: true })
+  @Column({ name: 'paid_at', type: 'timestamp', nullable: true })
   paidAt?: Date;
 
   @CreateDateColumn({ name: 'created_at' })

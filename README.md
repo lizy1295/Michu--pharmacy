@@ -39,7 +39,7 @@ MPH/
 
 ### 2. Build Shared Package (Mandatory First Step)
 ```bash
-cd shared
+cd shared 
 npm install
 npm run build
 cd ..

@@ -247,8 +247,8 @@ export default function AccountPage() {
               <p className="text-xs text-gray-400">Keep and renew your prescriptions safely online</p>
             </div>
             <div className="text-center space-y-1">
-              <p className="font-bold text-neutral-800 text-sm">Yene Loyalty Card</p>
-              <p className="text-xs text-gray-400">Get points on cosmetics and supplements checkouts</p>
+              <p className="font-bold text-neutral-800 text-sm">Verified Medicines</p>
+              <p className="text-xs text-gray-400">100% EFDA registered authentic pharmaceuticals</p>
             </div>
             <div className="text-center space-y-1">
               <p className="font-bold text-neutral-800 text-sm">Pharmacist Consults</p>
@@ -346,33 +346,27 @@ export default function AccountPage() {
             </button>
           </div>
 
-          {/* Yene Loyalty Card Widget */}
-          <div className="bg-gradient-to-tr from-brand-900 to-emerald-950 text-white rounded-2xl p-6 shadow-md relative overflow-hidden border border-brand-800">
+          {/* Verified Patient Account Badge */}
+          <div className="bg-gradient-to-tr from-brand-900 via-brand-800 to-emerald-950 text-white rounded-2xl p-6 shadow-md relative overflow-hidden border border-brand-800">
             <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-white/5 blur-xl pointer-events-none"></div>
-            <div className="absolute -bottom-16 -left-16 w-32 h-32 rounded-full bg-brand-500/10 blur-xl pointer-events-none"></div>
-
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-[10px] text-brand-300 font-extrabold uppercase tracking-widest">Michu Pharmacy Loyalty</p>
-                <h3 className="text-xl font-black tracking-tight mt-0.5">{t('dashboard.yene_card')}</h3>
+                <p className="text-[10px] text-emerald-300 font-extrabold uppercase tracking-widest">Verified Account</p>
+                <h3 className="text-base font-black tracking-tight mt-0.5">{user.firstName} {user.lastName}</h3>
               </div>
-              <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold border border-white/15">YC</span>
+              <span className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xs font-bold border border-emerald-400/30">✓</span>
             </div>
 
-            <div className="mt-8 flex justify-between items-end">
+            <div className="mt-6 flex justify-between items-end text-xs text-brand-200">
               <div>
-                <p className="text-[9px] text-brand-400 font-semibold uppercase">Card Holder</p>
-                <p className="text-sm font-bold tracking-wide mt-0.5">{user.firstName} {user.lastName}</p>
+                <p className="text-[10px] text-brand-300 font-semibold uppercase">{t('auth.phone_label')}</p>
+                <p className="font-mono text-xs text-white mt-0.5">{user.phone || '—'}</p>
               </div>
               <div className="text-right">
-                <p className="text-[9px] text-brand-400 font-semibold uppercase">{t('dashboard.points_balance')}</p>
-                <p className="text-xl font-black mt-0.5">480 <span className="text-xs font-normal text-brand-300">pts</span></p>
+                <span className="inline-block px-2.5 py-1 rounded-full bg-emerald-400/10 border border-emerald-400/20 text-[10px] font-bold text-emerald-300">
+                  EFDA Patient Care
+                </span>
               </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-white/10 flex justify-between items-center text-[10px] text-brand-300">
-              <span>{t('dashboard.loyalty_tier')}: <strong className="text-brand-200">Emerald Class</strong></span>
-              <span>{t('dashboard.discount_active')}</span>
             </div>
           </div>
         </aside>

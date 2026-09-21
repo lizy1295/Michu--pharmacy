@@ -23,7 +23,7 @@ export class Admin {
   @Column({ name: 'avatar_url', type: 'text', nullable: true })
   avatar?: string;
 
-  @Column({ name: 'last_login_at', type: 'datetime', nullable: true })
+  @Column({ name: 'last_login_at', type: 'timestamp', nullable: true })
   lastLoginAt?: Date;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })

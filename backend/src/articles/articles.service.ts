@@ -98,21 +98,6 @@ export class ArticlesService {
       createdAt: '2026-06-22T10:00:00Z',
       updatedAt: '2026-06-22T10:00:00Z',
     },
-    {
-      id: 6,
-      title: 'Maximizing Your Yene Card Loyalty Benefits',
-      slug: 'loyalty-program-benefits',
-      excerpt: 'Get the most out of your Yene Card. From earning points to redeeming vouchers, here is everything you need to know.',
-      content: '<h3>Earn Points on Every Purchase</h3><p>Present your Yene Card or registered phone number whenever you shop at any Michu Pharmacy branch to earn points on over-the-counter medicines, vitamins, and skincare products.</p>',
-      featuredImage: 'article-loyalty',
-      category: 'Loyalty',
-      tags: ['yene card', 'loyalty', 'discounts'],
-      status: 'published',
-      author: 'Michu Support Team',
-      relatedProductIds: [25, 26],
-      createdAt: '2026-06-15T10:00:00Z',
-      updatedAt: '2026-06-15T10:00:00Z',
-    },
   ];
 
   async findAll(): Promise<ArticleResponse[]> {

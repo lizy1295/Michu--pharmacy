@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { getArticles, Article } from '@/lib/api/articles';
+import { useState, useMemo } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
+import { Article } from '@/lib/api/articles';
 
 const AMHARIC_ARTICLES: Article[] = [
   {
@@ -130,85 +131,230 @@ const AMHARIC_ARTICLES: Article[] = [
     createdAt: '2026-07-15T10:00:00Z',
     updatedAt: '2026-07-15T10:00:00Z',
   },
+];
+
+const ENGLISH_ARTICLES: Article[] = [
   {
-    id: 6,
-    title: 'የ"የኔ ካርድ" (Yene Card) የፋርማሲ የታማኝነት ነጥቦች እና የቅናሽ ኩፖኖች',
-    slug: 'yene-card-loyalty-amharic',
-    excerpt: 'በሚቹ ፋርማሲ በገዙ ቁጥር ነጥብ በመሰብሰብ ለቀጣይ ግዢዎችዎ የ 15% ቅናሽ ኩፖን እና ልዩ ሽልማቶችን የሚያገኙበት የ loyalty ፕሮግራም መመሪያ።',
+    id: 1,
+    title: 'Understanding Hypertension: Causes, Symptoms, and Prevention',
+    slug: 'understanding-hypertension',
+    excerpt: 'High blood pressure affects millions globally. Learn about warning signs, dietary changes, and treatments available through Michu Pharmacy.',
     content: `
-      <h2>የየኔ ካርድ የታማኝነት ፕሮግራም</h2>
-      <p>የሚቹ ፋርማሲ ቋሚ ደንበኞቹን ለማመስገን ያዘጋጀው የሽልማት ካርድ ነው። በቴሌብር፣ በሲቢኢ ወይም በጥሬ ገንዘብ ሲገዙ ነጥብ ይቆጠርልዎታል።</p>
+      <h2>What is Hypertension?</h2>
+      <p>Hypertension, commonly known as high blood pressure, occurs when the force of blood against arterial walls is consistently too high. Untreated hypertension can lead to heart failure, stroke, or kidney damage.</p>
       
-      <h3>ጥቅሞቹ</h3>
+      <h3>Key Warning Symptoms</h3>
       <ul>
-        <li>በየግዢዎ 5% የሚመለስ የነጥብ ቁጠባ</li>
-        <li>ነጻ የደም ግፊት እና የክብደት መለኪያ አገልግሎት በሁሉም ቅርንጫፎቻችን</li>
-        <li>በልደትዎ እና በበዓላት ወቅት የሚሰጡ ልዩ የዋጋ ቅናሾች</li>
+        <li>Severe morning headaches</li>
+        <li>Blurred vision or dizziness</li>
+        <li>Shortness of breath and palpitations</li>
+        <li>Fatigue and general malaise</li>
+      </ul>
+
+      <h3>Practical Home Management</h3>
+      <p>Reduce sodium intake, follow a balanced diet rich in leafy greens, exercise regularly, and maintain an accurate home blood pressure monitor.</p>
+    `,
+    featuredImage: 'article-health',
+    category: 'Health Tips',
+    tags: ['hypertension', 'heart health', 'prevention', 'blood pressure'],
+    status: 'published',
+    author: 'Dr. Solomon Bekele (PharmD)',
+    relatedProductIds: [8, 14, 1, 2],
+    createdAt: '2026-08-10T10:00:00Z',
+    updatedAt: '2026-08-10T10:00:00Z',
+  },
+  {
+    id: 2,
+    title: 'Why Daily Multivitamins Are Essential for Family Health',
+    slug: 'importance-of-vitamins',
+    excerpt: 'Explore how targeted multivitamins bridge nutritional gaps and support immune health for children and adults alike.',
+    content: `
+      <h2>Bridging Nutritional Gaps</h2>
+      <p>Even with balanced meals, busy lifestyles can cause micronutrient deficits. High-quality supplements strengthen immune resilience and metabolic energy.</p>
+      
+      <h3>Essential Family Micronutrients</h3>
+      <ul>
+        <li><strong>Vitamin D3 & Calcium:</strong> Critical for bone density and dental strength</li>
+        <li><strong>Vitamin C & Zinc:</strong> Helps prevent respiratory infections and seasonal colds</li>
+        <li><strong>Omega-3 Fish Oils:</strong> Promotes cognitive focus and cardiovascular support</li>
       </ul>
     `,
-    featuredImage: 'article-loyalty',
-    category: 'የሚቹ ታማኝነት (Loyalty)',
-    tags: ['የኔ ካርድ', 'yene card', 'ቅናሽ', 'discounts'],
+    featuredImage: 'article-vitamins',
+    category: 'Nutrition',
+    tags: ['vitamins', 'supplements', 'wellness', 'immunity'],
     status: 'published',
-    author: 'የሚቹ ፋርማሲ የደንበኞች አገልግሎት',
-    relatedProductIds: [25, 26],
-    createdAt: '2026-07-10T10:00:00Z',
-    updatedAt: '2026-07-10T10:00:00Z',
+    author: 'Bethlehem Tadesse (Clinical Nutritionist)',
+    relatedProductIds: [16, 17, 19, 27],
+    createdAt: '2026-08-05T10:00:00Z',
+    updatedAt: '2026-08-05T10:00:00Z',
+  },
+  {
+    id: 3,
+    title: 'Smart Diabetes Management: A Practical Patient Guide',
+    slug: 'diabetes-management-tips',
+    excerpt: 'Expert advice from clinical pharmacists on insulin storage, glucometer monitoring, and blood sugar control.',
+    content: `
+      <h2>Controlling Diabetes with Modern Precision</h2>
+      <p>Individuals with diabetes can maintain vibrant health by taking prescribed medications on schedule, following tailored meal plans, and monitoring glucose regularly.</p>
+      
+      <h3>Critical Insulin Storage Rules</h3>
+      <p>Unopened insulin must be refrigerated between 2°C and 8°C. Michu Pharmacy guarantees continuous cold-chain integrity across all branches.</p>
+    `,
+    featuredImage: 'article-diabetes',
+    category: 'Chronic Care',
+    tags: ['diabetes', 'metformin', 'insulin', 'blood glucose'],
+    status: 'published',
+    author: 'Dr. Solomon Bekele (PharmD)',
+    relatedProductIds: [6, 9],
+    createdAt: '2026-07-28T10:00:00Z',
+    updatedAt: '2026-07-28T10:00:00Z',
+  },
+  {
+    id: 4,
+    title: 'Building a Daily Dermatologist-Approved Skincare Routine',
+    slug: 'skincare-routine',
+    excerpt: 'Protect skin against intense sun and dust exposure with broad-spectrum SPF 50+, gentle cleansers, and hydrating ceramides.',
+    content: `
+      <h2>The Three Core Skincare Steps</h2>
+      <p>Achieving radiant, resilient skin begins with understanding your skin barrier type and choosing scientifically backed dermatological products.</p>
+      
+      <h3>Daily Essentials</h3>
+      <ol>
+        <li><strong>Cleanse:</strong> Use a soap-free, pH-balanced facial cleanser</li>
+        <li><strong>Moisturize:</strong> Apply ceramide and hyaluronic acid enriched barrier creams</li>
+        <li><strong>Protect:</strong> Reapply broad-spectrum SPF 50+ sunscreen daily</li>
+      </ol>
+    `,
+    featuredImage: 'article-skincare',
+    category: 'Skincare',
+    tags: ['skincare', 'dermatology', 'sunscreen', 'beauty'],
+    status: 'published',
+    author: 'Helina Worku (Skincare Specialist)',
+    relatedProductIds: [29, 31, 34, 40],
+    createdAt: '2026-07-20T10:00:00Z',
+    updatedAt: '2026-07-20T10:00:00Z',
+  },
+  {
+    id: 5,
+    title: 'How to Safely Store Medications at Home',
+    slug: 'safe-medication-storage',
+    excerpt: 'Avoid medicine degradation from bathroom heat and humidity. Best practices for child safety and expiration date monitoring.',
+    content: `
+      <h2>Preserving Medication Efficacy</h2>
+      <p>Medicines exposed to excessive warmth, direct sunlight, or bathroom steam can rapidly degrade and lose therapeutic potency.</p>
+      
+      <h3>Safe Storage Checklist</h3>
+      <ul>
+        <li>Store medications high up in a locked cabinet away from children and pets.</li>
+        <li>Regularly inspect packaging for expiration dates and physical discoloration.</li>
+        <li>Store dry suspensions and reconstituted liquid antibiotics exactly per pharmacist label instructions.</li>
+      </ul>
+    `,
+    featuredImage: 'article-safety',
+    category: 'Safety',
+    tags: ['medication safety', 'storage', 'pharmacy guidance'],
+    status: 'published',
+    author: 'Michu Clinical Team',
+    relatedProductIds: [1, 2, 3],
+    createdAt: '2026-07-15T10:00:00Z',
+    updatedAt: '2026-07-15T10:00:00Z',
   },
 ];
 
 const renderArticleImage = (type: string) => {
   switch (type) {
     case 'article-health':
-      return <div className="w-full h-full bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600"><svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg></div>;
+      return (
+        <div className="w-full h-full bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+          <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+        </div>
+      );
     case 'article-vitamins':
-      return <div className="w-full h-full bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600"><svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>;
+      return (
+        <div className="w-full h-full bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
+          <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      );
     case 'article-diabetes':
-      return <div className="w-full h-full bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600"><svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158A6 6 0 018 16" /></svg></div>;
+      return (
+        <div className="w-full h-full bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+          <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158A6 6 0 018 16" />
+          </svg>
+        </div>
+      );
     case 'article-skincare':
-      return <div className="w-full h-full bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600"><svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2zM12 5V2m-3 3v4a3 3 0 006 0V5" /></svg></div>;
+      return (
+        <div className="w-full h-full bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600">
+          <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2zM12 5V2m-3 3v4a3 3 0 006 0V5" />
+          </svg>
+        </div>
+      );
     case 'article-safety':
-      return <div className="w-full h-full bg-red-50 rounded-2xl flex items-center justify-center text-red-600"><svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg></div>;
-    case 'article-loyalty':
-      return <div className="w-full h-full bg-teal-50 rounded-2xl flex items-center justify-center text-teal-600"><svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>;
+      return (
+        <div className="w-full h-full bg-red-50 rounded-2xl flex items-center justify-center text-red-600">
+          <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+      );
     default:
-      return <div className="w-full h-full bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400"><svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9a2 2 0 00-2 2v1" /></svg></div>;
+      return (
+        <div className="w-full h-full bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400">
+          <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9a2 2 0 00-2 2v1" />
+          </svg>
+        </div>
+      );
   }
 };
 
 export default function BlogsPage() {
-  const [articles, setArticles] = useState<Article[]>(AMHARIC_ARTICLES);
+  const { t, language } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const categories = Array.from(new Set(articles.map((a) => a.category)));
+  // Dynamically select articles based on active language
+  const activeArticles = useMemo(() => {
+    return language === 'am' ? AMHARIC_ARTICLES : ENGLISH_ARTICLES;
+  }, [language]);
 
-  const filtered = articles.filter((a) => {
-    if (selectedCategory && a.category !== selectedCategory) return false;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return a.title.toLowerCase().includes(q) || a.excerpt.toLowerCase().includes(q);
-    }
-    return true;
-  });
+  const categories = useMemo(() => {
+    return Array.from(new Set(activeArticles.map((a) => a.category)));
+  }, [activeArticles]);
+
+  const filtered = useMemo(() => {
+    return activeArticles.filter((a) => {
+      if (selectedCategory && a.category !== selectedCategory) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        return a.title.toLowerCase().includes(q) || a.excerpt.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [activeArticles, selectedCategory, searchQuery]);
 
   const featured = filtered.slice(0, 2);
   const rest = filtered.slice(2);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 font-sans">
-      {/* Header section in Amharic */}
+      {/* Header section */}
       <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-extrabold border border-emerald-200 shadow-xs">
-          <span>🇪🇹</span>
-          <span>የሚቹ ፋርማሲ የጤና እና የመድኃኒት መረጃዎች • Health Blog</span>
+          <span>{language === 'am' ? '🇪🇹' : '🩺'}</span>
+          <span>{t('blogs.badge')}</span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-          የጤና እና የህክምና መረጃ ጦማር
+          {t('blogs.title')}
         </h1>
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-          በሚቹ ፋርማሲ ክሊኒካል ባለሙያዎች የተዘጋጁ የጤና፣ የመድኃኒት አጠቃቀም እና የስነ-ምግብ ምክሮች
+          {t('blogs.subtitle')}
         </p>
       </div>
 
@@ -217,7 +363,7 @@ export default function BlogsPage() {
         <div className="flex-1 relative">
           <input
             type="text"
-            placeholder="የጤና ጽሑፎችን በስም ወይም በርዕስ ይፈልጉ... (Search articles)"
+            placeholder={t('blogs.search_placeholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 pl-10 text-sm focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none text-slate-800 transition"
@@ -233,7 +379,7 @@ export default function BlogsPage() {
               !selectedCategory ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            ሁሉም ዘርፎች (All)
+            {t('blogs.all_categories')}
           </button>
           {categories.map((cat) => (
             <button
@@ -249,12 +395,21 @@ export default function BlogsPage() {
         </div>
       </div>
 
+      {/* Empty State */}
+      {filtered.length === 0 && (
+        <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 p-8">
+          <p className="text-slate-500 text-sm font-medium">{t('blogs.no_articles')}</p>
+        </div>
+      )}
+
       {/* Featured Articles Grid */}
       {featured.length > 0 && (
         <div className="mb-14">
           <div className="flex items-center gap-2 mb-6">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-            <h2 className="text-xl font-extrabold text-slate-900">ተለይተው የቀረቡ የጤና ጽሑፎች (Featured Articles)</h2>
+            <h2 className="text-xl font-extrabold text-slate-900">
+              {language === 'am' ? 'ተለይተው የቀረቡ የጤና ጽሑፎች' : 'Featured Health Articles'}
+            </h2>
           </div>
           <div className="grid gap-6 md:grid-cols-2">
             {featured.map((article) => (
@@ -272,7 +427,7 @@ export default function BlogsPage() {
                 <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-3 text-xs text-slate-400 font-medium mb-3">
-                      <span>{new Date(article.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <span>{new Date(article.createdAt).toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                       <span>•</span>
                       <span className="text-emerald-700 font-bold">{article.author}</span>
                     </div>
@@ -284,7 +439,7 @@ export default function BlogsPage() {
                     </p>
                   </div>
                   <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-700">
-                    <span>ሙሉውን ያንብቡ (Read Full Article)</span>
+                    <span>{t('blogs.read_more')}</span>
                     <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
                   </div>
                 </div>
@@ -299,7 +454,9 @@ export default function BlogsPage() {
         <div>
           <div className="flex items-center gap-2 mb-6">
             <span className="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
-            <h2 className="text-xl font-extrabold text-slate-900">ተጨማሪ የጤና ጽሑፎች (Recent Articles)</h2>
+            <h2 className="text-xl font-extrabold text-slate-900">
+              {language === 'am' ? 'ተጨማሪ የጤና ጽሑፎች' : 'Recent Health Articles'}
+            </h2>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {rest.map((article) => (
@@ -317,7 +474,7 @@ export default function BlogsPage() {
                 <div className="p-5 flex-1 flex flex-col justify-between">
                   <div>
                     <div className="text-[11px] text-slate-400 font-medium mb-1.5">
-                      {new Date(article.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {new Date(article.createdAt).toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
                     <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 leading-snug">
                       {article.title}
@@ -327,7 +484,7 @@ export default function BlogsPage() {
                     </p>
                   </div>
                   <div className="mt-4 pt-3 border-t border-slate-100 text-xs font-bold text-emerald-700 flex items-center justify-between">
-                    <span>ሙሉ ጽሑፍ</span>
+                    <span>{t('blogs.read_more')}</span>
                     <span>&rarr;</span>
                   </div>
                 </div>

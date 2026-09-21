@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
+import { OrderItem } from './order-item.entity';
 
 export enum OrderStatus {
   PENDING = 'pending',
@@ -40,7 +48,10 @@ export class Order {
   @Column({ name: 'shipping_address', type: 'text' })
   shippingAddress!: string;
 
-  @Column({ name: 'items', type: 'simple-json' })
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
+  orderItems!: OrderItem[];
+
+  @Column({ name: 'items', type: 'jsonb' })
   items!: any[];
 
   @Column({ name: 'subtotal', type: 'decimal', precision: 10, scale: 2 })
@@ -73,13 +84,13 @@ export class Order {
   @Column({ name: 'notes', type: 'text', nullable: true })
   notes?: string;
 
-  @Column({ name: 'approved_at', type: 'datetime', nullable: true })
+  @Column({ name: 'approved_at', type: 'timestamp', nullable: true })
   approvedAt?: Date;
 
-  @Column({ name: 'shipped_at', type: 'datetime', nullable: true })
+  @Column({ name: 'shipped_at', type: 'timestamp', nullable: true })
   shippedAt?: Date;
 
-  @Column({ name: 'completed_at', type: 'datetime', nullable: true })
+  @Column({ name: 'completed_at', type: 'timestamp', nullable: true })
   completedAt?: Date;
 
   @CreateDateColumn({ name: 'created_at' })

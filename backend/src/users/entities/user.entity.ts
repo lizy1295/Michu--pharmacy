@@ -133,7 +133,7 @@ export class User {
 
   @Column({
     name: 'last_login',
-    type: 'datetime',
+    type: 'timestamp',
     nullable: true,
   })
   lastLogin?: Date | null;

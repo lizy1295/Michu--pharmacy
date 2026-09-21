@@ -17,31 +17,31 @@ export class Advertisement {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ length: 10, default: 'image' })
+  @Column({ name: 'media_type', length: 20, default: 'image' })
   mediaType!: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ name: 'media_url', type: 'text', nullable: true })
   mediaUrl?: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ name: 'thumbnail_url', type: 'text', nullable: true })
   thumbnailUrl?: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ name: 'target_url', type: 'text', nullable: true })
   targetUrl?: string;
 
-  @Column({ length: 100, default: 'homepage' })
+  @Column({ name: 'target_page', length: 100, default: 'homepage' })
   targetPage!: string;
 
   @Column({ length: 100, default: 'disease_solution' })
   position!: string;
 
-  @Column({ default: 0 })
+  @Column({ name: 'display_order', default: 0 })
   displayOrder!: number;
 
-  @Column({ type: 'date', nullable: true })
+  @Column({ name: 'start_date', type: 'date', nullable: true })
   startDate?: string;
 
-  @Column({ type: 'date', nullable: true })
+  @Column({ name: 'end_date', type: 'date', nullable: true })
   endDate?: string;
 
   /** draft | published | expired */
@@ -54,12 +54,12 @@ export class Advertisement {
   @Column({ type: 'int', default: 0 })
   views!: number;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ name: 'created_by', length: 255, nullable: true })
   createdBy?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt!: Date;
 }

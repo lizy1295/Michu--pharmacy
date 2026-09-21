@@ -370,7 +370,7 @@ function HealthServicesContent() {
                 <strong>Prescription Pickups:</strong> Due to health safety regulations, prescription drugs cannot be delivered and must be checked by our pharmacist at branches.
               </li>
               <li>
-                <strong>Tele-health Consults:</strong> Standard consult reviews are free of charge for Yene Card loyalty tier members.
+                <strong>Tele-health Consults:</strong> Connect directly with licensed clinical pharmacists for professional medication guidance and safety reviews.
               </li>
               <li>
                 <strong>Review Time:</strong> Standard uploads take approximately 15-30 minutes to review during standard opening hours.

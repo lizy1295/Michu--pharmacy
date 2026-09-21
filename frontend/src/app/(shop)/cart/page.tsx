@@ -111,7 +111,6 @@ export default function CartPage() {
   const taxAmount = cartTotal * 0.15; // 15% VAT
   const hasPrescriptionItems = cartItems.some(item => item.prescriptionRequired);
   const deliveryFee = hasPrescriptionItems ? 0 : 150; // Free for in-branch Rx pickup, 150 ETB standard home delivery
-  const loyaltyPointsEarned = Math.floor(cartTotal / 10);
   const finalTotal = cartTotal > 0 ? cartTotal + taxAmount + deliveryFee : 0;
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
@@ -1108,17 +1107,6 @@ export default function CartPage() {
               <div className="border-t border-dashed pt-2.5 flex justify-between text-neutral-900 font-extrabold text-base">
                 <span>{t('cart.total')}</span>
                 <span>{finalTotal.toFixed(2)} ETB</span>
-              </div>
-            </div>
-
-            {/* Loyalty points banner */}
-            <div className="bg-brand-50 border border-brand-100 rounded-xl p-3 flex items-center gap-2.5 text-xs text-brand-800">
-              <svg className="w-5 h-5 text-brand-600 shrink-0 font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <p className="font-bold">{t('cart.loyalty_earn')}</p>
-                <p className="text-[10px] text-brand-600 mt-0.5">{t('cart.loyalty_points').replace('{points}', String(loyaltyPointsEarned))}</p>
               </div>
             </div>
 

@@ -12,16 +12,19 @@ import { MakeEmailNullable1725550000000 } from '../../migrations/1725550000000-M
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   createTypeOrmOptions(): TypeOrmModuleOptions {
     const dbType = this.configService.get<string>('DB_TYPE', 'sqlite');
-    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
+    const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
+    const isProduction = nodeEnv === 'production';
+    const isStaging = nodeEnv === 'staging';
+    const isLocal = !isProduction && !isStaging;
 
-    // PostgreSQL shared config — includes migrations (postgres-specific SQL)
+    // PostgreSQL shared config ï¿½ includes migrations (postgres-specific SQL)
     const postgresShared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging' | 'migrations' | 'migrationsRun'> = {
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: isLocal,
       logging: !isProduction,
       migrations: [
         InitialSchema1725440000000,
@@ -35,10 +38,10 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       migrationsRun: true,
     };
 
-    // SQLite shared config — disable migrations (they use postgres SQL), use synchronize instead
+    // SQLite shared config ï¿½ disable migrations (they use postgres SQL), use synchronize instead
     const sqliteShared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging' | 'migrations' | 'migrationsRun'> = {
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: isLocal,
       logging: !isProduction,
       migrations: [],
       migrationsRun: false,
@@ -53,12 +56,12 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         ...(databaseUrl
           ? { url: databaseUrl }
           : {
-              host: this.configService.get<string>('DB_HOST', 'localhost'),
-              port: Number(this.configService.get<string | number>('DB_PORT', 5432)),
-              username: this.configService.get<string>('DB_USERNAME', 'postgres'),
-              password: this.configService.get<string>('DB_PASSWORD', 'postgres'),
-              database: this.configService.get<string>('DB_NAME', 'MPH'),
-            }),
+            host: this.configService.get<string>('DB_HOST', 'localhost'),
+            port: Number(this.configService.get<string | number>('DB_PORT', 5432)),
+            username: this.configService.get<string>('DB_USERNAME', 'postgres'),
+            password: this.configService.get<string>('DB_PASSWORD', 'postgres'),
+            database: this.configService.get<string>('DB_NAME', 'MPH'),
+          }),
         ssl: useSsl ? { rejectUnauthorized: false } : undefined,
       };
     }
