@@ -1531,7 +1531,6 @@ const translations: Translations = {
     "wishlist.move_to_cart": "Gara Gaariitti Dabalaa",
     "wishlist.remove": "Balleessaa",
     "wishlist.title": "Tarree Hawwii Koo",
-<<<<<<< HEAD
   },
   af: {
     "about.subtitle": "Itoophiyah qaxmeqe dijital fayyah cato kee farmasih laamata.",
@@ -2257,9 +2256,6 @@ const translations: Translations = {
     "wishlist.remove": "Ka Saar",
     "wishlist.title": "Liiskayga Rabitaanka",
   },
-=======
-  }
->>>>>>> 985754b62f5b8a690287e659e543c2707ca2b4e0
 };
 
 interface LanguageContextProps {
