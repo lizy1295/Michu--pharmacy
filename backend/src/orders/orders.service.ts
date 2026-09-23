@@ -133,6 +133,13 @@ export class OrdersService {
             `Product "${product.name}" is out of stock or has insufficient quantity (available: ${product.stock}, requested: ${item.quantity}).`,
           );
         }
+        // Authoritative server-side price from product catalogue
+        if (product.price !== undefined && product.price !== null) {
+          item.price = Number(product.price);
+        }
+        if (product.name) {
+          item.name = sanitizeText(product.name);
+        }
       }
     }
 
@@ -180,8 +187,11 @@ export class OrdersService {
   async updateStatus(id: number, dto: UpdateOrderStatusDto): Promise<Order> {
     const order = await this.findOne(id);
 
-    // Block shipping when any item in the order requires a prescription that is still PENDING
-    if (dto.status === OrderStatus.SHIPPED && this.prescriptionsRepo) {
+    // Block shipping or completing when any item in the order requires a prescription that is still PENDING
+    if (
+      (dto.status === OrderStatus.SHIPPED || dto.status === OrderStatus.COMPLETED) &&
+      this.prescriptionsRepo
+    ) {
       const requiresPrescriptionItems = (order.items || []).filter(
         (item) => item.prescriptionRequired,
       );
@@ -194,8 +204,8 @@ export class OrdersService {
           .getOne();
 
         if (pendingPrescription) {
-          throw new Error(
-            `Order cannot be shipped: prescription #${pendingPrescription.prescriptionNumber} for customer ${order.customerEmail} is still PENDING approval.`,
+          throw new BadRequestException(
+            `Order cannot transition to ${dto.status}: prescription #${pendingPrescription.prescriptionNumber} for customer ${order.customerEmail} is still PENDING approval.`,
           );
         }
       }
