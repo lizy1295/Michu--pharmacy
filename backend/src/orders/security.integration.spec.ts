@@ -1,15 +1,14 @@
-﻿/**
+/**
  * security.integration.spec.ts
  *
- * Security-critical integration tests (section 3 of the testing guide).
- * All four scenarios use mocked repositories — no live database required.
+ * Security-critical integration and service-level tests verifying core platform security rules:
  *
- * Scenarios:
- *  1. Unauthenticated GET /orders returns 401
- *  2. Customer A requesting Customer B's order via GET /orders/:id returns 403
- *  3. An order with a prescription item cannot move to "shipped" while
- *     the linked prescription is still PENDING
- *  4. A payment webhook without valid signature verification is rejected
+ * Rule 1: An unauthenticated request to GET /orders returns 401 Unauthorized.
+ * Rule 2: An authenticated Customer A requesting Customer B's order via GET /orders/:id returns 403 Forbidden.
+ * Rule 3: A customer-role token hitting an admin-only route (e.g. PATCH /products/:id, PATCH /orders/:id/status) returns 403 Forbidden.
+ * Rule 4: POST /orders ignores any "total" or "price" field sent in the request body and always uses the server-computed value from the product catalogue.
+ * Rule 5: A payment webhook without a valid signature/verification is rejected, not processed, and does not mark any order as paid.
+ * Rule 6: An order containing a prescription item cannot transition to a "shipped" or "fulfilled" (completed) status while its linked prescription is still PENDING.
  */
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -18,6 +17,7 @@ import {
   ValidationPipe,
   ExecutionContext,
   ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
@@ -40,6 +40,10 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 
+// ── Products ─────────────────────────────────────────────────────────────────
+import { ProductsService } from '../products/products.service';
+import { ProductsController } from '../products/products.controller';
+
 // ── Payments ─────────────────────────────────────────────────────────────────
 import { PaymentsController } from '../payments/payments.controller';
 import { PaymentsService } from '../payments/payments.service';
@@ -48,11 +52,8 @@ import { TelebirrService } from '../payments/services/telebirr.service';
 import { CbeService } from '../payments/services/cbe.service';
 import { ChapaService } from '../payments/services/chapa.service';
 import { ReceiptsService } from '../receipts/receipts.service';
-import { Receipt } from '../receipts/entities/receipt.entity';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
-import { ProductsService } from '../products/products.service';
-import { ProductsController } from '../products/products.controller';
 
 // ── Shared ────────────────────────────────────────────────────────────────────
 import { STAFF_ROLES } from '@michu/shared';
@@ -69,26 +70,27 @@ function signPayload(payload: object): string {
 }
 
 // ---------------------------------------------------------------------------
-// SHARED MOCK DATA
+// TEST SUITE: RULES 1, 2, 3 & 4 (Orders & Products HTTP / Controller Layer)
 // ---------------------------------------------------------------------------
 
-/** Customer A — the authenticated user in most tests */
-const CUSTOMER_A = { sub: '100', role: 'customer', email: 'alice@example.com' };
-
-/** Customer B — owns order #999 */
-const CUSTOMER_B = { sub: '200', role: 'customer', email: 'bob@example.com' };
-
-const STAFF_USER = { sub: '1', role: STAFF_ROLES[0], email: 'admin@michu.com' };
-
-// ---------------------------------------------------------------------------
-// SCENARIO 1 & 2  (Orders Controller — HTTP layer)
-// ---------------------------------------------------------------------------
-
-describe('Security: Orders auth enforcement', () => {
+describe('Security Rules: Auth Enforcement & Catalog Pricing (HTTP Layer)', () => {
   let app: INestApplication;
 
-  // Mutable so each test can swap the "logged-in" user; null = unauthenticated
+  const CUSTOMER_A = { sub: '100', role: 'customer', email: 'alice@example.com' };
+  const CUSTOMER_B = { sub: '200', role: 'customer', email: 'bob@example.com' };
+  const STAFF_USER = { sub: '1', role: STAFF_ROLES[0], email: 'admin@michu.com' };
+
   let currentUser: typeof CUSTOMER_A | null = CUSTOMER_A;
+
+  const catalogProduct: Partial<Product> = {
+    id: 1,
+    name: 'Amoxicillin 500mg',
+    price: 80,
+    brand: 'Bayer',
+    category: 'Antibiotics',
+    prescriptionRequired: true,
+    stock: 50,
+  };
 
   const orderOwnedByB: Partial<Order> = {
     id: 999,
@@ -104,15 +106,26 @@ describe('Security: Orders auth enforcement', () => {
     items: [],
   };
 
+  let createdOrders: Order[] = [];
+  let orderCounter = 1000;
+
   beforeAll(async () => {
     const mockOrderRepo = {
-      count: jest.fn().mockResolvedValue(1),
+      count: jest.fn().mockImplementation(() => Promise.resolve(createdOrders.length + 1)),
       findOne: jest.fn().mockImplementation(({ where }: any) => {
         if (where?.id === 999) return Promise.resolve({ ...orderOwnedByB });
+        const found = createdOrders.find((o) => o.id === where?.id);
+        if (found) return Promise.resolve({ ...found });
         return Promise.resolve(null);
       }),
-      create: jest.fn().mockImplementation((d: any) => ({ id: 1, ...d })),
-      save: jest.fn().mockImplementation((d: any) => Promise.resolve(d)),
+      create: jest.fn().mockImplementation((dto: any) => ({
+        id: ++orderCounter,
+        ...dto,
+      })),
+      save: jest.fn().mockImplementation((order: any) => {
+        createdOrders.push(order);
+        return Promise.resolve(order);
+      }),
       createQueryBuilder: jest.fn().mockReturnValue({
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
@@ -124,20 +137,24 @@ describe('Security: Orders auth enforcement', () => {
     };
 
     const mockProductRepo = {
-      findOne: jest.fn().mockResolvedValue(null),
-      findAndCount: jest.fn().mockResolvedValue([[], 0]),
+      findOne: jest.fn().mockImplementation(({ where }: any) => {
+        if (where?.id === 1) return Promise.resolve({ ...catalogProduct });
+        return Promise.resolve(null);
+      }),
+      findAndCount: jest.fn().mockResolvedValue([[catalogProduct], 1]),
+      save: jest.fn().mockImplementation((p: any) => Promise.resolve({ ...p })),
       createQueryBuilder: jest.fn().mockReturnValue({
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
-        getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+        getManyAndCount: jest.fn().mockResolvedValue([[catalogProduct], 1]),
       }),
     };
 
     const mockOrderItemRepo = {
-      save: jest.fn().mockResolvedValue([]),
+      save: jest.fn().mockImplementation((items) => Promise.resolve(items)),
       find: jest.fn().mockResolvedValue([]),
     };
 
@@ -163,7 +180,9 @@ describe('Security: Orders auth enforcement', () => {
       .overrideGuard(JwtAuthGuard)
       .useValue({
         canActivate: (context: ExecutionContext) => {
-          if (!currentUser) return false; // simulate 401
+          if (!currentUser) {
+            throw new UnauthorizedException('Authentication token is missing or invalid.');
+          }
           const req = context.switchToHttp().getRequest();
           req.user = currentUser;
           return true;
@@ -189,55 +208,316 @@ describe('Security: Orders auth enforcement', () => {
     if (app) await app.close();
   });
 
-  // ── Scenario 1 ─────────────────────────────────────────────────────────────
-
-  describe('Scenario 1: Unauthenticated GET /orders returns 401', () => {
-    it('returns 401 when no JWT is provided', async () => {
+  // ── Rule 1 ─────────────────────────────────────────────────────────────────
+  describe('Rule 1: Unauthenticated request to GET /orders returns 401 Unauthorized', () => {
+    it('returns 401 Unauthorized when no auth token is provided', async () => {
       currentUser = null;
       await request(app.getHttpServer()).get('/orders').expect(401);
       currentUser = CUSTOMER_A;
     });
-
-    it('returns 403 when an authenticated customer (non-staff) requests GET /orders', async () => {
-      currentUser = CUSTOMER_A;
-      await request(app.getHttpServer()).get('/orders').expect(403);
-    });
   });
 
-  // ── Scenario 2 ─────────────────────────────────────────────────────────────
-
-  describe("Scenario 2: Customer A cannot read Customer B's order (403)", () => {
-    it('returns 403 when Customer A requests GET /orders/999 (owned by Customer B)', async () => {
+  // ── Rule 2 ─────────────────────────────────────────────────────────────────
+  describe("Rule 2: Authenticated Customer A requesting Customer B's order via GET /orders/:id returns 403 Forbidden", () => {
+    it('returns 403 Forbidden when Customer A requests order #999 owned by Customer B', async () => {
       currentUser = CUSTOMER_A;
       const res = await request(app.getHttpServer()).get('/orders/999').expect(403);
       expect(res.body.message).toMatch(/not authorized/i);
     });
 
-    it('returns 200 when Customer B requests their own order', async () => {
+    it('allows Customer B (the owner) to retrieve their own order with 200 OK', async () => {
       currentUser = CUSTOMER_B;
       const res = await request(app.getHttpServer()).get('/orders/999').expect(200);
       expect(res.body.id).toBe(999);
       expect(res.body.customerEmail).toBe(CUSTOMER_B.email);
     });
 
-    it('staff can read any order regardless of ownership', async () => {
+    it('allows staff users to retrieve any order regardless of ownership with 200 OK', async () => {
       currentUser = STAFF_USER;
       const res = await request(app.getHttpServer()).get('/orders/999').expect(200);
       expect(res.body.id).toBe(999);
     });
   });
+
+  // ── Rule 3 ─────────────────────────────────────────────────────────────────
+  describe('Rule 3: Customer-role token hitting an admin-only route returns 403 Forbidden', () => {
+    it('returns 403 Forbidden when Customer A hits staff-only GET /orders', async () => {
+      currentUser = CUSTOMER_A;
+      await request(app.getHttpServer()).get('/orders').expect(403);
+    });
+
+    it('returns 403 Forbidden when Customer A attempts to update product via PATCH /products/:id', async () => {
+      currentUser = CUSTOMER_A;
+      await request(app.getHttpServer())
+        .patch('/products/1')
+        .send({ price: 10 })
+        .expect(403);
+    });
+
+    it('returns 403 Forbidden when Customer A attempts to update order status via PATCH /orders/:id/status', async () => {
+      currentUser = CUSTOMER_A;
+      await request(app.getHttpServer())
+        .patch('/orders/999/status')
+        .send({ status: OrderStatus.SHIPPED })
+        .expect(403);
+    });
+
+    it('allows staff user to access admin-only routes', async () => {
+      currentUser = STAFF_USER;
+      await request(app.getHttpServer()).get('/orders').expect(200);
+    });
+  });
+
+  // ── Rule 4 ─────────────────────────────────────────────────────────────────
+  describe('Rule 4: POST /orders ignores client "total" or "price" fields and uses server-computed catalogue price', () => {
+    it('overrides client-tampered price and total with authoritative product catalogue calculation', async () => {
+      currentUser = CUSTOMER_A;
+
+      // Product 1 has price = 80 in catalog.
+      // Client tampers with price: 1 (instead of 80), subtotal: 3, total: 3.
+      const tamperedPayload = {
+        customerName: 'Alice Tamperer',
+        customerEmail: 'alice@example.com',
+        customerPhone: '+251911223344',
+        shippingAddress: 'Bole Road, Addis Ababa',
+        items: [
+          {
+            id: 1,
+            name: 'Amoxicillin 500mg',
+            price: 1.0, // FAKE tampered price!
+            quantity: 3,
+            prescriptionRequired: true,
+          },
+        ],
+        subtotal: 3.0, // FAKE tampered subtotal!
+        tax: 36,
+        deliveryFee: 50,
+      };
+
+      const res = await request(app.getHttpServer())
+        .post('/orders')
+        .send(tamperedPayload)
+        .expect(201);
+
+      // Server computation: 3 units * 80 ETB catalog price = 240 ETB subtotal
+      expect(res.body.subtotal).toBe(240);
+      expect(res.body.subtotal).not.toBe(3.0);
+
+      // Server computation: 240 + 36 (tax) + 50 (delivery) = 326 ETB total
+      expect(res.body.total).toBe(326);
+      expect(res.body.total).not.toBe(3.0);
+
+      // Verify item price was set to catalog price 80, NOT tampered 1.0
+      expect(res.body.items[0].price).toBe(80);
+      expect(res.body.items[0].price).not.toBe(1.0);
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
-// SCENARIO 3  (OrdersService — unit level)
+// TEST SUITE: RULE 5 (Payment Webhook Signature & Order Paid Protection)
 // ---------------------------------------------------------------------------
 
-describe('Scenario 3: Cannot ship order while prescription is PENDING', () => {
+describe('Security Rule 5: Payment webhook signature rejection & order paid protection', () => {
+  let app: INestApplication;
+  let paymentsService: PaymentsService;
+
+  const validTxRef = 'PAY-1725800000000-99';
+  const validWebhookBody = { tx_ref: validTxRef, status: 'success' };
+
+  let mockPayment: Partial<Payment>;
+  let mockOrder: Partial<Order>;
+  let savedEntities: any[] = [];
+
+  const mockQueryRunner = {
+    connect: jest.fn(),
+    startTransaction: jest.fn(),
+    commitTransaction: jest.fn(),
+    rollbackTransaction: jest.fn(),
+    release: jest.fn(),
+    manager: {
+      findOne: jest.fn().mockImplementation((entityClass: any) => {
+        if (entityClass === Payment) return Promise.resolve({ ...mockPayment });
+        if (entityClass === Order) return Promise.resolve({ ...mockOrder });
+        return Promise.resolve(null);
+      }),
+      find: jest.fn().mockResolvedValue([]),
+      save: jest.fn().mockImplementation((e: any) => {
+        savedEntities.push(e);
+        return Promise.resolve(e);
+      }),
+      getRepository: jest.fn().mockReturnValue({
+        findOne: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockImplementation((d: any) => ({ id: 50, receiptNumber: 'REC-0050', ...d })),
+        save: jest.fn().mockImplementation((d: any) => Promise.resolve({ id: 50, receiptNumber: 'REC-0050', ...d })),
+      }),
+    },
+  };
+
+  beforeAll(async () => {
+    mockPayment = {
+      id: 10,
+      paymentNumber: validTxRef,
+      orderId: 500,
+      amount: 300,
+      currency: 'ETB',
+      status: PaymentRecordStatus.PAYMENT_INITIATED,
+      paymentMethod: PaymentProviderMethod.TELEBIRR,
+    };
+
+    mockOrder = {
+      id: 500,
+      orderNumber: 'ORD-0500',
+      customerId: 100,
+      customerEmail: 'alice@example.com',
+      total: 300,
+      subtotal: 260,
+      tax: 40,
+      deliveryFee: 0,
+      status: OrderStatus.PENDING,
+      paymentStatus: PaymentStatus.PAYMENT_INITIATED,
+      items: [],
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [PaymentsController],
+      providers: [
+        PaymentsService,
+        ChapaService,
+        { provide: TelebirrService, useValue: { initiatePayment: jest.fn(), verifyPayment: jest.fn() } },
+        { provide: CbeService, useValue: { initiatePayment: jest.fn(), verifyPayment: jest.fn() } },
+        {
+          provide: ReceiptsService,
+          useValue: {
+            createReceipt: jest.fn().mockResolvedValue({ id: 50, receiptNumber: 'REC-0050' }),
+            findByOrderId: jest.fn().mockResolvedValue(null),
+          },
+        },
+        {
+          provide: getRepositoryToken(Payment),
+          useValue: {
+            findOne: jest.fn().mockImplementation(() => Promise.resolve(mockPayment)),
+            create: jest.fn().mockImplementation((d: any) => ({ id: 10, ...d })),
+            save: jest.fn().mockImplementation((d: any) => Promise.resolve(d)),
+          },
+        },
+        {
+          provide: getRepositoryToken(Order),
+          useValue: {
+            findOne: jest.fn().mockImplementation(() => Promise.resolve(mockOrder)),
+            save: jest.fn().mockImplementation((d: any) => Promise.resolve(d)),
+          },
+        },
+        { provide: getRepositoryToken(Product), useValue: { findOne: jest.fn() } },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string, def?: string) => {
+              if (key === 'CHAPA_WEBHOOK_SECRET') return WEBHOOK_SECRET;
+              if (key === 'CHAPA_SECRET_KEY') return 'CHASECK_TEST-sample';
+              if (key === 'CHAPA_BASE_URL') return 'https://api.chapa.co';
+              return def;
+            }),
+          },
+        },
+        { provide: DataSource, useValue: { createQueryRunner: () => mockQueryRunner } },
+      ],
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
+
+    const chapaServiceInstance = module.get<ChapaService>(ChapaService);
+    jest.spyOn(chapaServiceInstance, 'verifyTransaction').mockResolvedValue({
+      success: true,
+      status: 'success',
+      txRef: validTxRef,
+      reference: 'CHAPA-REF-999',
+      amount: 300,
+      currency: 'ETB',
+    } as any);
+
+    app = module.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    await app.init();
+    paymentsService = module.get<PaymentsService>(PaymentsService);
+  });
+
+  afterAll(async () => {
+    if (app) await app.close();
+  });
+
+  beforeEach(() => {
+    savedEntities = [];
+    mockOrder.paymentStatus = PaymentStatus.PAYMENT_INITIATED;
+    mockPayment.status = PaymentRecordStatus.PAYMENT_INITIATED;
+    jest.clearAllMocks();
+  });
+
+  it('5a. Missing x-chapa-signature header is rejected with ForbiddenException and does not mark order as paid', async () => {
+    await expect(
+      paymentsService.processChapaWebhook(validWebhookBody, {}),
+    ).rejects.toThrow(ForbiddenException);
+
+    // Assert order was NOT marked as paid
+    expect(mockOrder.paymentStatus).toBe(PaymentStatus.PAYMENT_INITIATED);
+    expect(mockOrder.paymentStatus).not.toBe(PaymentStatus.PAID);
+    expect(mockQueryRunner.commitTransaction).not.toHaveBeenCalled();
+  });
+
+  it('5b. Wrong/tampered signature is rejected with ForbiddenException and does not mark order as paid', async () => {
+    const fakeSignature = crypto
+      .createHmac('sha256', 'attacker_wrong_secret')
+      .update(JSON.stringify(validWebhookBody))
+      .digest('hex');
+
+    await expect(
+      paymentsService.processChapaWebhook(validWebhookBody, {
+        'x-chapa-signature': fakeSignature,
+      }),
+    ).rejects.toThrow(ForbiddenException);
+
+    // Assert order was NOT marked as paid
+    expect(mockOrder.paymentStatus).toBe(PaymentStatus.PAYMENT_INITIATED);
+    expect(mockOrder.paymentStatus).not.toBe(PaymentStatus.PAID);
+    expect(mockQueryRunner.commitTransaction).not.toHaveBeenCalled();
+  });
+
+  it('5c. HTTP POST /payments/webhook/chapa without signature returns 403 Forbidden', async () => {
+    await request(app.getHttpServer())
+      .post('/payments/webhook/chapa')
+      .send(validWebhookBody)
+      .expect(403);
+
+    expect(mockOrder.paymentStatus).not.toBe(PaymentStatus.PAID);
+  });
+
+  it('5d. Valid signature processes payment and marks order as PAID', async () => {
+    const validSignature = signPayload(validWebhookBody);
+
+    const result = await paymentsService.processChapaWebhook(validWebhookBody, {
+      'x-chapa-signature': validSignature,
+    });
+
+    expect(result.received).toBe(true);
+    expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TEST SUITE: RULE 6 (Prescription-Item Transition Protection)
+// ---------------------------------------------------------------------------
+
+describe('Security Rule 6: Prescription-item orders cannot transition to shipped or fulfilled while prescription is PENDING', () => {
   let ordersService: OrdersService;
 
   const prescriptionItem = {
-    id: 1, productId: 10, name: 'Amoxicillin 500mg',
-    quantity: 2, price: 80, prescriptionRequired: true,
+    id: 1,
+    productId: 10,
+    name: 'Amoxicillin 500mg',
+    quantity: 2,
+    price: 80,
+    prescriptionRequired: true,
   };
 
   const pendingPrescriptionOrder: Partial<Order> = {
@@ -255,7 +535,12 @@ describe('Scenario 3: Cannot ship order while prescription is PENDING', () => {
       andWhere: jest.fn().mockReturnThis(),
       getOne: jest.fn().mockResolvedValue(
         pendingRxFound
-          ? { id: 1, prescriptionNumber: 'RX-2024-001', patientEmail: 'alice@example.com', status: PrescriptionStatus.PENDING }
+          ? {
+              id: 1,
+              prescriptionNumber: 'RX-2024-001',
+              patientEmail: 'alice@example.com',
+              status: PrescriptionStatus.PENDING,
+            }
           : null,
       ),
     };
@@ -286,7 +571,7 @@ describe('Scenario 3: Cannot ship order while prescription is PENDING', () => {
     }).compile();
   }
 
-  it('throws when attempting to ship while prescription is PENDING', async () => {
+  it('6a. Blocks transition to SHIPPED when linked prescription is PENDING', async () => {
     const module = await buildServiceModule(true);
     ordersService = module.get<OrdersService>(OrdersService);
 
@@ -295,7 +580,16 @@ describe('Scenario 3: Cannot ship order while prescription is PENDING', () => {
     ).rejects.toThrow(/prescription.*PENDING/i);
   });
 
-  it('does NOT block transitioning to APPROVED (non-shipping transition)', async () => {
+  it('6b. Blocks transition to COMPLETED (fulfilled) when linked prescription is PENDING', async () => {
+    const module = await buildServiceModule(true);
+    ordersService = module.get<OrdersService>(OrdersService);
+
+    await expect(
+      ordersService.updateStatus(42, { status: OrderStatus.COMPLETED }),
+    ).rejects.toThrow(/prescription.*PENDING/i);
+  });
+
+  it('6c. Allows transition to APPROVED (non-shipping/fulfilling transition) even if prescription is PENDING', async () => {
     const module = await buildServiceModule(true);
     ordersService = module.get<OrdersService>(OrdersService);
 
@@ -304,167 +598,19 @@ describe('Scenario 3: Cannot ship order while prescription is PENDING', () => {
     ).resolves.toBeDefined();
   });
 
-  it('allows shipping when no PENDING prescription is found for the customer', async () => {
+  it('6d. Allows transition to SHIPPED when linked prescription is no longer PENDING (e.g. approved)', async () => {
     const module = await buildServiceModule(false);
     ordersService = module.get<OrdersService>(OrdersService);
 
-    await expect(
-      ordersService.updateStatus(42, { status: OrderStatus.SHIPPED }),
-    ).resolves.toBeDefined();
+    const res = await ordersService.updateStatus(42, { status: OrderStatus.SHIPPED });
+    expect(res.status).toBe(OrderStatus.SHIPPED);
+  });
+
+  it('6e. Allows transition to COMPLETED (fulfilled) when linked prescription is no longer PENDING', async () => {
+    const module = await buildServiceModule(false);
+    ordersService = module.get<OrdersService>(OrdersService);
+
+    const res = await ordersService.updateStatus(42, { status: OrderStatus.COMPLETED });
+    expect(res.status).toBe(OrderStatus.COMPLETED);
   });
 });
-
-// ---------------------------------------------------------------------------
-// SCENARIO 4  (Payments webhook — service + HTTP)
-// ---------------------------------------------------------------------------
-
-describe('Scenario 4: Payment webhook rejects invalid signatures', () => {
-  let app: INestApplication;
-  let paymentsService: PaymentsService;
-
-  const validTxRef = 'PAY-1725800000000-99';
-  const validWebhookBody = { tx_ref: validTxRef, status: 'success' };
-
-  const mockPayment: Partial<Payment> = {
-    id: 10, paymentNumber: validTxRef, orderId: 500,
-    amount: 300, currency: 'ETB',
-    status: PaymentRecordStatus.PAYMENT_INITIATED,
-    paymentMethod: PaymentProviderMethod.TELEBIRR,
-  };
-
-  const mockOrder: Partial<Order> = {
-    id: 500, orderNumber: 'ORD-0500',
-    customerId: 100, customerEmail: 'alice@example.com',
-    total: 300, subtotal: 260, tax: 40, deliveryFee: 0,
-    status: OrderStatus.APPROVED,
-    paymentStatus: PaymentStatus.PAYMENT_INITIATED,
-    items: [],
-  };
-
-  const mockQueryRunner = {
-    connect: jest.fn(),
-    startTransaction: jest.fn(),
-    commitTransaction: jest.fn(),
-    rollbackTransaction: jest.fn(),
-    release: jest.fn(),
-    manager: {
-      findOne: jest.fn().mockImplementation((entityClass: any) => {
-        if (entityClass === Payment) return Promise.resolve({ ...mockPayment });
-        if (entityClass === Order) return Promise.resolve({ ...mockOrder });
-        return Promise.resolve(null);
-      }),
-      find: jest.fn().mockResolvedValue([]),
-      save: jest.fn().mockImplementation((e: any) => Promise.resolve(e)),
-      getRepository: jest.fn().mockReturnValue({
-        findOne: jest.fn().mockResolvedValue(null),
-        create: jest.fn().mockImplementation((d: any) => ({ id: 50, receiptNumber: 'REC-0050', ...d })),
-        save: jest.fn().mockImplementation((d: any) => Promise.resolve({ id: 50, receiptNumber: 'REC-0050', ...d })),
-      }),
-    },
-  };
-
-  beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [PaymentsController],
-      providers: [
-        PaymentsService,
-        ChapaService,
-        { provide: TelebirrService, useValue: { initiatePayment: jest.fn(), verifyPayment: jest.fn() } },
-        { provide: CbeService, useValue: { initiatePayment: jest.fn(), verifyPayment: jest.fn() } },
-        {
-          provide: ReceiptsService,
-          useValue: {
-            createReceipt: jest.fn().mockResolvedValue({ id: 50, receiptNumber: 'REC-0050' }),
-            findByOrderId: jest.fn().mockResolvedValue({ id: 50, receiptNumber: 'REC-0050' }),
-          },
-        },
-        {
-          provide: getRepositoryToken(Payment),
-          useValue: {
-            findOne: jest.fn().mockResolvedValue(mockPayment),
-            create: jest.fn().mockImplementation((d: any) => ({ id: 10, ...d })),
-            save: jest.fn().mockImplementation((d: any) => Promise.resolve(d)),
-          },
-        },
-        {
-          provide: getRepositoryToken(Order),
-          useValue: {
-            findOne: jest.fn().mockResolvedValue(mockOrder),
-            save: jest.fn().mockImplementation((d: any) => Promise.resolve(d)),
-          },
-        },
-        { provide: getRepositoryToken(Product), useValue: { findOne: jest.fn() } },
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn((key: string, def?: string) => {
-              if (key === 'CHAPA_WEBHOOK_SECRET') return WEBHOOK_SECRET;
-              if (key === 'CHAPA_SECRET_KEY') return 'CHASECK_TEST-sample';
-              if (key === 'CHAPA_BASE_URL') return 'https://api.chapa.co';
-              return def;
-            }),
-          },
-        },
-        { provide: DataSource, useValue: { createQueryRunner: () => mockQueryRunner } },
-      ],
-    })
-      .overrideGuard(JwtAuthGuard)
-      .useValue({ canActivate: () => true })
-      .compile();
-
-    const chapaServiceInstance = module.get<ChapaService>(ChapaService);
-    jest.spyOn(chapaServiceInstance, 'verifyTransaction').mockResolvedValue({
-      success: true, status: 'success', txRef: validTxRef,
-      reference: 'CHAPA-REF-999', amount: 300, currency: 'ETB',
-    } as any);
-
-    app = module.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-    await app.init();
-    paymentsService = module.get<PaymentsService>(PaymentsService);
-  });
-
-  afterAll(async () => {
-    if (app) await app.close();
-  });
-
-  it('4a. Missing x-chapa-signature header is rejected with ForbiddenException', async () => {
-    await expect(
-      paymentsService.processChapaWebhook(validWebhookBody, {}),
-    ).rejects.toThrow(ForbiddenException);
-  });
-
-  it('4b. Wrong (tampered) signature is rejected with ForbiddenException', async () => {
-    const wrongSig = crypto
-      .createHmac('sha256', 'wrong_secret')
-      .update(JSON.stringify(validWebhookBody))
-      .digest('hex');
-
-    await expect(
-      paymentsService.processChapaWebhook(validWebhookBody, {
-        'x-chapa-signature': wrongSig,
-      }),
-    ).rejects.toThrow(ForbiddenException);
-  });
-
-  it('4c. Correct HMAC signature is accepted and returns success', async () => {
-    const correctSig = signPayload(validWebhookBody);
-
-    const result = await paymentsService.processChapaWebhook(validWebhookBody, {
-      'x-chapa-signature': correctSig,
-    });
-
-    expect(result.received).toBe(true);
-  });
-
-  it('4d. HTTP POST /payments/webhook/chapa without signature returns 4xx', async () => {
-    const res = await request(app.getHttpServer())
-      .post('/payments/webhook/chapa')
-      .send(validWebhookBody);
-
-    expect([400, 403]).toContain(res.status);
-  });
-});
-
-
-
