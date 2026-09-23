@@ -14,6 +14,7 @@ import {
   PaymentRecordStatus,
 } from './entities/payment.entity';
 import { Order, OrderStatus, PaymentStatus } from '../orders/entities/order.entity';
+import { OrderItem } from '../orders/entities/order-item.entity';
 import { Product } from '../products/product.entity';
 import { TelebirrService } from './services/telebirr.service';
 import { CbeService } from './services/cbe.service';
@@ -333,20 +334,28 @@ export class PaymentsService {
           }
           await queryRunner.manager.save(order);
 
-          // Deduct product inventory stock safely
-          if (Array.isArray(order.items)) {
-            for (const item of order.items) {
-              const productId = Number(item.id || item.productId);
-              const qty = Number(item.quantity || 1);
+          // Deduct product inventory stock safely from order_items (with fallback to order.items)
+          const dbOrderItems =
+            typeof queryRunner.manager.find === 'function'
+              ? await queryRunner.manager.find(OrderItem, {
+                  where: { orderId: order.id },
+                })
+              : [];
+          const itemsToDeduct =
+            dbOrderItems && dbOrderItems.length > 0
+              ? dbOrderItems.map((oi) => ({ productId: Number(oi.productId), quantity: Number(oi.quantity || 1) }))
+              : Array.isArray(order.items)
+              ? order.items.map((it) => ({ productId: Number(it.id || it.productId), quantity: Number(it.quantity || 1) }))
+              : [];
 
-              if (productId && qty > 0) {
-                const product = await queryRunner.manager.findOne(Product, {
-                  where: { id: productId },
-                });
-                if (product) {
-                  product.stock = Math.max(0, Number(product.stock) - qty);
-                  await queryRunner.manager.save(product);
-                }
+          for (const item of itemsToDeduct) {
+            if (item.productId && item.quantity > 0) {
+              const product = await queryRunner.manager.findOne(Product, {
+                where: { id: item.productId },
+              });
+              if (product) {
+                product.stock = Math.max(0, Number(product.stock) - item.quantity);
+                await queryRunner.manager.save(product);
               }
             }
           }
@@ -548,20 +557,28 @@ export class PaymentsService {
         }
         await queryRunner.manager.save(order);
 
-        // Deduct product inventory stock safely
-        if (Array.isArray(order.items)) {
-          for (const item of order.items) {
-            const productId = Number(item.id || item.productId);
-            const qty = Number(item.quantity || 1);
+        // Deduct product inventory stock safely from order_items (with fallback to order.items)
+        const dbOrderItems =
+          typeof queryRunner.manager.find === 'function'
+            ? await queryRunner.manager.find(OrderItem, {
+                where: { orderId: order.id },
+              })
+            : [];
+        const itemsToDeduct =
+          dbOrderItems && dbOrderItems.length > 0
+            ? dbOrderItems.map((oi) => ({ productId: Number(oi.productId), quantity: Number(oi.quantity || 1) }))
+            : Array.isArray(order.items)
+            ? order.items.map((it) => ({ productId: Number(it.id || it.productId), quantity: Number(it.quantity || 1) }))
+            : [];
 
-            if (productId && qty > 0) {
-              const product = await queryRunner.manager.findOne(Product, {
-                where: { id: productId },
-              });
-              if (product) {
-                product.stock = Math.max(0, Number(product.stock) - qty);
-                await queryRunner.manager.save(product);
-              }
+        for (const item of itemsToDeduct) {
+          if (item.productId && item.quantity > 0) {
+            const product = await queryRunner.manager.findOne(Product, {
+              where: { id: item.productId },
+            });
+            if (product) {
+              product.stock = Math.max(0, Number(product.stock) - item.quantity);
+              await queryRunner.manager.save(product);
             }
           }
         }
@@ -766,19 +783,28 @@ export class PaymentsService {
       }
       await queryRunner.manager.save(order);
 
-      // Deduct inventory stock safely
-      if (Array.isArray(order.items)) {
-        for (const item of order.items) {
-          const productId = Number(item.id || item.productId);
-          const qty = Number(item.quantity || 1);
-          if (productId && qty > 0) {
-            const product = await queryRunner.manager.findOne(Product, {
-              where: { id: productId },
-            });
-            if (product) {
-              product.stock = Math.max(0, Number(product.stock) - qty);
-              await queryRunner.manager.save(product);
-            }
+      // Deduct inventory stock safely from order_items (with fallback to order.items)
+      const dbOrderItems =
+        typeof queryRunner.manager.find === 'function'
+          ? await queryRunner.manager.find(OrderItem, {
+              where: { orderId: order.id },
+            })
+          : [];
+      const itemsToDeduct =
+        dbOrderItems && dbOrderItems.length > 0
+          ? dbOrderItems.map((oi) => ({ productId: Number(oi.productId), quantity: Number(oi.quantity || 1) }))
+          : Array.isArray(order.items)
+          ? order.items.map((it) => ({ productId: Number(it.id || it.productId), quantity: Number(it.quantity || 1) }))
+          : [];
+
+      for (const item of itemsToDeduct) {
+        if (item.productId && item.quantity > 0) {
+          const product = await queryRunner.manager.findOne(Product, {
+            where: { id: item.productId },
+          });
+          if (product) {
+            product.stock = Math.max(0, Number(product.stock) - item.quantity);
+            await queryRunner.manager.save(product);
           }
         }
       }

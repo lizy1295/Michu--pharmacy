@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { User } from '../../users/entities/user.entity';
@@ -32,6 +33,7 @@ export class Payment {
   @Column({ name: 'payment_number', type: 'varchar', length: 50, unique: true })
   paymentNumber!: string;
 
+  @Index('IDX_payments_order_id')
   @Column({ name: 'order_id', type: 'integer' })
   orderId!: number;
 

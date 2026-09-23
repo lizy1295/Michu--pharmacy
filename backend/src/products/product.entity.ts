@@ -29,6 +29,7 @@ export class Product {
   })
   price!: number;
 
+  @Index('IDX_products_brand')
   @Column({
     type: 'varchar',
     length: 150,
@@ -36,6 +37,7 @@ export class Product {
   })
   brand?: string | null;
 
+  @Index('IDX_products_category')
   @Column({
     type: 'varchar',
     length: 50,

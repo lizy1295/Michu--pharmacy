@@ -94,6 +94,7 @@ export class User {
   })
   roleId!: number;
 
+  @Index('IDX_users_role')
   @Column({
     name: 'role',
     type: 'varchar',
@@ -102,6 +103,7 @@ export class User {
   })
   role!: string;
 
+  @Index('IDX_users_branch_id')
   @Column({
     name: 'branch_id',
     type: 'varchar',

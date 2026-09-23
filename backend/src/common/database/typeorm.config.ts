@@ -4,11 +4,17 @@ import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { join } from 'path';
 import { InitialSchema1725440000000 } from '../../migrations/1725440000000-InitialSchema';
 import { AddCertificationsToDoctor1725450000000 } from '../../migrations/1725450000000-AddCertificationsToDoctor';
+import { MakeEmailNullable1725550000000 } from '../../migrations/1725550000000-MakeEmailNullable';
 import { AddUserIdToPayments1757000000000 } from '../../migrations/1757000000000-AddUserIdToPayments';
 import { CreateReceiptsTable1757100000000 } from '../../migrations/1757100000000-CreateReceiptsTable';
 import { CreatePasswordResetTokens1757200000000 } from '../../migrations/1757200000000-CreatePasswordResetTokens';
 import { UpgradePasswordResetToOtp1757300000000 } from '../../migrations/1757300000000-UpgradePasswordResetToOtp';
-import { MakeEmailNullable1725550000000 } from '../../migrations/1725550000000-MakeEmailNullable';
+import { CreateAdvertisementsTable1757400000000 } from '../../migrations/1757400000000-CreateAdvertisementsTable';
+import { CreateOrderItemsTable1757500000000 } from '../../migrations/1757500000000-CreateOrderItemsTable';
+import { InitialSchema1789966972055 } from '../../migrations/1789966972055-InitialSchema';
+import { FixAdvertisementsColumnDrift1789970000000 } from '../../migrations/1789970000000-FixAdvertisementsColumnDrift';
+import { RetireDuplicateOrderStorage1789971000000 } from '../../migrations/1789971000000-RetireDuplicateOrderStorage';
+import { AddMissingAuditIndexes1789972000000 } from '../../migrations/1789972000000-AddMissingAuditIndexes';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -21,7 +27,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
     const isStaging = nodeEnv === 'staging';
     const isLocal = !isProduction && !isStaging;
 
-    // PostgreSQL shared config � includes migrations (postgres-specific SQL)
+    // PostgreSQL shared config  includes migrations (postgres-specific SQL)
     const postgresShared: Pick<TypeOrmModuleOptions, 'autoLoadEntities' | 'synchronize' | 'logging' | 'migrations' | 'migrationsRun'> = {
       autoLoadEntities: true,
       synchronize: isLocal,
@@ -29,11 +35,17 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       migrations: [
         InitialSchema1725440000000,
         AddCertificationsToDoctor1725450000000,
+        MakeEmailNullable1725550000000,
         AddUserIdToPayments1757000000000,
         CreateReceiptsTable1757100000000,
         CreatePasswordResetTokens1757200000000,
         UpgradePasswordResetToOtp1757300000000,
-        MakeEmailNullable1725550000000,
+        CreateAdvertisementsTable1757400000000,
+        CreateOrderItemsTable1757500000000,
+        InitialSchema1789966972055,
+        FixAdvertisementsColumnDrift1789970000000,
+        RetireDuplicateOrderStorage1789971000000,
+        AddMissingAuditIndexes1789972000000,
       ],
       migrationsRun: true,
     };

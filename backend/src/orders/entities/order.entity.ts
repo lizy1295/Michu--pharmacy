@@ -5,6 +5,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  Index,
+  AfterLoad,
 } from 'typeorm';
 import { OrderItem } from './order-item.entity';
 
@@ -33,6 +35,7 @@ export class Order {
   @Column({ name: 'order_number', type: 'varchar', length: 50, unique: true })
   orderNumber!: string;
 
+  @Index('IDX_orders_customer_id')
   @Column({ name: 'customer_id', type: 'integer' })
   customerId!: number;
 
@@ -51,8 +54,27 @@ export class Order {
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
   orderItems!: OrderItem[];
 
-  @Column({ name: 'items', type: 'jsonb' })
-  items!: any[];
+  /**
+   * Virtual items array populated from orderItems for API backward-compatibility.
+   * Not stored in the database.
+   */
+  items: any[] = [];
+
+  @AfterLoad()
+  populateItems() {
+    if (this.orderItems && Array.isArray(this.orderItems)) {
+      this.items = this.orderItems.map((oi) => ({
+        id: oi.productId,
+        productId: oi.productId,
+        name: oi.product?.name || `Product #${oi.productId}`,
+        price: Number(oi.unitPrice),
+        quantity: oi.quantity,
+        dosage: (oi.product?.attributes as any)?.dosage || undefined,
+        prescriptionRequired: Boolean(oi.product?.prescriptionRequired),
+        imageType: oi.product?.imageUrl || undefined,
+      }));
+    }
+  }
 
   @Column({ name: 'subtotal', type: 'decimal', precision: 10, scale: 2 })
   subtotal!: number;
@@ -66,9 +88,11 @@ export class Order {
   @Column({ name: 'total', type: 'decimal', precision: 10, scale: 2 })
   total!: number;
 
+  @Index('IDX_orders_status')
   @Column({ name: 'status', type: 'varchar', length: 20, default: OrderStatus.PENDING })
   status!: OrderStatus;
 
+  @Index('IDX_orders_payment_status')
   @Column({ name: 'payment_status', type: 'varchar', length: 20, default: PaymentStatus.PENDING })
   paymentStatus!: PaymentStatus;
 

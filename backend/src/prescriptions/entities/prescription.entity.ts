@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 
 export enum PrescriptionStatus {
@@ -24,6 +25,7 @@ export class Prescription {
   @Column({ name: 'patient_name', type: 'varchar', length: 100 })
   patientName!: string;
 
+  @Index('IDX_prescriptions_patient_email')
   @Column({ name: 'patient_email', type: 'varchar', length: 150 })
   patientEmail!: string;
 

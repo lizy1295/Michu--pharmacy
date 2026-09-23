@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
 import { Receipt } from './entities/receipt.entity';
 import { Order } from '../orders/entities/order.entity';
+import { OrderItem } from '../orders/entities/order-item.entity';
 import { Payment } from '../payments/entities/payment.entity';
 
 @Injectable()
@@ -38,6 +39,24 @@ export class ReceiptsService {
     const timestamp = Date.now();
     const receiptNumber = `REC-${timestamp}-${order.id}`;
 
+    // Resolve line items from order.items or order_items table
+    let items = Array.isArray(order.items) && order.items.length > 0 ? order.items : [];
+    if (items.length === 0 && manager) {
+      const orderItems = await manager.find(OrderItem, {
+        where: { orderId: order.id },
+        relations: ['product'],
+      });
+      if (orderItems && orderItems.length > 0) {
+        items = orderItems.map((oi) => ({
+          id: oi.productId,
+          productId: oi.productId,
+          name: oi.product?.name || `Product #${oi.productId}`,
+          quantity: oi.quantity,
+          price: Number(oi.unitPrice),
+        }));
+      }
+    }
+
     // 3. Create receipt snapshot
     const receipt = repo.create({
       receiptNumber,
@@ -49,7 +68,7 @@ export class ReceiptsService {
       customerName: order.customerName,
       customerEmail: order.customerEmail,
       customerPhone: order.customerPhone,
-      items: Array.isArray(order.items) ? order.items : [],
+      items,
       subtotal: Number(order.subtotal),
       tax: Number(order.tax || 0),
       deliveryFee: Number(order.deliveryFee || 0),

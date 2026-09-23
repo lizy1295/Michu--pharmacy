@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 
 export enum InquiryStatus {
   OPEN = 'open',
@@ -22,6 +22,7 @@ export class Inquiry {
   @Column({ name: 'message', type: 'text' })
   message!: string;
 
+  @Index('IDX_inquiries_status')
   @Column({ name: 'status', type: 'varchar', length: 20, default: InquiryStatus.OPEN })
   status!: InquiryStatus;
 

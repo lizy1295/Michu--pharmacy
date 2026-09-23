@@ -1,7 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  UnprocessableEntityException,
+  Optional,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order, OrderStatus, PaymentStatus } from './entities/order.entity';
+import { OrderItem } from './entities/order-item.entity';
+import { Product } from '../products/product.entity';
+import { Prescription, PrescriptionStatus } from '../prescriptions/entities/prescription.entity';
 import { CreateOrderDto, UpdateOrderStatusDto } from './dto/create-order.dto';
 import { sanitizeText } from '../common/utils/sanitize.util';
 
@@ -10,10 +19,19 @@ export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly ordersRepo: Repository<Order>,
+    @Optional()
+    @InjectRepository(Product)
+    private readonly productsRepo?: Repository<Product>,
+    @Optional()
+    @InjectRepository(Prescription)
+    private readonly prescriptionsRepo?: Repository<Prescription>,
   ) {}
 
   async findAll(status?: OrderStatus, search?: string, page = 1, limit = 20): Promise<{ data: Order[]; total: number; page: number; limit: number }> {
-    const query = this.ordersRepo.createQueryBuilder('order');
+    const query = this.ordersRepo
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.orderItems', 'orderItems')
+      .leftJoinAndSelect('orderItems.product', 'product');
 
     if (status) {
       query.andWhere('order.status = :status', { status });
@@ -35,7 +53,10 @@ export class OrdersService {
   }
 
   async findOne(id: number): Promise<Order> {
-    const order = await this.ordersRepo.findOne({ where: { id } });
+    const order = await this.ordersRepo.findOne({
+      where: { id },
+      relations: ['orderItems', 'orderItems.product'],
+    });
     if (!order) throw new NotFoundException(`Order with id ${id} not found`);
     return order;
   }
@@ -101,13 +122,39 @@ export class OrdersService {
       throw new BadRequestException('Shipping address is required and cannot be empty.');
     }
 
+    if (this.productsRepo) {
+      for (const item of validatedItems) {
+        const product = await this.productsRepo.findOne({ where: { id: item.id } });
+        if (!product) {
+          throw new UnprocessableEntityException(`Product with ID ${item.id} not found.`);
+        }
+        if (product.stock !== undefined && product.stock !== null && product.stock < item.quantity) {
+          throw new UnprocessableEntityException(
+            `Product "${product.name}" is out of stock or has insufficient quantity (available: ${product.stock}, requested: ${item.quantity}).`,
+          );
+        }
+      }
+    }
+
     const count = await this.ordersRepo.count();
     const orderNumber = `ORD-${String(count + 1).padStart(4, '0')}`;
 
-    const subtotal = dto.subtotal !== undefined && typeof dto.subtotal === 'number' && dto.subtotal >= 0 ? dto.subtotal : 0;
+    // Server-side calculation of subtotal from validated item prices and quantities
+    const calculatedSubtotal = validatedItems.reduce(
+      (sum, item) => sum + Number(item.price) * Number(item.quantity),
+      0,
+    );
     const tax = dto.tax !== undefined && typeof dto.tax === 'number' && dto.tax >= 0 ? dto.tax : 0;
     const deliveryFee = dto.deliveryFee !== undefined && typeof dto.deliveryFee === 'number' && dto.deliveryFee >= 0 ? dto.deliveryFee : 0;
-    const total = subtotal + tax + deliveryFee;
+    const total = calculatedSubtotal + tax + deliveryFee;
+
+    const orderItems = validatedItems.map((item) => {
+      const oi = new OrderItem();
+      oi.productId = Number(item.id);
+      oi.quantity = Number(item.quantity);
+      oi.unitPrice = Number(item.price);
+      return oi;
+    });
 
     const order = this.ordersRepo.create({
       orderNumber,
@@ -116,8 +163,8 @@ export class OrdersService {
       customerEmail: sanitizedCustomerEmail,
       customerPhone: sanitizedCustomerPhone,
       shippingAddress: sanitizedShippingAddress,
-      items: validatedItems,
-      subtotal,
+      orderItems,
+      subtotal: calculatedSubtotal,
       tax,
       deliveryFee,
       total,
@@ -125,14 +172,37 @@ export class OrdersService {
       paymentStatus: PaymentStatus.PENDING,
       notes: sanitizedNotes,
     });
+    order.items = validatedItems;
 
     return this.ordersRepo.save(order);
   }
 
   async updateStatus(id: number, dto: UpdateOrderStatusDto): Promise<Order> {
     const order = await this.findOne(id);
+
+    // Block shipping when any item in the order requires a prescription that is still PENDING
+    if (dto.status === OrderStatus.SHIPPED && this.prescriptionsRepo) {
+      const requiresPrescriptionItems = (order.items || []).filter(
+        (item) => item.prescriptionRequired,
+      );
+      if (requiresPrescriptionItems.length > 0) {
+        // Look up by customer email; at least one PENDING prescription for this order's customer
+        const pendingPrescription = await this.prescriptionsRepo
+          .createQueryBuilder('rx')
+          .where('LOWER(rx.patientEmail) = LOWER(:email)', { email: order.customerEmail })
+          .andWhere('rx.status = :status', { status: PrescriptionStatus.PENDING })
+          .getOne();
+
+        if (pendingPrescription) {
+          throw new Error(
+            `Order cannot be shipped: prescription #${pendingPrescription.prescriptionNumber} for customer ${order.customerEmail} is still PENDING approval.`,
+          );
+        }
+      }
+    }
+
     order.status = dto.status;
-    
+
     if (dto.notes !== undefined) {
       order.notes = sanitizeText(dto.notes);
     }
@@ -145,7 +215,11 @@ export class OrdersService {
   }
 
   async findByCustomer(email?: string, customerId?: number): Promise<Order[]> {
-    const query = this.ordersRepo.createQueryBuilder('order');
+    const query = this.ordersRepo
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.orderItems', 'orderItems')
+      .leftJoinAndSelect('orderItems.product', 'product');
+
     if (customerId) {
       query.andWhere('order.customerId = :customerId', { customerId });
     } else if (email) {
