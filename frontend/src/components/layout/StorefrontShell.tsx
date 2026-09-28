@@ -8,7 +8,6 @@ import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { AiAssistant } from '@/components/ai/AiAssistant';
-import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 
 export function StorefrontShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -26,7 +25,6 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
           <main className="flex-1">{children}</main>
           <Footer />
           <AiAssistant />
-          <ThemeSwitcher />
         </WishlistProvider>
       </CartProvider>
     </LanguageProvider>

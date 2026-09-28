@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { StorefrontShell } from '@/components/layout/StorefrontShell';
 import { OfflineBanner } from '@/components/OfflineBanner';
-import { ThemeProvider } from '@/context/ThemeContext';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -26,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#474C80',
+  themeColor: '#29710A',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -36,16 +35,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-theme="theme-1" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        {/* Anti-flash inline script for theme loading + Chrome Extension error handler */}
+        {/* Chrome Extension error handler */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('mph_theme')||'theme-1';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
-            if (typeof window !== 'undefined') {
+            __html: `if (typeof window !== 'undefined') {
               window.addEventListener('error', function(e) {
                 if (e.filename && e.filename.includes('chrome-extension')) {
                   e.stopImmediatePropagation();
@@ -61,11 +59,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col selection:bg-brand-600 selection:text-white bg-rumswizzle text-almostblack">
-        <ThemeProvider>
-          <OfflineBanner />
-          <StorefrontShell>{children}</StorefrontShell>
-        </ThemeProvider>
+      <body className="min-h-screen flex flex-col bg-matcha text-forest">
+        <OfflineBanner />
+        <StorefrontShell>{children}</StorefrontShell>
       </body>
     </html>
   );
