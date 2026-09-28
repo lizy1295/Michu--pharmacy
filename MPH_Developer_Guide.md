@@ -268,6 +268,44 @@ The checkout collects a `deliveryFee`, but the backend does not integrate with a
    - Do not enable `synchronize: true` in production or staging environments.
 5. **Localization Completeness:** Every customer-facing string introduced in the frontend must include translations across all 6 supported Ethiopian languages.
 
+### 8.5 Database Troubleshooting
+
+#### "column X does not exist" during a CREATE INDEX step
+
+**Symptom:** A TypeORM migration fails during a `CREATE INDEX` statement with an error like:
+
+```
+error: column "order_id" does not exist
+Migration "CreateOrderItemsTable1757500000000" failed
+```
+
+**Root Cause:** An orphaned (empty) table with the target name already exists in the `public` schema from a previous, partially-applied migration or manual `CREATE TABLE` statement. TypeORM's `CREATE TABLE IF NOT EXISTS` silently skips re-creating the table, leaving it with the *old* column definitions — which do not include the columns expected by the new `CREATE INDEX` statements.
+
+**Recovery:** Drop the orphaned table before re-running migrations:
+
+```bash
+# 1. Connect to the database
+psql -h localhost -p 5432 -U postgres -d MPH
+
+# 2. Drop the offending orphan (CASCADE removes dependent constraints / views)
+DROP TABLE IF EXISTS order_items CASCADE;
+
+# 3. Exit psql and re-run migrations
+\q
+```
+
+```bash
+# From the backend directory:
+npm run migration:run
+```
+
+**Preventive Checklist — fresh database setup:**
+- Always start with a clean schema (`DROP SCHEMA public CASCADE; CREATE SCHEMA public;`) or a freshly created database when wiping and re-running all migrations from scratch.
+- Never manually `CREATE TABLE` in a database where TypeORM migrations are the schema authority.
+- If you must manually inspect a table during development, use a read-only `\d tablename` in psql and avoid executing DDL statements outside of migrations.
+
+> **Note:** This issue was observed with the `order_items` table (migration `CreateOrderItemsTable1757500000000`). The root cause was a stale empty table left behind from an earlier experimental migration. Dropping it and re-running migrations resolved the error completely.
+
 ---
 
 ## 9. Environment, Deployment & Operations

@@ -74,3 +74,23 @@ npm run dev
 - 📋 **Prescription Triage**: Clinic workflow for uploading and reviewing prescription images.
 - 🧾 **Automated Receipts**: Sequential receipt numbering and order ledgering.
 - 📦 **Inventory & Stock Management**: Multi-branch stock counts, batch numbers, and expiration tracking.
+
+---
+
+## 🛠️ Troubleshooting
+
+### Migration fails with "column X does not exist" on a fresh database
+
+If a migration fails during a `CREATE INDEX` step (e.g. `column "order_id" does not exist`), an orphaned empty table from a prior partial migration is the most likely cause.
+
+**Quick fix:**
+```bash
+# Drop the orphaned table (example: order_items)
+psql -h localhost -p 5432 -U postgres -d MPH \
+  -c "DROP TABLE IF EXISTS order_items CASCADE;"
+
+# Re-run migrations from the backend directory
+npm run migration:run
+```
+
+For full root-cause analysis, preventive checklist, and general database conventions, see **[§8.5 of the Developer Guide](./MPH_Developer_Guide.md#85-database-troubleshooting)**.
