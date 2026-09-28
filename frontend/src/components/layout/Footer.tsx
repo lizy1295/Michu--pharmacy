@@ -168,7 +168,7 @@ export function Footer() {
             <div className="space-y-2.5 text-xs text-pearl-200/70">
               {/* Address */}
               <div className="flex items-start gap-2.5">
-                <span className="text-radiate text-sm mt-0.5">📍</span>
+                <span className="text-accent text-sm mt-0.5">📍</span>
                 <div>
                   <p className="font-bold text-pearl">Main Branch / Head Office:</p>
                   <p className="text-pearl-200/50 text-[11px] leading-relaxed">
@@ -179,7 +179,7 @@ export function Footer() {
 
               {/* Phone Numbers */}
               <div className="flex items-start gap-2.5">
-                <span className="text-radiate text-sm mt-0.5">📞</span>
+                <span className="text-accent text-sm mt-0.5">📞</span>
                 <div>
                   <p className="font-bold text-pearl">Customer Support &amp; Orders:</p>
                   <p className="text-pearl-200/70 text-xs font-mono">
@@ -192,7 +192,7 @@ export function Footer() {
 
               {/* Email */}
               <div className="flex items-start gap-2.5">
-                <span className="text-radiate text-sm mt-0.5">✉️</span>
+                <span className="text-accent text-sm mt-0.5">✉️</span>
                 <div>
                   <p className="font-bold text-pearl">Email Inquiries:</p>
                   <a href="mailto:mkoo7891@gmail.com" className="text-pearl-200/60 hover:text-gleam transition text-[11px]">

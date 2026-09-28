@@ -88,19 +88,19 @@ export function Header() {
 
   return (
     <header className="w-full flex flex-col bg-pearl sticky top-0 z-50 shadow-sm shadow-moss-900/10">
-      {/* 1. Announcement Top Bar — Tilled Earth bg, Wheat Field Sunrise text */}
+      {/* 1. Announcement Top Bar — Deep Leaf Green bg, Orange accent */}
       <div className="w-full bg-moss-900 text-pearl py-2 px-4 text-xs font-semibold overflow-hidden border-b border-moss-950">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-2 text-center md:text-left">
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-gleam animate-ping"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-ping"></span>
             <span>{t('nav.announcement')}</span>
           </div>
-          <span className="hidden md:inline text-herb-500">|</span>
+          <span className="hidden md:inline text-herb-400">|</span>
           <div>Michu Pharmacy · {t('nav.slogan')}</div>
-          <span className="hidden md:inline text-herb-500">|</span>
-          <div className="text-radiate-300">{t('nav.warning')}</div>
-          <span className="hidden md:inline text-herb-500">|</span>
-          <div className="bg-radiate px-2 py-0.5 rounded text-pearl text-[10px] uppercase font-bold tracking-wider">
+          <span className="hidden md:inline text-herb-400">|</span>
+          <div className="text-accent-300 font-bold">{t('nav.warning')}</div>
+          <span className="hidden md:inline text-herb-400">|</span>
+          <div className="bg-accent px-2.5 py-0.5 rounded-full text-white text-[10px] uppercase font-black tracking-wider shadow-sm shadow-accent/40">
             {t('nav.discount')}
           </div>
         </div>
@@ -200,13 +200,13 @@ export function Header() {
             {/* Action Buttons: Telebirr payment, Cart & Profile display ONLY after login. Otherwise display Get Started button */}
             {isLoggedIn ? (
               <>
-                {/* 1. Fast Payment Quick Access Button (Left of Cart) */}
+                {/* 1. Fast Payment Quick Access Button (Left of Cart) — juicy orange accent */}
                 <Link
                   href="/cart"
-                  className="hidden lg:flex items-center gap-2 rounded-full bg-emerald-50/90 hover:bg-emerald-100 text-emerald-950 border border-emerald-200/90 px-3.5 py-1.5 text-xs font-black transition shadow-2xs group"
+                  className="hidden lg:flex items-center gap-2 rounded-full bg-accent/10 hover:bg-accent/20 text-accent-700 border border-accent/30 px-3.5 py-1.5 text-xs font-black transition shadow-sm shadow-accent/10 group"
                   title="Telebirr & CBE Direct Payments Accepted"
                 >
-                  <svg className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-accent-600 group-hover:scale-110 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <rect x="2" y="5" width="20" height="14" rx="3" strokeWidth="1.8" />
                     <path strokeLinecap="round" strokeWidth="1.8" d="M2 10h20" />
                     <circle cx="7" cy="15" r="1.5" fill="currentColor" />
@@ -238,7 +238,7 @@ export function Header() {
                     />
                   </svg>
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-radiate text-[10px] font-black text-white ring-2 ring-pearl px-1">
+                    <span className="absolute -top-1 -right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-accent text-[10px] font-black text-white ring-2 ring-pearl px-1 shadow-sm shadow-accent/50">
                       {cartCount}
                     </span>
                   )}
@@ -273,7 +273,7 @@ export function Header() {
             ) : (
               <Link
                 href="/login"
-                className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-sm shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all duration-150 group shrink-0"
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-accent hover:bg-accent-600 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-accent/30 hover:shadow-accent-glow transition-all duration-150 group shrink-0"
                 title={t('nav.get_started')}
               >
                 <span>{t('nav.get_started')}</span>
@@ -412,7 +412,7 @@ export function Header() {
             <Link href="/faq" className="text-sm font-semibold text-moss-800 hover:text-herb-600 transition pb-1">{t('nav.faq')}</Link>
           </nav>
 
-          <Link href="/health?action=upload" className="rounded-full bg-radiate px-5 py-2 text-sm font-bold text-pearl hover:bg-radiate-600 shadow-sm shadow-radiate/30 transition duration-200">
+          <Link href="/health?action=upload" className="rounded-full bg-accent px-5 py-2 text-sm font-bold text-white hover:bg-accent-600 shadow-md shadow-accent/35 hover:shadow-accent-glow transition-all duration-200 active:scale-95">
             {t('nav.upload_prescription')}
           </Link>
         </div>
@@ -506,8 +506,8 @@ export function Header() {
                   {t('nav.my_account')}
                 </Link>
               ) : (
-                <Link href="/login" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-radiate-700 hover:bg-radiate/10 transition" onClick={() => setMobileMenuOpen(false)}>
-                  <svg className="w-5 h-5 text-radiate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <Link href="/login" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-accent hover:bg-accent-600 transition shadow-sm" onClick={() => setMobileMenuOpen(false)}>
+                  <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                   {t('nav.sign_in')}
                 </Link>
               )}
