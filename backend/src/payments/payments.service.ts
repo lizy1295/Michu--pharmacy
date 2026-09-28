@@ -452,7 +452,7 @@ export class PaymentsService {
     const isValidSig = this.chapaService.validateWebhookSignature(body, signature);
     if (!isValidSig) {
       this.logger.warn('[Chapa Webhook] Rejected: Invalid or missing webhook signature');
-      return { received: false, message: 'Invalid webhook signature' };
+      throw new ForbiddenException('Invalid webhook signature');
     }
 
     // ── 2. Extract transaction reference ───────────────────────────────────
