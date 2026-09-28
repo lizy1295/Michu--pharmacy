@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import PrescriptionIntakeForm from '@/components/prescriptions/PrescriptionIntakeForm';
+import { createBooking, Booking } from '@/lib/api/bookings';
+import { getAccessToken } from '@/lib/auth/tokens';
 
 const BRANCHES = [
   { name: 'Adama Branch', address: 'Bole Road, Near Adama Stadium', phone: '+251 221 112 233', hours: '8:00 AM - 10:00 PM' },
@@ -73,23 +75,47 @@ function HealthServicesContent() {
   const [consultDate, setConsultDate] = useState('');
   const [consultTime, setConsultTime] = useState('10:00 AM');
   const [consultReason, setConsultReason] = useState('');
+  const [consultSubmitting, setConsultSubmitting] = useState(false);
+  const [consultError, setConsultError] = useState<string | null>(null);
+  const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
 
-  // Drug Lookup State
-  const [drugSearch, setDrugSearch] = useState('');
-  const [drugResult, setDrugResult] = useState<{ name: string; uses: string; dosage: string; warnings: string } | null>(null);
-
-  const handleConsultationSubmit = (e: React.FormEvent) => {
+  const handleConsultationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      triggerToast('⚠️ Internet Connection Required: Tele-health consultation booking requires an active internet connection.');
+    setConsultError(null);
+
+    // Check auth first — booking requires a JWT
+    const token = getAccessToken();
+    if (!token) {
+      setConsultError('You must be signed in to book a consultation. Please log in and try again.');
       return;
     }
+
     if (!consultDate) {
-      triggerToast('Please select a preferred date.');
+      setConsultError('Please select a preferred date.');
       return;
     }
-    triggerToast(`Booking confirmed for ${consultDate} at ${consultTime} with ${consultDoctor}! Check your SMS for link.`);
-    setConsultReason('');
+
+    setConsultSubmitting(true);
+    try {
+      const booking = await createBooking({
+        doctorName: consultDoctor,
+        requestedDate: consultDate,
+        requestedTime: consultTime,
+        reason: consultReason,
+      });
+      setConfirmedBooking(booking);
+      setConsultReason('');
+      setConsultDate('');
+    } catch (err: any) {
+      const status = (err as any)?.status ?? 0;
+      if (status === 401 || err?.message?.includes('401')) {
+        setConsultError('Your session has expired. Please log in again to book a consultation.');
+      } else {
+        setConsultError(err?.message ?? 'Booking failed. Please try again.');
+      }
+    } finally {
+      setConsultSubmitting(false);
+    }
   };
 
   const handleDrugSearch = (e: React.FormEvent) => {
@@ -199,72 +225,129 @@ function HealthServicesContent() {
 
             {/* 2. Book Tele-health Consultation Form */}
             {activeTab === 'consult' && (
-              <form onSubmit={handleConsultationSubmit} className="space-y-4">
+              <div className="space-y-4">
                 <h2 className="text-xl font-bold text-gray-800">{t('health.consult_title')}</h2>
                 <p className="text-xs text-gray-500">
                   {t('health.consult_desc')}
                 </p>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_doctor')}</label>
-                  <select
-                    value={consultDoctor}
-                    onChange={(e) => setConsultDoctor(e.target.value)}
-                    className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
-                  >
-                    <option value="Dr. Million Negasa (Founder & Chief Pharmacist)">Dr. Million Negasa (Founder & Chief Pharmacist)</option>
-                    <option value="Dr. Sarah Hailu (Clinical Lead)">Dr. Sarah Hailu (Clinical Lead)</option>
-                    <option value="Abebe Kebede (Senior Pharmacist)">Abebe Kebede (Senior Pharmacist)</option>
-                    <option value="Dr. Betty Girma (Cosmetic consultant)">Dr. Betty Girma (Cosmetic consultant)</option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_date')}</label>
-                    <input
-                      type="date"
-                      required
-                      value={consultDate}
-                      onChange={(e) => setConsultDate(e.target.value)}
-                      className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_time')}</label>
-                    <select
-                      value={consultTime}
-                      onChange={(e) => setConsultTime(e.target.value)}
-                      className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
+                {/* Confirmation card — shown after successful booking */}
+                {confirmedBooking ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-bold text-emerald-900 text-sm">Booking request received!</p>
+                        <p className="text-xs text-emerald-700">Reference: <span className="font-mono font-bold">BKG-{confirmedBooking.id}</span></p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-emerald-800 space-y-1 border-t border-emerald-200 pt-3">
+                      <p><span className="font-semibold">Doctor:</span> {confirmedBooking.doctorName}</p>
+                      <p><span className="font-semibold">Date:</span> {confirmedBooking.requestedDate} at {confirmedBooking.requestedTime}</p>
+                      <p><span className="font-semibold">Status:</span> Pending confirmation — our team will contact you to confirm.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmedBooking(null)}
+                      className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline transition"
                     >
-                      <option value="9:00 AM">9:00 AM</option>
-                      <option value="10:00 AM">10:00 AM</option>
-                      <option value="11:30 AM">11:30 AM</option>
-                      <option value="2:00 PM">2:00 PM</option>
-                      <option value="4:00 PM">4:00 PM</option>
-                    </select>
+                      Book another consultation →
+                    </button>
                   </div>
-                </div>
+                ) : (
+                  <form onSubmit={handleConsultationSubmit} className="space-y-4">
+                    {/* Inline error banner */}
+                    {consultError && (
+                      <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 font-medium flex items-start gap-2">
+                        <svg className="w-4 h-4 mt-0.5 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {consultError}
+                      </div>
+                    )}
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_reason')}</label>
-                  <textarea
-                    rows={3}
-                    required
-                    placeholder="Briefly describe what questions or issues you would like to discuss (e.g. side effects, dosages, multi-drug reviews)."
-                    value={consultReason}
-                    onChange={(e) => setConsultReason(e.target.value)}
-                    className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_doctor')}</label>
+                      <select
+                        id="consult-doctor"
+                        value={consultDoctor}
+                        onChange={(e) => setConsultDoctor(e.target.value)}
+                        className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
+                      >
+                        <option value="Dr. Million Negasa (Founder & Chief Pharmacist)">Dr. Million Negasa (Founder & Chief Pharmacist)</option>
+                        <option value="Dr. Sarah Hailu (Clinical Lead)">Dr. Sarah Hailu (Clinical Lead)</option>
+                        <option value="Abebe Kebede (Senior Pharmacist)">Abebe Kebede (Senior Pharmacist)</option>
+                        <option value="Dr. Betty Girma (Cosmetic consultant)">Dr. Betty Girma (Cosmetic consultant)</option>
+                      </select>
+                    </div>
 
-                <button
-                  type="submit"
-                  className="w-full flex items-center justify-center rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 text-sm active:scale-95 transition shadow-sm"
-                >
-                  Schedule Video Consultation
-                </button>
-              </form>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_date')}</label>
+                        <input
+                          id="consult-date"
+                          type="date"
+                          required
+                          value={consultDate}
+                          onChange={(e) => setConsultDate(e.target.value)}
+                          className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_time')}</label>
+                        <select
+                          id="consult-time"
+                          value={consultTime}
+                          onChange={(e) => setConsultTime(e.target.value)}
+                          className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
+                        >
+                          <option value="9:00 AM">9:00 AM</option>
+                          <option value="10:00 AM">10:00 AM</option>
+                          <option value="11:30 AM">11:30 AM</option>
+                          <option value="2:00 PM">2:00 PM</option>
+                          <option value="4:00 PM">4:00 PM</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase">{t('health.consult_reason')}</label>
+                      <textarea
+                        id="consult-reason"
+                        rows={3}
+                        required
+                        placeholder="Briefly describe what questions or issues you would like to discuss (e.g. side effects, dosages, multi-drug reviews)."
+                        value={consultReason}
+                        onChange={(e) => setConsultReason(e.target.value)}
+                        className="mt-1.5 block w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <button
+                      id="consult-submit-btn"
+                      type="submit"
+                      disabled={consultSubmitting}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 text-sm active:scale-95 transition shadow-sm"
+                    >
+                      {consultSubmitting ? (
+                        <>
+                          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                          </svg>
+                          Submitting...
+                        </>
+                      ) : (
+                        'Schedule Video Consultation'
+                      )}
+                    </button>
+                  </form>
+                )}
+              </div>
             )}
 
             {/* 3. Drug Info Search Database */}
