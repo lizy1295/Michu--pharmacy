@@ -26,6 +26,7 @@ import { PartnersModule } from './partners/partners.module';
 import { ReceiptsModule } from './receipts/receipts.module';
 import { MailModule } from './mail/mail.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { SymptomsModule } from './symptoms/symptoms.module';
 import { TypeOrmConfigService } from './common/database/typeorm.config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
@@ -66,6 +67,7 @@ import { join } from 'path';
     SettingsModule,
     DoctorsModule,
     BookingsModule,
+    SymptomsModule,
     InquiriesModule,
     PartnersModule,
   ],
